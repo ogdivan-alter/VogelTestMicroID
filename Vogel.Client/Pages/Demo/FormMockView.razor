@@ -1,0 +1,302 @@
+@page "/demo/form"
+@page "/work/form-demo"
+@namespace Vogel.Client.Pages
+@inject NavigationManager NavigationManager
+
+<PageTitle>Control de Acceso — Vogel</PageTitle>
+
+<div class="vogel-form-mock-view">
+    <!-- HeaderWork: Franja superior de trabajo con botón de Salir -->
+    <HeaderWork Title="Control de Acceso"
+                Color="#0c0e14"
+                TextExit="Salir"
+                ActionExit="/" />
+
+    <main class="vogel-form-mock-body" role="main">
+        <div class="vogel-form-mock-container">
+            @if (_showSuccessAlert)
+            {
+                <div class="vogel-form-alert-success" role="alert">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <span>Los cambios se han guardado exitosamente.</span>
+                    <button type="button" class="vogel-alert-close" @onclick="() => _showSuccessAlert = false">&times;</button>
+                </div>
+            }
+
+            <div class="vogel-form-card">
+                <!-- SECCIÓN 1: DATOS GENERALES -->
+                <section class="vogel-form-section" aria-labelledby="section-datos-generales">
+                    <h3 id="section-datos-generales" class="vogel-form-section-title">Datos Generales</h3>
+
+                    <div class="vogel-form-row vogel-form-row--2col">
+                        <div class="vogel-form-group">
+                            <label class="vogel-form-label" for="txtNombreCompleto">Nombre Completo</label>
+                            <input id="txtNombreCompleto"
+                                   type="text"
+                                   class="vogel-form-input"
+                                   @bind="_nombreCompleto"
+                                   placeholder="Juan Pérez" />
+                            <small class="vogel-form-helper">Nombre completo por Juan Pérez</small>
+                        </div>
+
+                        <div class="vogel-form-group">
+                            <label class="vogel-form-label" for="txtEstadoGeneral">Estado:</label>
+                            <input id="txtEstadoGeneral"
+                                   type="text"
+                                   class="vogel-form-input"
+                                   @bind="_estadoGeneral" />
+                        </div>
+                    </div>
+
+                    <div class="vogel-form-row vogel-form-row--3col">
+                        <div class="vogel-form-group">
+                            <label class="vogel-form-label" for="numId">ID Numérico</label>
+                            <input id="numId"
+                                   type="number"
+                                   class="vogel-form-input"
+                                   @bind="_idNumerico" />
+                            <small class="vogel-form-helper">Númer do numero to al numérico</small>
+                        </div>
+
+                        <div class="vogel-form-group vogel-form-group--relative">
+                            <label class="vogel-form-label" for="txtFechaRegistro">Fecha de Registro</label>
+                            <div class="vogel-date-picker-control" @onclick="ToggleCalendar">
+                                <input id="txtFechaRegistro"
+                                       type="text"
+                                       class="vogel-form-input vogel-date-input"
+                                       value="@_selectedDate.ToString("dd/MM/yyyy")"
+                                       readonly />
+                                <button type="button"
+                                        class="vogel-date-icon-btn"
+                                        aria-label="Abrir selector de fecha">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Pop-up interactivo de calendario (réplica exacta de la referencia visual) -->
+                            @if (_isCalendarOpen)
+                            {
+                                <div class="vogel-calendar-popup" @onclick:stopPropagation="true" role="dialog" aria-label="Selector de fecha">
+                                    <div class="vogel-calendar-header">
+                                        <button type="button" class="vogel-calendar-nav-btn" @onclick="PrevMonth" aria-label="Mes anterior">&lsaquo;</button>
+                                        <span class="vogel-calendar-month-label">@CurrentMonthName @_currentCalendarDate.Year</span>
+                                        <button type="button" class="vogel-calendar-nav-btn" @onclick="NextMonth" aria-label="Mes siguiente">&rsaquo;</button>
+                                    </div>
+
+                                    <div class="vogel-calendar-weekdays">
+                                        <span>Lu</span>
+                                        <span>La</span>
+                                        <span>Mi</span>
+                                        <span>Ju</span>
+                                        <span>V</span>
+                                        <span>Sa</span>
+                                        <span>Su</span>
+                                    </div>
+
+                                    <div class="vogel-calendar-days-grid">
+                                        @foreach (var day in GenerateCalendarDays())
+                                        {
+                                            <button type="button"
+                                                    class="vogel-calendar-day @(day.IsOtherMonth ? "is-other-month" : "") @(day.IsSelected ? "is-selected" : "")"
+                                                    @onclick="() => SelectDay(day.Date)">
+                                                @day.DayNumber
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="vogel-form-group">
+                            <label class="vogel-form-label" for="selRol">Rol del Sistema</label>
+                            <div class="vogel-select-container">
+                                <select id="selRol" class="vogel-form-select" @bind="_rolSistema">
+                                    <option value="Administrador Principal">Administrador Principal</option>
+                                    <option value="Operador">Operador</option>
+                                    <option value="Auditor">Auditor</option>
+                                    <option value="Consultor">Consultor</option>
+                                </select>
+                                <span class="vogel-select-chevron" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN 2: CONFIGURACIÓN DE USUARIO -->
+                <section class="vogel-form-section" aria-labelledby="section-config-usuario">
+                    <h3 id="section-config-usuario" class="vogel-form-section-title">Configuración de Usuario</h3>
+
+                    <div class="vogel-form-row vogel-form-row--config">
+                        <!-- Columna izquierda: Estado y 2FA -->
+                        <div class="vogel-config-col-left">
+                            <div class="vogel-form-group">
+                                <label class="vogel-form-label">Estado:</label>
+                                <div class="vogel-radio-options" role="radiogroup" aria-label="Estado de usuario">
+                                    <label class="vogel-radio-label">
+                                        <input type="radio"
+                                               name="userState"
+                                               checked="@(_estadoUsuario == "Activo")"
+                                               @onchange="@(() => _estadoUsuario = "Activo")" />
+                                        <span class="vogel-radio-indicator"></span>
+                                        <span>Activo</span>
+                                    </label>
+
+                                    <label class="vogel-radio-label">
+                                        <input type="radio"
+                                               name="userState"
+                                               checked="@(_estadoUsuario == "Inactivo")"
+                                               @onchange="@(() => _estadoUsuario = "Inactivo")" />
+                                        <span class="vogel-radio-indicator"></span>
+                                        <span>Inactivo</span>
+                                    </label>
+                                </div>
+                                <small class="vogel-form-helper">Configuración de Usuario</small>
+                            </div>
+
+                            <div class="vogel-form-group vogel-checkbox-wrapper">
+                                <label class="vogel-checkbox-label">
+                                    <input type="checkbox" @bind="_dobleFactor" />
+                                    <span class="vogel-checkbox-indicator">
+                                        @if (_dobleFactor)
+                                        {
+                                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        }
+                                    </span>
+                                    <span>Doble Factor de Autenticación (2FA)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Columna derecha: Observaciones -->
+                        <div class="vogel-config-col-right">
+                            <div class="vogel-form-group">
+                                <label class="vogel-form-label" for="txtObservaciones">Observaciones</label>
+                                <textarea id="txtObservaciones"
+                                          class="vogel-form-textarea"
+                                          rows="4"
+                                          @bind="_observaciones"
+                                          placeholder=""></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- BOTONES DE ACCIÓN (Inferior derecha) -->
+                <div class="vogel-form-actions">
+                    <button type="button"
+                            class="vogel-btn-form-save"
+                            @onclick="HandleSaveAsync"
+                            disabled="@_isSaving">
+                        @if (_isSaving)
+                        {
+                            <span class="vogel-spinner-small"></span>
+                        }
+                        <span>Guardar Cambios</span>
+                    </button>
+
+                    <button type="button"
+                            class="vogel-btn-form-cancel"
+                            @onclick="HandleCancel">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+@code {
+    private string _nombreCompleto = "Juan Pérez";
+    private string _estadoGeneral = string.Empty;
+    private int? _idNumerico = null;
+    private DateTime _selectedDate = new DateTime(2026, 11, 9);
+    private DateTime _currentCalendarDate = new DateTime(2026, 11, 1);
+    private string _rolSistema = "Administrador Principal";
+    private string _estadoUsuario = "Activo";
+    private bool _dobleFactor = true;
+    private string _observaciones = string.Empty;
+
+    private bool _isCalendarOpen = true; // Abierto por defecto para reflejar la pantalla de referencia
+    private bool _isSaving = false;
+    private bool _showSuccessAlert = false;
+
+    private string CurrentMonthName => _currentCalendarDate.ToString("MMMM", new System.Globalization.CultureInfo("es-ES")) switch
+    {
+        var s when !string.IsNullOrEmpty(s) => char.ToUpper(s[0]) + s.Substring(1),
+        _ => "Noviembre"
+    };
+
+    private void ToggleCalendar()
+    {
+        _isCalendarOpen = !_isCalendarOpen;
+    }
+
+    private void PrevMonth()
+    {
+        _currentCalendarDate = _currentCalendarDate.AddMonths(-1);
+    }
+
+    private void NextMonth()
+    {
+        _currentCalendarDate = _currentCalendarDate.AddMonths(1);
+    }
+
+    private void SelectDay(DateTime date)
+    {
+        _selectedDate = date;
+        _isCalendarOpen = false;
+    }
+
+    private async Task HandleSaveAsync()
+    {
+        _isSaving = true;
+        await Task.Delay(300);
+        _isSaving = false;
+        _showSuccessAlert = true;
+    }
+
+    private void HandleCancel()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private record CalendarCell(DateTime Date, int DayNumber, bool IsOtherMonth, bool IsSelected);
+
+    private List<CalendarCell> GenerateCalendarDays()
+    {
+        var list = new List<CalendarCell>();
+        var firstDayOfMonth = new DateTime(_currentCalendarDate.Year, _currentCalendarDate.Month, 1);
+        
+        // Calcular offset para iniciar en Lunes (DayOfWeek: Monday = 1 ... Sunday = 0 -> 7)
+        int dayOfWeek = (int)firstDayOfMonth.DayOfWeek;
+        int leadingDays = (dayOfWeek == 0 ? 7 : dayOfWeek) - 1; // 0 para lunes
+
+        var startDate = firstDayOfMonth.AddDays(-leadingDays);
+
+        // Generar 35 casillas (5 semanas)
+        for (int i = 0; i < 35; i++)
+        {
+            var date = startDate.AddDays(i);
+            bool isOtherMonth = date.Month != _currentCalendarDate.Month;
+            bool isSelected = date.Date == _selectedDate.Date;
+            list.Add(new CalendarCell(date, date.Day, isOtherMonth, isSelected));
+        }
+
+        return list;
+    }
+}
+

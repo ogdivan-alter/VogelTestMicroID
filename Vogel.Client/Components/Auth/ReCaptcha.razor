@@ -1,0 +1,32 @@
+@namespace Vogel.Client.Components
+@inherits ReCaptchaBase
+
+@if (IsVisible)
+{
+    <div class="recaptcha-container" role="region" aria-label="Verificación de seguridad reCAPTCHA">
+        <div class="recaptcha-box @(IsVerified ? "verified" : "")" @onclick="HandleVerificationToggle">
+            <div class="recaptcha-checkbox">
+                @if (IsVerified)
+                {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="#2ecc71" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                }
+                else
+                {
+                    <div class="recaptcha-square"></div>
+                }
+            </div>
+            <span class="recaptcha-label">No soy un robot</span>
+            <div class="recaptcha-logo" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <small>reCAPTCHA</small>
+            </div>
+        </div>
+    </div>
+}
+

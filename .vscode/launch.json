@@ -1,0 +1,18 @@
+{
+    // Use IntelliSense para saber los atributos posibles.
+    // Mantenga el puntero para ver las descripciones de los existentes atributos.
+    // Para más información, visite: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch and Debug Hosted Blazor WebAssembly App",
+            "type": "blazorwasm",
+            "request": "launch",
+            "hosted": true,
+            "program": "${workspaceFolder}/Vogel.Server/bin/Debug/net10.0/Vogel.Server.dll",
+            "cwd": "${workspaceFolder}/Vogel.Server",
+            "url": "http://localhost:5031",
+            "preLaunchTask": "prerunbuild"
+        }
+    ]
+}

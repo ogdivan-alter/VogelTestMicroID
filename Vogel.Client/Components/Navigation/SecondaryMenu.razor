@@ -1,0 +1,41 @@
+@namespace Vogel.Client.Components
+
+<div class="vogel-secondary-menu">
+    @if (_isLoading)
+    {
+        <div class="vogel-secondary-menu__loading">
+            <span class="vogel-spinner"></span>
+            <p>Cargando opciones...</p>
+        </div>
+    }
+    else if (_groupedPrivileges == null || !_groupedPrivileges.Any())
+    {
+        <div class="vogel-secondary-menu__empty">
+            <p>No se encontraron opciones secundarias habilitadas.</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var group in _groupedPrivileges)
+        {
+            <section class="vogel-secondary-menu__group" aria-labelledby="@($"group-heading-{group.Key}")">
+                @if (!string.IsNullOrWhiteSpace(group.Key))
+                {
+                    <h3 id="@($"group-heading-{group.Key}")" class="vogel-secondary-menu__group-title">
+                        <span class="vogel-secondary-menu__group-pill"></span>
+                        @group.Key
+                    </h3>
+                }
+
+                <div class="vogel-secondary-menu__grid">
+                    @foreach (var privilege in group.Value)
+                    {
+                        <SecondaryMenuItem Title="@privilege.Title"
+                                           Icon="@privilege.Icon"
+                                           Action="@privilege.Action" />
+                    }
+                </div>
+            </section>
+        }
+    }
+</div>

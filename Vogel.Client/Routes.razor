@@ -1,0 +1,86 @@
+@using Vogel.Client.Services
+@inject SessionState SessionState
+@inject ISecureSessionStorageService SessionStorage
+@inject ISessionValidationService SessionValidationService
+@inject IClientLogger Logger
+
+@if (!_ready)
+{
+    <div class="vogel-loading-container">
+        <span class="vogel-spinner"></span>
+        <p>Iniciando sesión segura...</p>
+    </div>
+}
+else
+{
+    <CascadingAuthenticationState>
+        <!-- Router principal de la aplicación Vogel con autorización declarativa -->
+        <Router AppAssembly="@typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+            <Found Context="routeData">
+                <AuthGuard RouteData="@routeData">
+                    <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
+                    <FocusOnNavigate RouteData="@routeData" Selector="[autofocus], h1" />
+                </AuthGuard>
+            </Found>
+        </Router>
+    </CascadingAuthenticationState>
+}
+
+@code {
+    private bool _ready = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Validar instancia del servidor y restaurar sesión almacenada en paralelo
+            var serverValidTask = SessionValidationService.ValidateServerInstanceAsync();
+            var userTask = SessionStorage.GetItemDecryptedObjectAsync<Shared.Models.User>("vogel_user_session").AsTask();
+
+            await Task.WhenAll(serverValidTask, userTask);
+
+            var serverValid = await serverValidTask;
+            if (!serverValid)
+            {
+                // Servidor reiniciado - invalidar sesión almacenada
+                try { await SessionStorage.ClearAsync(); } catch { }
+                SessionState.ClearUser();
+                return;
+            }
+
+            // Restaurar sesión desde almacenamiento cifrado si el servidor no ha reiniciado
+            try
+            {
+                var user = await userTask;
+                if (user != null)
+                {
+                    if (string.IsNullOrWhiteSpace(user.BaseRole))
+                    {
+                        user.BaseRole = "Único";
+                    }
+                    SessionState.SetUser(user);
+                }
+            }
+            catch
+            {
+                try { await SessionStorage.RemoveItemAsync("vogel_user_session"); } catch { }
+            }
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                _ = Logger.LogErrorAsync("Error al inicializar estado de sesión.", ex, nameof(Routes));
+            }
+            catch { }
+
+            try { await SessionStorage.ClearAsync(); } catch { }
+            SessionState.ClearUser();
+        }
+        finally
+        {
+            _ready = true;
+        }
+    }
+}
+

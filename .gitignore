@@ -1,0 +1,67 @@
+# Build results
+bin/
+obj/
+out/
+
+# User-specific files
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio cache
+.vs/
+
+# Rider / JetBrains
+.idea/
+
+# Logs
+*.log
+
+# NuGet packages
+*.nupkg
+*.snupkg
+packages/
+*.nuspec
+
+# Backup & reports
+*.bak
+*.backup
+*.swp
+*.tmp
+*.temp
+
+# Publish outputs
+wwwroot/
+dist/
+publish/
+
+# ASP.NET scaffolding
+ScaffoldingReadMe.txt
+
+# Generated files
+Generated_Code/
+
+# Coverage results
+*.coverage
+*.coveragexml
+TestResults/
+
+# Others
+*.dbmdl
+*.jfm
+*.pdb
+*.cache
+*.dll
+*.exe
+
+# Node (if using npm/yarn in Client project)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test Results
+Vogel.Tests.*/test-results/
+Vogel.Tests.*/playwright-report/

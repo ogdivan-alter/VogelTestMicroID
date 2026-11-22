@@ -1,0 +1,10 @@
+@namespace Vogel.Client.Components
+@inherits DefaultFooterBase
+
+<footer class="vogel-footer @(IsLightBackground ? "vogel-footer--light" : "") @AdditionalCssClass" role="contentinfo" aria-label="Pie de página">
+    <span class="footer-text">
+        &copy; @DateTime.Now.Year @CompanyName &mdash; @ApplicationTitle
+    </span>
+    <span class="footer-version" aria-label="Versión del sistema">@Version</span>
+</footer>
+

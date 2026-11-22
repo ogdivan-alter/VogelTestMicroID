@@ -1,0 +1,128 @@
+@page "/work/{Codename}"
+@namespace Vogel.Client.Pages
+
+@if (_isLoading)
+{
+    <div class="vogel-loading-container">
+        <span class="vogel-spinner"></span>
+        <p>Cargando vista de trabajo...</p>
+    </div>
+}
+else if (_blockWork == null)
+{
+    <div class="vogel-work-not-found">
+        <h2>Entidad no encontrada</h2>
+        <p>No se encontró la configuración de bloque de trabajo para el identificador: <code>@Codename</code></p>
+        <button type="button" class="vogel-btn vogel-btn--primary" @onclick="GoBackToSecondary">
+            Regresar al Menú Secundario
+        </button>
+    </div>
+}
+else
+{
+    <WorkViewFrame BlockWork="@_blockWork"
+                   OnExit="GoBackToSecondary">
+
+        @* 1. SECCIÓN INFO FRAME (Maestro) *@
+        <InfoFrame>
+            <InfoViewFrame Title="Información de la Entidad Maestra">
+                <div class="vogel-master-card">
+                    <div class="vogel-master-field">
+                        <span class="vogel-master-field__label">Código de Entidad:</span>
+                        <input type="text" class="vogel-input vogel-master-input" value="@_blockWork.Codename" readonly />
+                    </div>
+                    <div class="vogel-master-field">
+                        <span class="vogel-master-field__label">Clave Primaria Maestro:</span>
+                        <span class="vogel-badge vogel-badge--info">@_blockWork.KeyMasterAttribute</span>
+                    </div>
+                    <div class="vogel-master-field">
+                        <span class="vogel-master-field__label">Clave Primaria Detalle:</span>
+                        <span class="vogel-badge vogel-badge--accent">@_blockWork.KeyDetailAttribute</span>
+                    </div>
+                    <div class="vogel-master-field">
+                        <span class="vogel-master-field__label">Total Registros Detalle:</span>
+                        <strong class="vogel-master-field__value">@_totalCount elementos</strong>
+                    </div>
+                </div>
+            </InfoViewFrame>
+        </InfoFrame>
+
+        @* 2. SECCIÓN FILTER FRAME (Búsqueda y Filtros) *@
+        <FilterFrame>
+            <div class="vogel-filter-panel">
+                <div class="vogel-filter-panel__search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-search-icon">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text"
+                           class="vogel-input vogel-filter-input"
+                           placeholder="Buscar por código o descripción..."
+                           value="@_filterTerm"
+                           @oninput="HandleSearchInput" />
+                    @if (!string.IsNullOrWhiteSpace(_filterTerm))
+                    {
+                        <button type="button" class="vogel-btn-clear" @onclick="ClearFilter">&times;</button>
+                    }
+                </div>
+                <div class="vogel-filter-panel__actions">
+                    <button type="button" 
+                            class="vogel-btn vogel-btn--outline vogel-btn--sm"
+                            @onclick="() => LoadPagedDataAsync(1)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-btn__icon">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                        <span>Actualizar</span>
+                    </button>
+                </div>
+            </div>
+        </FilterFrame>
+
+        @* 3. SECCIÓN LIST FRAME (Tabla Detalle Paginada ListViewFrame) *@
+        <ListFrame>
+            <ListViewFrame TItem="Dictionary<string, object>"
+                           PageSize="@_pageSize"
+                           CurrentPage="@_currentPage"
+                           TotalCount="@_totalCount"
+                           Data="@_detailItems"
+                           PageMethod="HandlePageChangedAsync"
+                           IsLoading="@_isLoadingData">
+                <HeaderContent>
+                    <th scope="col">Código</th>
+                    <th scope="col">Descripción</th>
+                    <th scope="col">Categoría</th>
+                    <th scope="col" class="text-right">Cantidad</th>
+                    <th scope="col" class="text-right">Precio Unitario</th>
+                    <th scope="col" class="text-center">Estado</th>
+                </HeaderContent>
+                <RowTemplate Context="item">
+                    <td>
+                        <span class="vogel-item-code">@item["ItemCode"]</span>
+                    </td>
+                    <td>@item["Description"]</td>
+                    <td>
+                        <span class="vogel-badge vogel-badge--muted">@item["Category"]</span>
+                    </td>
+                    <td class="text-right font-mono">@item["Quantity"]</td>
+                    <td class="text-right font-mono">@string.Format("{0:C2}", item["UnitPrice"])</td>
+                    <td class="text-center">
+                        @{
+                            var status = item["Status"]?.ToString() ?? "";
+                            var statusClass = status == "Activo" ? "allowed" : "denied";
+                        }
+                        <span class="badge @statusClass">@status</span>
+                    </td>
+                </RowTemplate>
+            </ListViewFrame>
+        </ListFrame>
+
+        @* 4. SECCIÓN FOOTER FRAME *@
+        <FooterFrame>
+            <div class="vogel-work-footer-info">
+                <span>Vogel M1 &bull; Entidad Maestro-Detalle Activa: <strong>@_blockWork.Title</strong></span>
+                <span class="vogel-footer-tag">Paginación Servidor 100% Reactiva</span>
+            </div>
+        </FooterFrame>
+    </WorkViewFrame>
+}

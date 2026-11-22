@@ -1,0 +1,242 @@
+@namespace Vogel.Client.Components
+
+<div class="vogel-work-view-frame @CustomClass">
+    @* 1. HEADER: HeaderWork configurado con el BlockWork *@
+    <HeaderWork Title="@(BlockWork?.Title ?? HeaderTitle)"
+                Color="@HeaderColor"
+                TextExit="@HeaderExitText"
+                ActionExit="@(BlockWork?.ActionSet?.Exit ?? HeaderExitAction)"
+                OnExit="@OnExit" />
+
+    @* 2. BODY: Secciones InfoFrame, CaptureFrame, FilterFrame, ListFrame (Sección 2.3.9 del Requerimiento Maestro) *@
+    <main class="vogel-work-view-frame__body" role="main">
+        <div class="vogel-work-view-frame__container">
+            @* BLOQUE MAESTRO STICKY (InfoFrame + Toolbar de Acciones) - Permanece anclado al hacer scroll *@
+            <div class="vogel-work-master-sticky">
+                @* InfoFrame (Condicionado a show_info según requerimiento 2.4.1) *@
+                @if (BlockWork == null || BlockWork.ShowInfo)
+                {
+                    @if (InfoFrame != null)
+                    {
+                        <div class="vogel-work-section vogel-work-section--info">
+                            @InfoFrame
+                        </div>
+                    }
+                    else if (BlockWork?.ViewSet != null && !string.IsNullOrWhiteSpace(BlockWork.ViewSet.Info))
+                    {
+                        var infoType = ResolveViewType(BlockWork.ViewSet.Info);
+                        <div class="vogel-work-section vogel-work-section--info">
+                            @if (infoType != null)
+                            {
+                                <DynamicComponent Type="@infoType" Parameters="@GetViewParameters(infoType)" />
+                            }
+                            else
+                            {
+                                <div class="vogel-view-placeholder vogel-view-placeholder--info">
+                                    <span class="vogel-badge vogel-badge--muted">@BlockWork.ViewSet.Info</span>
+                                    <p class="vogel-text-muted">Vista Info configurada: @BlockWork.ViewSet.Info</p>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+
+                @* Notificación de Acción *@
+                @if (!string.IsNullOrWhiteSpace(_actionMessage))
+                {
+                    <div class="vogel-work-view-frame__alert vogel-work-view-frame__alert--info">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-alert-icon">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        <span>@_actionMessage</span>
+                        <button type="button" class="vogel-alert-close" @onclick="() => _actionMessage = null">&times;</button>
+                    </div>
+                }
+
+                @* Barra de Acciones Operativas de BlockWork (ActionSet) integrada al final del bloque maestro *@
+                @if (BlockWork?.ActionSet != null && ShowActionToolbar)
+                {
+                    <AuthorizeView Roles="@SessionState.PrivilegeFunction(BlockWork.Codename)">
+                        <Authorized>
+                            <div class="vogel-work-toolbar" role="toolbar" aria-label="Acciones de la entidad">
+                                <div class="vogel-work-toolbar__container">
+                                    <div class="vogel-work-toolbar__group">
+                                        @if (!string.IsNullOrWhiteSpace(BlockWork.ActionSet.ApplyMaster))
+                                        {
+                                            <button type="button" 
+                                                    class="vogel-btn vogel-btn--primary vogel-btn--sm"
+                                                    disabled="@_isActionBusy"
+                                                    @onclick="@(() => HandleActionClickAsync("apply_master", BlockWork.ActionSet.ApplyMaster))">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-btn__icon">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                                <span>Aplicar</span>
+                                            </button>
+                                        }
+
+                                        @if (!string.IsNullOrWhiteSpace(BlockWork.ActionSet.CancelMaster))
+                                        {
+                                            <button type="button" 
+                                                    class="vogel-btn vogel-btn--secondary vogel-btn--sm"
+                                                    disabled="@_isActionBusy"
+                                                    @onclick="@(() => HandleActionClickAsync("cancel_master", BlockWork.ActionSet.CancelMaster))">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-btn__icon">
+                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                </svg>
+                                                <span>Cancelar</span>
+                                            </button>
+                                        }
+
+                                        @if (!string.IsNullOrWhiteSpace(BlockWork.ActionSet.Capture))
+                                        {
+                                            <button type="button" 
+                                                    class="vogel-btn vogel-btn--outline vogel-btn--sm"
+                                                    disabled="@_isActionBusy"
+                                                    @onclick="@(() => HandleActionClickAsync("capture", BlockWork.ActionSet.Capture))">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-btn__icon">
+                                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                </svg>
+                                                <span>Nuevo Detalle</span>
+                                            </button>
+                                        }
+                                    </div>
+
+                                    <div class="vogel-work-toolbar__group vogel-work-toolbar__group--end">
+                                        @if (!string.IsNullOrWhiteSpace(BlockWork.ActionSet.DocMaster))
+                                        {
+                                            <button type="button" 
+                                                    class="vogel-btn vogel-btn--ghost vogel-btn--sm"
+                                                    disabled="@_isActionBusy"
+                                                    title="Descargar documento representativo (PDF)"
+                                                    @onclick="@(() => HandleActionClickAsync("doc_master", BlockWork.ActionSet.DocMaster))">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-btn__icon">
+                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                                </svg>
+                                                <span>Documento (PDF)</span>
+                                            </button>
+                                        }
+
+                                        @if (!string.IsNullOrWhiteSpace(BlockWork.ActionSet.RepMaster))
+                                        {
+                                            <button type="button" 
+                                                    class="vogel-btn vogel-btn--ghost vogel-btn--sm"
+                                                    disabled="@_isActionBusy"
+                                                    title="Descargar reporte detallado (Excel)"
+                                                    @onclick="@(() => HandleActionClickAsync("rep_master", BlockWork.ActionSet.RepMaster))">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-btn__icon">
+                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                                </svg>
+                                                <span>Reporte (Excel)</span>
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </Authorized>
+                        <NotAuthorized>
+                            <div class="vogel-work-toolbar vogel-work-toolbar--unauthorized">
+                                <span class="vogel-unauthorized-hint">Operaciones restringidas por privilegios de usuario.</span>
+                            </div>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                }
+                            @* FilterFrame *@
+            @if (FilterFrame != null)
+            {
+                <div class="vogel-work-section vogel-work-section--filter">
+                    @FilterFrame
+                </div>
+            }
+            else if (BlockWork?.ViewSet != null && !string.IsNullOrWhiteSpace(BlockWork.ViewSet.Filter))
+            {
+                var filterType = ResolveViewType(BlockWork.ViewSet.Filter);
+                if (filterType != null)
+                {
+                    <div class="vogel-work-section vogel-work-section--filter">
+                        <DynamicComponent Type="@filterType" Parameters="@GetViewParameters(filterType)" />
+                    </div>
+                }
+            }
+            </div>
+
+            @* CaptureFrame *@
+            @if (CaptureFrame != null)
+            {
+                <div class="vogel-work-section vogel-work-section--capture">
+                    @CaptureFrame
+                </div>
+            }
+            else if (BlockWork?.ViewSet != null && !string.IsNullOrWhiteSpace(BlockWork.ViewSet.Capture))
+            {
+                var captureType = ResolveViewType(BlockWork.ViewSet.Capture);
+                if (captureType != null)
+                {
+                    <div class="vogel-work-section vogel-work-section--capture">
+                        <DynamicComponent Type="@captureType" Parameters="@GetViewParameters(captureType)" />
+                    </div>
+                }
+            }
+
+            @* ListFrame *@
+            @if (ListFrame != null)
+            {
+                <div class="vogel-work-section vogel-work-section--list">
+                    @ListFrame
+                </div>
+            }
+            else if (BlockWork?.ViewSet != null && !string.IsNullOrWhiteSpace(BlockWork.ViewSet.List))
+            {
+                var listType = ResolveViewType(BlockWork.ViewSet.List);
+                if (listType != null)
+                {
+                    <div class="vogel-work-section vogel-work-section--list">
+                        <DynamicComponent Type="@listType" Parameters="@GetViewParameters(listType)" />
+                    </div>
+                }
+                else
+                {
+                    <div class="vogel-view-placeholder vogel-view-placeholder--list">
+                        <span class="vogel-badge vogel-badge--muted">@BlockWork.ViewSet.List</span>
+                        <p class="vogel-text-muted">Vista List configurada: @BlockWork.ViewSet.List</p>
+                    </div>
+                }
+            }
+
+            @* Contenido libre adicional *@
+            @if (ChildContent != null)
+            {
+                <div class="vogel-work-section vogel-work-section--content">
+                    @ChildContent
+                </div>
+            }
+        </div>
+    </main>
+
+    @* 3. FOOTER: FooterFrame *@
+    @if (FooterFrame != null)
+    {
+        <footer class="vogel-work-view-frame__footer">
+            <div class="vogel-work-view-frame__container">
+                @FooterFrame
+            </div>
+        </footer>
+    }
+    else
+    {
+        <footer class="vogel-work-view-frame__footer">
+            <div class="vogel-work-view-frame__container">
+                <DefaultFooter />
+            </div>
+        </footer>
+    }
+</div>

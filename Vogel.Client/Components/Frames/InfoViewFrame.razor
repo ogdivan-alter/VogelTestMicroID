@@ -1,0 +1,28 @@
+@namespace Vogel.Client.Components
+
+<section class="vogel-info-view-frame @CustomClass" aria-label="@(Title ?? "Información")">
+    @if (!string.IsNullOrWhiteSpace(Title) || HeaderContent != null)
+    {
+        <header class="vogel-info-view-frame__header">
+            @if (HeaderContent != null)
+            {
+                @HeaderContent
+            }
+            else
+            {
+                <div class="vogel-info-view-frame__title-wrapper">
+                    <svg class="vogel-info-view-frame__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <h3 class="vogel-info-view-frame__title">@Title</h3>
+                </div>
+            }
+        </header>
+    }
+
+    <div class="vogel-info-view-frame__body">
+        @ChildContent
+    </div>
+</section>

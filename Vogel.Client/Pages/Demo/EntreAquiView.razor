@@ -1,0 +1,50 @@
+@namespace Vogel.Client.Pages
+@page "/demo/entre-aqui"
+@inherits EntreAquiViewBase
+
+<PageTitle>Entre Aquí — Demostración Vogel</PageTitle>
+
+<div class="entre-aqui-container" role="main" aria-label="Vista de demostración Entre Aquí">
+    <div class="entre-aqui-card">
+        <div class="card-header-bar">
+            <div class="card-icon" aria-hidden="true">
+                <img src="icons/entre_aqui.svg" alt="" width="28" height="28" />
+            </div>
+            <div>
+                <h2>Subopción: Entre Aquí</h2>
+                <p class="card-subtitle">Demostración funcional de navegación desde Arranque 1</p>
+            </div>
+        </div>
+
+        <div class="card-body-content">
+            <p>
+                Ha ingresado con éxito a la subopción de prueba <strong>"Entre Aquí"</strong>.
+                Esta vista confirma que al navegar fuera de la vista principal, el <code>MainMenu</code>
+                se oculta correctamente, dejando todo el espacio de trabajo disponible para la vista activa.
+            </p>
+
+            <div class="access-matrix">
+                <h3>Permisos asignados a esta opción:</h3>
+                <div class="access-badges">
+                    <span class="badge allowed">Lectura (Read)</span>
+                    <span class="badge allowed">Ejecución (Execute)</span>
+                    <span class="badge allowed">Creación (Create)</span>
+                    <span class="badge denied">Modificación (Modify: Negado)</span>
+                    <span class="badge denied">Eliminación (Delete: Negado)</span>
+                </div>
+            </div>
+
+            <div class="actions-row">
+                <a href="/" class="btn btn-primary" id="btn-return-main">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    <span>Regresar a la Vista Principal</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+

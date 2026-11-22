@@ -1,0 +1,33 @@
+@namespace Vogel.Client.Components
+@inherits SuboptionMenuBase
+
+<li class="suboption-menu-item @(IsActive ? "active" : "")" role="none">
+    <button type="button"
+            class="suboption-menu-link"
+            @onclick="HandleClickAsync"
+            role="menuitem"
+            title="@Title"
+            aria-label="@Title">
+        @if (!string.IsNullOrEmpty(Icon))
+        {
+            <span class="suboption-menu-icon" aria-hidden="true">
+                <img src="@Icon" alt="" width="16" height="16" />
+            </span>
+        }
+        else
+        {
+            <span class="suboption-menu-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="6 4 18 12 6 20 6 4"></polygon>
+                </svg>
+            </span>
+        }
+        <span class="suboption-menu-title">@Title</span>
+        <span class="suboption-menu-chevron-right" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        </span>
+    </button>
+</li>
+

@@ -1,0 +1,53 @@
+@namespace Vogel.Client.Components
+@inherits OptionMenuBase
+
+<div class="option-menu-wrapper @(IsExpanded ? "expanded" : "collapsed")" role="none">
+    <!-- Botón de opción raíz (no ejecuta action directa, conmuta el acordeón) -->
+    <button type="button"
+            id="opt-menu-@Id"
+            class="option-menu-header @(IsExpanded ? "active" : "")"
+            @onclick="HandleToggleAsync"
+            aria-expanded="@IsExpanded.ToString().ToLower()"
+            aria-controls="suboptions-@Id"
+            aria-label="@Title">
+        
+        @if (!string.IsNullOrEmpty(Icon))
+        {
+            <span class="option-menu-icon" aria-hidden="true">
+                <img src="@Icon" alt="" width="20" height="20" />
+            </span>
+        }
+        else
+        {
+            <span class="option-menu-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                    <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                    <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                    <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                </svg>
+            </span>
+        }
+
+        <span class="option-menu-title">@Title</span>
+
+        <span class="option-menu-chevron" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        </span>
+    </button>
+
+    <!-- Contenedor animado de subopciones -->
+    @if (IsExpanded)
+    {
+        <ul id="suboptions-@Id"
+            class="option-menu-children"
+            role="menu"
+            aria-label="Subopciones de @Title">
+            @ChildContent
+        </ul>
+    }
+</div>
+

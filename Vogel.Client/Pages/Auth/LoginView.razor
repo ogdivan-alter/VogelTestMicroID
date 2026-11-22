@@ -1,0 +1,39 @@
+@namespace Vogel.Client.Pages
+@page "/login"
+@inherits LoginViewBase
+
+<PageTitle>Iniciar Sesión — Vogel</PageTitle>
+
+<section class="login-view" aria-label="Página de autenticación">
+    <div class="login-card" role="main">
+
+        <!-- ===== Logo / Encabezado ===== -->
+        <div class="login-logo" aria-label="Vogel">
+            <div class="login-logo-icon" aria-hidden="true">V</div>
+            <div class="login-logo-text">
+                <h1>Vogel</h1>
+                <p>Sistema de Gestión</p>
+            </div>
+        </div>
+
+        <!-- ===== Título del formulario ===== -->
+        <h2>Iniciar Sesión</h2>
+        <p class="login-subtitle">Ingrese sus credenciales para acceder al sistema.</p>
+
+        <!-- ===== Componente Login ===== -->
+        <Login @ref="LoginComponent"
+               IsLoading="@IsLoading"
+               ErrorMessage="@ErrorMessage"
+               ShowCancelButton="false"
+               ShowClearButton="true"
+               ShowRememberMe="@ShowRememberMe"
+               RememberMeText="@RememberMeText"
+               RecaptchaMode="@RecaptchaMode"
+               RecaptchaSiteKey="@RecaptchaSiteKey"
+               RecaptchaConditionMet="@RecaptchaConditionMet"
+               OnSubmit="@HandleLoginSubmitAsync"
+               OnCancel="@HandleCancel" />
+
+    </div>
+</section>
+

@@ -1,0 +1,22 @@
+@namespace Vogel.Client.Components
+
+<InfoViewFrame Title="@(BlockWork?.Title != null ? $"Información Maestro - {BlockWork.Title}" : "Información Maestro")">
+    <div class="vogel-master-card">
+        <div class="vogel-master-field">
+            <span class="vogel-master-field__label">Código de Entidad:</span>
+            <strong class="vogel-master-field__value">@(BlockWork?.Codename ?? "N/A")</strong>
+        </div>
+        <div class="vogel-master-field">
+            <span class="vogel-master-field__label">Clave Primaria Maestro:</span>
+            <span class="vogel-badge vogel-badge--info">@(BlockWork?.KeyMasterAttribute ?? "Id")</span>
+        </div>
+        <div class="vogel-master-field">
+            <span class="vogel-master-field__label">Clave Primaria Detalle:</span>
+            <span class="vogel-badge vogel-badge--accent">@(BlockWork?.KeyDetailAttribute ?? "ItemCode")</span>
+        </div>
+        <div class="vogel-master-field">
+            <span class="vogel-master-field__label">Vista Info:</span>
+            <span class="vogel-badge vogel-badge--muted">@(BlockWork?.ViewSet.Info ?? "OpSecundariaInfoFrame")</span>
+        </div>
+    </div>
+</InfoViewFrame>

@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Vogel.Client/Vogel.Client.csproj" />
+  <Project Path="Vogel.Server/Vogel.Server.csproj" />
+  <Project Path="Vogel.Shared/Vogel.Shared.csproj" />
+  <Project Path="Vogel.Tests/Vogel.Tests.csproj" />
+</Solution>
+

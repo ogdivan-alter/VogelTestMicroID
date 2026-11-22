@@ -1,0 +1,53 @@
+@namespace Vogel.Client.Components
+@inherits MainMenuBase
+
+<aside class="vogel-main-menu" role="navigation" aria-label="Menú principal de navegación">
+    @if (!string.IsNullOrWhiteSpace(HeaderBadge) || !string.IsNullOrWhiteSpace(HeaderTitle))
+    {
+        <div class="main-menu-header">
+            @if (!string.IsNullOrWhiteSpace(HeaderBadge))
+            {
+                <span class="main-menu-badge">@HeaderBadge</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(HeaderTitle))
+            {
+                <h2 class="main-menu-headline">@HeaderTitle</h2>
+            }
+        </div>
+    }
+
+    @if (RootOptions != null && RootOptions.Any())
+    {
+        <nav class="main-menu-nav" role="menubar">
+            @foreach (var option in RootOptions)
+            {
+                var suboptions = GetSuboptions(option.Id);
+
+                <OptionMenu Id="@option.Id"
+                            Codename="@option.Codename"
+                            Title="@option.Title"
+                            Icon="@option.Icon"
+                            Action="@option.Action"
+                            IsExpanded="@(ExpandedOptionId == option.Id)"
+                            OnToggle="@HandleOptionToggle">
+                    @foreach (var sub in suboptions)
+                    {
+                        <SuboptionMenu IdParent="@sub.IdParent"
+                                       Codename="@sub.Codename"
+                                       Title="@sub.Title"
+                                       Icon="@sub.Icon"
+                                       Action="@(Submenu(sub))"
+                                       />
+                    }
+                </OptionMenu>
+            }
+        </nav>
+    }
+    else
+    {
+        <div class="main-menu-empty" role="status">
+            <p>No hay opciones disponibles para este perfil.</p>
+        </div>
+    }
+</aside>
+

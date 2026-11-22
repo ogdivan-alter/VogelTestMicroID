@@ -1,0 +1,110 @@
+@inherits MainLayoutBase
+
+<!-- Shell principal de la aplicación Vogel (Sprint 3) -->
+<div class="vogel-shell">
+
+    <!-- Monitor de inactividad global -->
+    @if (SessionState.IsAuthenticated)
+    {
+        <InactivityMonitor TimeoutMinutes="@InactivityTimeoutMinutes" />
+    }
+
+    <!-- ===== HEADER ===== -->
+    <header class="vogel-header" role="banner">
+        <!-- Logotipo / Marca (clic redirige a MainView '/') -->
+        <a href="/" class="brand" aria-label="Vogel - Inicio">
+            <span class="brand-icon" aria-hidden="true">V</span>
+            <span class="brand-name">Vogel</span>
+        </a>
+
+        <div class="spacer"></div>
+
+        <!-- Bloque de usuario (solo visible si está autenticado) -->
+        @if (SessionState.IsAuthenticated && SessionState.CurrentUser != null)
+        {
+            <!-- Botón tipo burger para vista responsive en dispositivos móviles -->
+            <button class="burger-btn"
+                    @onclick="ToggleMobileMenu"
+                    aria-label="Alternar menú de usuario"
+                    aria-expanded="@IsMobileMenuOpen">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+
+            <div class="user-block @(IsMobileMenuOpen ? "mobile-open" : "")" role="navigation" aria-label="Menú de usuario">
+                <!-- 1. Info usuario (username + avatar) -->
+                <div class="user-info" title="@(SessionState.CurrentUser.Name ?? SessionState.CurrentUser.Username)">
+                    <div class="user-avatar" aria-hidden="true">
+                        @GetUserInitials()
+                    </div>
+                    <span class="user-name">@SessionState.CurrentUser.Username</span>
+                </div>
+
+                <!-- 2. Cambio de clave (solo visible si allow_password_change está activo) -->
+                @if (SessionState.CurrentUser.AllowPasswordChange)
+                {
+                    <a href="/change-password"
+                       id="btn-change-password"
+                       class="header-btn"
+                       title="Cambiar Contraseña"
+                       aria-label="Cambiar Contraseña">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                             aria-hidden="true">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        <span>Cambiar Clave</span>
+                    </a>
+                }
+
+                <!-- 3. Cierre de sesión (botón con ícono diferenciado del botón Salir de HeaderWork) -->
+                <button id="btn-logout"
+                        class="header-btn danger"
+                        title="Cierre de Sesión"
+                        @onclick="HandleLogoutAsync"
+                        disabled="@IsLoggingOut"
+                        aria-label="Cierre de Sesión">
+                    @if (IsLoggingOut)
+                    {
+                        <span class="btn-spinner" role="status" aria-hidden="true"></span>
+                    }
+                    else
+                    {
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                             aria-hidden="true">
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" y1="2" x2="12" y2="12"></line>
+                        </svg>
+                        <span>Cierre de Sesión</span>
+                    }
+                </button>
+            </div>
+        }
+    </header>
+
+    <!-- ===== CUERPO ===== -->
+    <div class="vogel-body" role="main">
+        <div class="vogel-page-content">
+            @Body
+        </div>
+    </div>
+
+    <!-- ===== FOOTER (DefaultFooter Component) ===== -->
+    <DefaultFooter CompanyName="Vogel" ApplicationTitle="Sistema de Gestión" Version="v1.0.0" />
+
+    <!-- Overlay de carga global (durante logout u operaciones asíncronas) -->
+    @if (IsLoggingOut)
+    {
+        <div class="global-overlay" role="status" aria-live="polite" aria-label="Cerrando sesión...">
+            <div class="spinner" aria-hidden="true"></div>
+            <span class="spinner-text">Cerrando sesión...</span>
+        </div>
+    }
+
+</div>

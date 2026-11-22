@@ -1,0 +1,27 @@
+@page "/work/auto/{Codename}"
+@namespace Vogel.Client.Pages
+
+@if (_isLoading)
+{
+    <div class="vogel-loading-container">
+        <span class="vogel-spinner"></span>
+        <p>Cargando vista de trabajo autónoma...</p>
+    </div>
+}
+else if (_blockWork == null)
+{
+    <div class="vogel-work-not-found">
+        <h2>Entidad no encontrada</h2>
+        <p>No se encontró la configuración de bloque de trabajo para el identificador: <code>@Codename</code></p>
+        <button type="button" class="vogel-btn vogel-btn--primary" @onclick="GoBackToSecondary">
+            Regresar
+        </button>
+    </div>
+}
+else
+{
+    @* Esta vista depende EXCLUSIVAMENTE de la instancia BlockWork recibida por parámetro. *@
+    @* NO implementa elementos internos como InfoFrame o ListFrame de manera manual. *@
+    <WorkViewFrame BlockWork="@_blockWork"
+                   OnExit="GoBackToSecondary" />
+}

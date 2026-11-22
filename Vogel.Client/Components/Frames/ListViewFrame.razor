@@ -1,0 +1,126 @@
+@typeparam TItem
+@namespace Vogel.Client.Components
+
+<div class="vogel-list-view-frame @CustomClass">
+    <div class="vogel-list-view-frame__table-wrapper">
+        @if (IsLoading)
+        {
+            <div class="vogel-list-view-frame__overlay" aria-live="polite">
+                <div class="vogel-list-view-frame__spinner-wrapper">
+                    <span class="vogel-spinner"></span>
+                    <span class="vogel-list-view-frame__loading-text">Cargando registros...</span>
+                </div>
+            </div>
+        }
+
+        <table class="vogel-table" role="grid">
+            @if (HeaderContent != null)
+            {
+                <thead class="vogel-table__head">
+                    @HeaderContent
+                </thead>
+            }
+
+            <tbody class="vogel-table__body">
+                @if (Data != null && Data.Any())
+                {
+                    @if (RowTemplate != null)
+                    {
+                        @foreach (var item in Data)
+                        {
+                            <tr class="vogel-table__row">
+                                @RowTemplate(item)
+                            </tr>
+                        }
+                    }
+                    else if (ChildContent != null)
+                    {
+                        @ChildContent
+                    }
+                }
+                else if (!IsLoading)
+                {
+                    <tr class="vogel-table__empty-row">
+                        <td colspan="100" class="vogel-table__empty-cell">
+                            <div class="vogel-table__empty-message">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-table__empty-icon">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                                </svg>
+                                <span>No hay registros para mostrar.</span>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @* Barra de Navegación Paginada (Requerimiento 2.3.11: << 1 2 3 ... 4 5 >>) *@
+    @if (TotalPages > 1 || TotalCount > 0)
+    {
+        <div class="vogel-pagination" role="navigation" aria-label="Paginación de registros">
+            <div class="vogel-pagination__info">
+                <span>
+                    Mostrando <strong>@StartRecordIndex</strong> a <strong>@EndRecordIndex</strong> de <strong>@TotalCount</strong> registros
+                </span>
+            </div>
+
+            <div class="vogel-pagination__controls">
+                @* Botón ir al inicio (<<) *@
+                <button type="button"
+                        class="vogel-pagination__btn vogel-pagination__btn--first"
+                        disabled="@(CurrentPage <= 1 || IsLoading)"
+                        @onclick="() => ChangePageAsync(1)"
+                        title="Primera página"
+                        aria-label="Primera página">
+                    <span>&laquo;</span>
+                </button>
+
+                @* Botón página anterior (<) *@
+                <button type="button"
+                        class="vogel-pagination__btn vogel-pagination__btn--prev"
+                        disabled="@(CurrentPage <= 1 || IsLoading)"
+                        @onclick="() => ChangePageAsync(CurrentPage - 1)"
+                        title="Página anterior"
+                        aria-label="Página anterior">
+                    <span>&lsaquo;</span>
+                </button>
+
+                @* Botones numéricos de página (máximo 10 visibles) *@
+                @foreach (var pageNumber in GetVisiblePages())
+                {
+                    var isCurrent = pageNumber == CurrentPage;
+                    <button type="button"
+                            class="vogel-pagination__btn vogel-pagination__btn--page @(isCurrent ? "vogel-pagination__btn--active" : "")"
+                            disabled="@(isCurrent || IsLoading)"
+                            @onclick="() => ChangePageAsync(pageNumber)"
+                            aria-current="@(isCurrent ? "page" : null)"
+                            aria-label="@($"Página {pageNumber}")">
+                        @pageNumber
+                    </button>
+                }
+
+                @* Botón página siguiente (>) *@
+                <button type="button"
+                        class="vogel-pagination__btn vogel-pagination__btn--next"
+                        disabled="@(CurrentPage >= TotalPages || IsLoading)"
+                        @onclick="() => ChangePageAsync(CurrentPage + 1)"
+                        title="Página siguiente"
+                        aria-label="Página siguiente">
+                    <span>&rsaquo;</span>
+                </button>
+
+                @* Botón ir al fin (>>) *@
+                <button type="button"
+                        class="vogel-pagination__btn vogel-pagination__btn--last"
+                        disabled="@(CurrentPage >= TotalPages || IsLoading)"
+                        @onclick="() => ChangePageAsync(TotalPages)"
+                        title="Última página"
+                        aria-label="Última página">
+                    <span>&raquo;</span>
+                </button>
+            </div>
+        </div>
+    }
+</div>

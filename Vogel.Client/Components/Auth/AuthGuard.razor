@@ -1,0 +1,15 @@
+@namespace Vogel.Client.Components
+@inherits Vogel.Client.Components.AuthGuardBase
+
+@if (!_ready)
+{
+    <div class="vogel-loading-container">
+        <span class="vogel-spinner"></span>
+        <p>Validando sesión...</p>
+    </div>
+}
+else
+{
+    @ChildContent
+}
+

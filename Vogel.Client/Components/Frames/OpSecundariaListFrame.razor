@@ -1,0 +1,67 @@
+@namespace Vogel.Client.Components
+
+<div class="vogel-op-secundaria-list">
+    <div class="vogel-filter-panel mb-3">
+        <div class="vogel-filter-panel__search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-search-icon">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text"
+                   class="vogel-input vogel-filter-input"
+                   placeholder="Buscar en registros de Operación Secundaria..."
+                   value="@_filterTerm"
+                   @oninput="HandleSearchInput" />
+            @if (!string.IsNullOrWhiteSpace(_filterTerm))
+            {
+                <button type="button" class="vogel-btn-clear" @onclick="ClearFilter">&times;</button>
+            }
+        </div>
+        <div class="vogel-filter-panel__actions">
+            <button type="button" 
+                    class="vogel-btn vogel-btn--outline vogel-btn--sm"
+                    @onclick="() => LoadDataAsync(1)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-btn__icon">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg>
+                <span>Actualizar</span>
+            </button>
+        </div>
+    </div>
+
+    <ListViewFrame TItem="Dictionary<string, object>"
+                   PageSize="@_pageSize"
+                   CurrentPage="@_currentPage"
+                   TotalCount="@_totalCount"
+                   Data="@_items"
+                   PageMethod="HandlePageChangedAsync"
+                   IsLoading="@_isLoading">
+        <HeaderContent>
+            <th scope="col">Código</th>
+            <th scope="col">Descripción</th>
+            <th scope="col">Categoría</th>
+            <th scope="col" class="text-right">Cantidad</th>
+            <th scope="col" class="text-right">Precio Unitario</th>
+            <th scope="col" class="text-center">Estado</th>
+        </HeaderContent>
+        <RowTemplate Context="item">
+            <td>
+                <span class="vogel-item-code">@item["ItemCode"]</span>
+            </td>
+            <td>@item["Description"]</td>
+            <td>
+                <span class="vogel-badge vogel-badge--muted">@item["Category"]</span>
+            </td>
+            <td class="text-right font-mono">@item["Quantity"]</td>
+            <td class="text-right font-mono">@string.Format("{0:C2}", item["UnitPrice"])</td>
+            <td class="text-center">
+                @{
+                    var status = item["Status"]?.ToString() ?? "";
+                    var statusClass = status == "Activo" ? "allowed" : "denied";
+                }
+                <span class="badge @statusClass">@status</span>
+            </td>
+        </RowTemplate>
+    </ListViewFrame>
+</div>

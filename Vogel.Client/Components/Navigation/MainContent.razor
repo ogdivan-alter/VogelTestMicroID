@@ -1,0 +1,46 @@
+@namespace Vogel.Client.Components
+@inherits MainContentBase
+
+<section class="vogel-main-content" role="region" aria-label="Contenido principal">
+    @if (CustomView != null)
+    {
+        @CustomView
+    }
+    else
+    {
+        <!-- Jumbotron por defecto -->
+        <div class="jumbotron-card" role="banner">
+            <div class="jumbotron-brand-container">
+                @if (!string.IsNullOrEmpty(MainImage))
+                {
+                    <div class="jumbotron-image-wrapper">
+                        <img src="@MainImage" alt="Logo de la Aplicación" class="jumbotron-image" />
+                    </div>
+                }
+            </div>
+
+            <div class="jumbotron-text-container">
+                <h1 class="jumbotron-title">@MainText</h1>
+                <p class="jumbotron-description">
+                    Sistema integral para la gestión y ejecución de módulos corporativos de Vogel.
+                    Seleccione una opción en el menú lateral para comenzar.
+                </p>
+                <div class="jumbotron-features">
+                    <div class="feature-item">
+                        <span class="feature-dot" aria-hidden="true"></span>
+                        <span>Arquitectura Blazor WebAssembly Hosted</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-dot" aria-hidden="true"></span>
+                        <span>Sesión Segura y Cifrada</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-dot" aria-hidden="true"></span>
+                        <span>Monitoreo Activo de Inactividad</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</section>
+
