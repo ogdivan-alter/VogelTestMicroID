@@ -1,7 +1,10 @@
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -120,6 +123,45 @@ public class SecurityAndLoggingTests
 
         // Assert
         Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
+    public void AuthController_LoginAndChangePassword_ShouldHaveAuthStrictRateLimiting()
+    {
+        var loginAttr = typeof(AuthController).GetMethod(nameof(AuthController.Login))?
+            .GetCustomAttribute<EnableRateLimitingAttribute>();
+        var changePwAttr = typeof(AuthController).GetMethod(nameof(AuthController.ChangePassword))?
+            .GetCustomAttribute<EnableRateLimitingAttribute>();
+
+        Assert.NotNull(loginAttr);
+        Assert.Equal("AuthStrict", loginAttr.PolicyName);
+        Assert.NotNull(changePwAttr);
+        Assert.Equal("AuthStrict", changePwAttr.PolicyName);
+    }
+
+    [Fact]
+    public async Task BlockWorkController_WithInvalidCodename_ShouldReturnBadRequest()
+    {
+        var controller = new BlockWorkController();
+        var actionResult = await controller.Capture("../etc/passwd");
+
+        Assert.IsType<BadRequestObjectResult>(actionResult.Result);
+    }
+
+    [Fact]
+    public void ClientLogDto_ExceedingMaxLength_ShouldFailValidation()
+    {
+        var dto = new ClientLogDto
+        {
+            LogLevel = "Information",
+            Message = new string('A', 2001)
+        };
+
+        var results = new List<ValidationResult>();
+        var isValid = Validator.TryValidateObject(dto, new ValidationContext(dto), results, validateAllProperties: true);
+
+        Assert.False(isValid);
+        Assert.NotEmpty(results);
     }
 
     private class TestHostEnvironment : IHostEnvironment

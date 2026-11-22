@@ -29,5 +29,6 @@ public class LoginRequestDto
     /// <summary>
     /// Token opcional generado por reCAPTCHA para validación anti-bot.
     /// </summary>
+    [MaxLength(4096, ErrorMessage = "El token de reCAPTCHA no puede exceder los 4096 caracteres.")]
     public string? RecaptchaToken { get; set; }
 }

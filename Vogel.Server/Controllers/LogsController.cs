@@ -31,30 +31,42 @@ public class LogsController : ControllerBase
             return BadRequest("El contenido del log no puede estar vacío.");
         }
 
-        var source = string.IsNullOrWhiteSpace(logDto.Source) ? "Vogel.Client" : logDto.Source;
-        var stack = string.IsNullOrWhiteSpace(logDto.StackTrace) ? string.Empty : $"\nStack: {logDto.StackTrace}";
+        var source = SanitizeForLog(string.IsNullOrWhiteSpace(logDto.Source) ? "Vogel.Client" : logDto.Source);
+        var message = SanitizeForLog(logDto.Message);
+        var stack = string.IsNullOrWhiteSpace(logDto.StackTrace) ? string.Empty : $"\nStack: {SanitizeForLog(logDto.StackTrace)}";
 
         switch (logDto.LogLevel?.ToUpperInvariant())
         {
             case "ERROR":
             case "CRITICAL":
-                _logger.LogError("[Client] [{Source}] {Message} {Stack}", source, logDto.Message, stack);
+                _logger.LogError("[Client] [{Source}] {Message} {Stack}", source, message, stack);
                 break;
 
             case "WARNING":
             case "WARN":
-                _logger.LogWarning("[Client] [{Source}] {Message}", source, logDto.Message);
+                _logger.LogWarning("[Client] [{Source}] {Message}", source, message);
                 break;
 
             case "DEBUG":
-                _logger.LogDebug("[Client] [{Source}] {Message}", source, logDto.Message);
+                _logger.LogDebug("[Client] [{Source}] {Message}", source, message);
                 break;
 
             default:
-                _logger.LogInformation("[Client] [{Source}] {Message}", source, logDto.Message);
+                _logger.LogInformation("[Client] [{Source}] {Message}", source, message);
                 break;
         }
 
         return Ok(new { success = true, timestamp = DateTime.UtcNow });
+    }
+
+    private static string SanitizeForLog(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return string.Empty;
+        }
+
+        return value.Replace("\r", string.Empty, StringComparison.Ordinal)
+                    .Replace("\n", string.Empty, StringComparison.Ordinal);
     }
 }

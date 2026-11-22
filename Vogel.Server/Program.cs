@@ -1,4 +1,6 @@
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.CookiePolicy;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Serilog;
 using Vogel.Server.Components;
@@ -70,6 +72,37 @@ builder.Services.AddControllersWithViews(options =>
     options.Filters.Add<GlobalExceptionFilter>();
 });
 
+// Rate limiting estricto para endpoints críticos de autenticación (anti brute-force)
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.ContentType = "application/json; charset=utf-8";
+        await context.HttpContext.Response.WriteAsJsonAsync(new
+        {
+            success = false,
+            message = "Demasiadas solicitudes. Intente nuevamente más tarde."
+        }, cancellationToken);
+    };
+
+    options.AddPolicy("AuthStrict", httpContext =>
+    {
+        var remoteIp = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: remoteIp,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 15,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0,
+                AutoReplenishment = true
+            });
+    });
+});
+
 // Servicios de Blazor Web App con soporte de componentes interactivos WebAssembly
 builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
@@ -98,6 +131,8 @@ app.UseHttpsRedirection();
 
 // Registro estructurado y resumido de cada solicitud HTTP (una línea por request)
 app.UseSerilogRequestLogging();
+
+app.UseRateLimiter();
 
 app.UseAntiforgery();
 

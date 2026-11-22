@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Vogel.Server.Services;
 
@@ -87,9 +88,9 @@ public class BlockWorkController : ControllerBase
     /// </summary>
     private async Task<ActionResult<object>> HandleActionAsync(string codename, string action, object? payload = null)
     {
-        if (string.IsNullOrWhiteSpace(codename))
+        if (string.IsNullOrWhiteSpace(codename) || codename.Length > 100 || !Regex.IsMatch(codename, "^[a-zA-Z0-9_-]+$"))
         {
-            return BadRequest(new { success = false, message = "El codename de la entidad es obligatorio." });
+            return BadRequest(new { success = false, message = "El codename de la entidad es obligatorio y solo debe contener caracteres alfanuméricos, guiones o guiones bajos." });
         }
 
         var authProvider = _configuration?.GetValue<string>("AuthProvider", "Mock") ?? "Mock";

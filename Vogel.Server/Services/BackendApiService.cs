@@ -68,13 +68,13 @@ public class BackendApiService : IBackendApiService
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "Error de red al conectar con el backend externo en LoginAsync para usuario {Username}.", username);
+            _logger.LogError(ex, "Error de red al conectar con el backend externo en LoginAsync para usuario {Username}.", SanitizeForLog(username));
             var netError = new BackendErrorDto((int)(ex.StatusCode ?? HttpStatusCode.ServiceUnavailable), "No fue posible conectar con el backend externo de negocio");
             return (null, null, netError, netError.Status);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error inesperado en LoginAsync para usuario {Username}.", username);
+            _logger.LogError(ex, "Error inesperado en LoginAsync para usuario {Username}.", SanitizeForLog(username));
             var unexpected = new BackendErrorDto((int)HttpStatusCode.InternalServerError, "Error inesperado en el BFF al procesar la autenticación");
             return (null, null, unexpected, unexpected.Status);
         }
@@ -156,14 +156,25 @@ public class BackendApiService : IBackendApiService
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogWarning(ex, "No se pudo conectar con el backend externo para la acción {Action} de {Codename}.", action, codename);
+            _logger.LogWarning(ex, "No se pudo conectar con el backend externo para la acción {Action} de {Codename}.", action, SanitizeForLog(codename));
             return (false, null, ex.Message, (int)(ex.StatusCode ?? HttpStatusCode.ServiceUnavailable));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al ejecutar la acción {Action} de {Codename} en el backend externo.", action, codename);
+            _logger.LogError(ex, "Error al ejecutar la acción {Action} de {Codename} en el backend externo.", action, SanitizeForLog(codename));
             return (false, null, ex.Message, (int)HttpStatusCode.InternalServerError);
         }
+    }
+
+    private static string SanitizeForLog(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return string.Empty;
+        }
+
+        return value.Replace("\r", string.Empty, StringComparison.Ordinal)
+                    .Replace("\n", string.Empty, StringComparison.Ordinal);
     }
 }
 

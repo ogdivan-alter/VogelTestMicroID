@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using Vogel.Server.Services;
 using Vogel.Server.Services.MicroId;
@@ -54,6 +55,7 @@ public class AuthController : ControllerBase
     /// Retorna un LoginResponseDto con la entidad User completa hacia Vogel.Client.
     /// </summary>
     [HttpPost("login")]
+    [EnableRateLimiting("AuthStrict")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
     {
         if (request == null || string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
@@ -260,6 +262,7 @@ public class AuthController : ControllerBase
     /// Cambia la contraseña del usuario autenticado (o con código de verificación).
     /// </summary>
     [HttpPost("change-password")]
+    [EnableRateLimiting("AuthStrict")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto request)
     {
         if (request == null)

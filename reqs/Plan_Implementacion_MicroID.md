@@ -14,7 +14,7 @@
 | Fase 2 | Cliente HTTP MicroID y Gestión Automática de `X-System-Key` (`Vogel.Server`) | Completado | 5 / 5 |
 | Fase 3 | Integración BFF en `AuthController` y `IMicroIdAuthService` (`Vogel.Server`) | Completado | 5 / 5 |
 | Fase 4 | Integración en `Vogel.Client` (Cambio de Clave Real y Validación de Privilegios) | Pendiente | 0 / 4 |
-| Fase 5 | Hardening de Seguridad del Servicio Vogel y Auditoría InfoSec | Pendiente | 0 / 5 |
+| Fase 5 | Hardening de Seguridad del Servicio Vogel y Auditoría InfoSec | En progreso | 4 / 5 |
 | Fase 6 | Pruebas Funcionales End-to-End (`carlos.gomez`) y Verificación | Pendiente | 0 / 5 |
 
 ---
@@ -82,13 +82,13 @@
 
 ## Fase 5: Hardening de Seguridad del Servicio Vogel y Auditoría InfoSec
 
-- [ ] **T5.1 — Añadir `Cache-Control: no-store, no-cache` y `Pragma: no-cache` en `/api/auth/*`**
+- [x] **T5.1 — Añadir `Cache-Control: no-store, no-cache` y `Pragma: no-cache` en `/api/auth/*`**
   - Reforzar `SecurityHeadersMiddleware` (o middleware en `Program.cs`) y revisar `SecurityHeaders` en `appsettings.json`.
-- [ ] **T5.2 — Implementar Rate Limiting (`AuthStrict`) en `/api/auth/login` y `/api/auth/change-password`**
+- [x] **T5.2 — Implementar Rate Limiting (`AuthStrict`) en `/api/auth/login` y `/api/auth/change-password`**
   - Configurar `AddRateLimiter` por IP en `Program.cs` devolviendo `429 Too Many Requests` en JSON estándar.
-- [ ] **T5.3 — Auditar protección anti-BOLA/IDOR, logs (`Serilog`) y `GlobalExceptionFilter`**
+- [x] **T5.3 — Auditar protección anti-BOLA/IDOR, logs (`Serilog`) y `GlobalExceptionFilter`**
   - Verificar que no se registren contraseñas, `X-System-Key`, `plain_api_key` ni JWT en `Serilog` (consola/archivo), sanitizar `\r`/`\n` en `username`, y validar que `GlobalExceptionFilter` no filtre detalles internos en producción.
-- [ ] **T5.4 — Auditar validación de DTOs y superficie de controladores en `Vogel.Server`**
+- [x] **T5.4 — Auditar validación de DTOs y superficie de controladores en `Vogel.Server`**
   - Verificar `[Required]` / `[MaxLength]` en DTOs de entrada y revisar controladores (`AuthController`, `BlockWorkController`, `SessionController`, `LogsController`, `ReportsController`).
 - [ ] **T5.5 — Auditoría integral de `vogel-infosec-guardian` (OWASP / NIST SP 800-63B / RFC 7519)**
   - Emitir dictamen final con 0 hallazgos Críticos/Altos abiertos.

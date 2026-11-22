@@ -36,6 +36,13 @@ public class SecurityHeadersMiddleware
                 }
             }
 
+            if (context.Request.Path.StartsWithSegments("/api/auth", StringComparison.OrdinalIgnoreCase) ||
+                context.Request.Path.StartsWithSegments("/api/v1/auth", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Response.Headers["Cache-Control"] = "no-store, no-cache";
+                context.Response.Headers["Pragma"] = "no-cache";
+            }
+
             return Task.CompletedTask;
         });
 
