@@ -10,7 +10,7 @@
 
 | Fase | Descripción | Estado | Avance |
 |---|---|---|---|
-| Fase 1 | Contratos Compartidos (`Vogel.Shared`) y Proveedor BFF Desacoplado (`Vogel.Server`) | Pendiente | 0 / 4 |
+| Fase 1 | Contratos Compartidos (`Vogel.Shared`) y Proveedor BFF Desacoplado (`Vogel.Server`) | Completada | 4 / 4 |
 | Fase 2 | Estado Compartido y Vistas en `AdmPriv` (`Vogel.Client`) | Completada | 6 / 6 |
 | Fase 3 | Auditoría InfoSec (`vogel-infosec-guardian`) y Verificación QA (`vogel-qa-verifier`) | Pendiente | 0 / 4 |
 
@@ -18,16 +18,16 @@
 
 ## Fase 1: Contratos Compartidos y Proveedor BFF Desacoplado
 
-- [ ] **T1.1 — Crear DTOs de administración de privilegios en `Vogel.Shared/DTOs/PrivilegeAdminDtos.cs`**
+- [x] **T1.1 — Crear DTOs de administración de privilegios en `Vogel.Shared/DTOs/PrivilegeAdminDtos.cs`**
   - `PrivilegeAdminItemDto`: `IdPrivilege`, `IdSystem`, `IdParent`, `Codename`, `Title`, `GroupName`, `Action`, `Icon`, `Status`.
   - `PrivilegeAdminListResponseDto`: `SystemCode`, `IdSystem`, `Items`, `Total`.
-- [ ] **T1.2 — Agregar modelos internos de MicroID `/priv/list` en `Vogel.Server/Models/MicroId/MicroIdPrivilegeModels.cs`**
+- [x] **T1.2 — Agregar modelos internos de MicroID `/priv/list` en `Vogel.Server/Models/MicroId/MicroIdPrivilegeModels.cs`**
   - `MicroIdListPrivilegeFilter` (`status`, `group_name`, `search`), `MicroIdListPrivilegeRequest` (`id_system`, `filter`), `MicroIdPrivilegeDetailResponse`, `MicroIdListPrivilegeResponse`.
-- [ ] **T1.3 — Crear abstracción `IPrivilegeAdminProviderService` e implementaciones (`Api` y `Mock`) en `Vogel.Server/Services/`**
+- [x] **T1.3 — Crear abstracción `IPrivilegeAdminProviderService` e implementaciones (`Api` y `Mock`) en `Vogel.Server/Services/`**
   - `IPrivilegeAdminProviderService` (sin referencias a MicroID).
   - `MicroIdPrivilegeAdminService : IPrivilegeAdminProviderService` (consume `POST /priv/list` en MicroID con `id_system = MicroIdOptions.SystemNumericId` y `status = null` para traer activos e inactivos del sistema `"MICROID"`).
   - `MockPrivilegeAdminService : IPrivilegeAdminProviderService` (adapta los privilegios de `IMockDataService`).
-- [ ] **T1.4 — Crear `PrivilegesController` (`GET /api/privileges`) y registrar servicios en `Vogel.Server/Program.cs`**
+- [x] **T1.4 — Crear `PrivilegesController` (`GET /api/privileges`) y registrar servicios en `Vogel.Server/Program.cs`**
   - Inyectar únicamente `IPrivilegeAdminProviderService`, validar token de sesión (`401` si falta), aplicar cabeceras `no-store` en `SecurityHeadersMiddleware` y resolver `IPrivilegeAdminProviderService` según `AuthProvider` (`"Api"` por defecto -> `MicroIdPrivilegeAdminService`, `"Mock"` -> `MockPrivilegeAdminService`).
 
 ---
@@ -74,3 +74,4 @@
 | 2026-11-22 | Definición de requerimiento y plan `AdmPriv` | Agente / Usuario | Documentos creados en `reqs/` pendientes de revisión del usuario. |
 | 2026-11-22 | T3.2 — Auditoría InfoSec (`AdmPriv`) | `vogel-infosec-guardian` | **APROBADO (0 Críticos, 0 Altos, 0 Medios, 2 Bajos / 1 Informativo no bloqueantes)**. Verificado: desacoplamiento total en `PrivilegesController`, validación de Bearer/`X-Session-Token` (401), lista blanca de `status` y cero secretos en logs (`MicroIdPrivilegeAdminService` / `MockPrivilegeAdminService`), `Cache-Control: no-store, no-cache` + `Pragma: no-cache` en `/api/privileges` y `/api/v1/privileges`, cliente sin `X-System-Key`/`8021`/`MarkupString` y `F:\LABORATORIO\2026\MICROID` intacto. |
 | 2026-11-22 | T2.1–T2.6 — Estado compartido y vistas `AdmPriv` (`Vogel.Client`) | Especialista Frontend Blazor | Implementados `IAdmPrivStateService`/`AdmPrivStateService` (registrado Scoped en `Program.cs`) y las 5 vistas con Code-Behind en `AdmPriv` (`AdmPriv`, `AdmPrivInfo`, `AdmPrivCapture`, `AdmPrivFilter`, `AdmPrivList`). `dotnet build Vogel.slnx` (0 errores, 0 advertencias) y `dotnet test Vogel.slnx --no-build` (76/76 superadas). |
+| 2026-11-22 | T1.1–T1.4 — Contratos compartidos y proveedor BFF desacoplado (`Vogel.Shared` / `Vogel.Server`) | Especialista Backend BFF | Creados `PrivilegeAdminDtos.cs`, `MicroIdPrivilegeModels.cs`, `IPrivilegeAdminProviderService.cs`, `MicroIdPrivilegeAdminService.cs`, `MockPrivilegeAdminService.cs` y `PrivilegesController.cs`; actualizados `SecurityHeadersMiddleware.cs` (`no-store`/`no-cache` en `/api/privileges` y `/api/v1/privileges`) y `Program.cs` (registro Scoped con resolución por `AuthProvider`). `dotnet build Vogel.slnx` (0 errores, 0 advertencias) y `dotnet test Vogel.slnx --no-build` (76/76 superadas). |
