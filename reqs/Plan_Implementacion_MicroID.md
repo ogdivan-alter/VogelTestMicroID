@@ -15,7 +15,7 @@
 | Fase 3 | Integración BFF en `AuthController` y `IMicroIdAuthService` (`Vogel.Server`) | Completado | 5 / 5 |
 | Fase 4 | Integración en `Vogel.Client` (Cambio de Clave Real y Validación de Privilegios) | Pendiente | 0 / 4 |
 | Fase 5 | Hardening de Seguridad del Servicio Vogel y Auditoría InfoSec | Completado | 5 / 5 |
-| Fase 6 | Pruebas Funcionales End-to-End (`carlos.gomez`) y Verificación | Parcial | 3 / 5 |
+| Fase 6 | Pruebas Funcionales End-to-End (`carlos.gomez`) y Verificación | Completado | 5 / 5 |
 
 ---
 
@@ -101,10 +101,10 @@
   - Verificar 0 errores en `Vogel.Shared`, `Vogel.Client` y `Vogel.Server`.
 - [x] **T6.2 — Prueba de obtención automática de `X-System-Key` contra `http://localhost:8021/creds/create`**
   - Confirmar obtención de `plain_api_key` con `id_system = 1` y `renovation = "MONTHLY"`.
-- [ ] **T6.3 — Prueba de autenticación inicial con `carlos.gomez` / `UserPass2026*`**
-  - Verificar `POST /api/auth/login` -> `200 OK`, `X-Session-Token` emitido, `User` poblado y login fallido -> `401`. *(Bloqueado: `carlos.gomez` devuelve `403` por no tener privilegios efectivos asignados en MicroID; login fallido `401` verificado).*
-- [ ] **T6.4 — Prueba de `GET /api/auth/privileges` (`/auth`) y `POST /api/auth/change-password` (`/user/changepw`)**
-  - Confirmar validación con token válido, rechazo `401` con token inválido y validación de política (`400`) en cambio de clave. *(Rechazo `401` con token inválido verificado; pruebas con token válido bloqueadas por falta de privilegios de `carlos.gomez` en `T6.3`).*
+- [x] **T6.3 — Prueba de autenticación inicial con `carlos.gomez` / `UserPass2026*`**
+  - Verificar `POST /api/auth/login` -> `200 OK`, `X-Session-Token` emitido (JWT de 1311 caracteres), `success: true`, `user.username = "carlos.gomez"`, `user.privileges` con 2 privilegios (`first_option`, `first_suboption`), y login fallido con `qa.invalid.user` -> `401 Unauthorized` (`"Usuario o Clave incorrectos"`).
+- [x] **T6.4 — Prueba de `GET /api/auth/privileges` (`/auth`) y `POST /api/auth/change-password` (`/user/changepw`)**
+  - Confirmar validación con token válido (`200 OK`, 2 privilegios para `carlos.gomez`), rechazo `401 Unauthorized` con token inválido y validación de política (`400 Bad Request`, `"La contraseña no cumple con las políticas de seguridad requeridas."`) en cambio de clave con `newPassword = "123"`.
 - [x] **T6.5 — Prueba de alternancia `AuthProvider = "Mock"`, Rate Limiting (`429`) y cabeceras HTTP**
   - Verificar operación en modo `"Mock"`, cabeceras de seguridad y límite de tasa en login.
 
@@ -118,3 +118,4 @@
 | 2026-11-22 | Fase 4 (`T4.1`–`T4.4`) | Especialista Blazor WASM | `ChangePasswordAsync` integrado con BFF (`Bearer`), `ChangePasswordView` conectado, jerarquía de privilegios y `LogoutAsync` verificados. |
 | 2026-11-22 | `T5.5` Auditoría InfoSec | `vogel-infosec-guardian` | **APROBADO (0 Críticos, 0 Altos)**. Verificados `SecurityHeadersMiddleware`, `AuthStrict` Rate Limiting (`429`), `CookiePolicyOptions`, `MicroIdOptions` (HTTPS fuera de loopback), gestión en memoria de `X-System-Key`, anti-replay (`X-Request-Id`/`X-Timestamp`), anti-BOLA/IDOR en `ChangePasswordAsync`, sanitización anti-Log Forging y cero secretos en `Serilog`/`Vogel.Client`. `MICROID` intacto. `dotnet build` (0 errores) y `dotnet test` (76/76). Observaciones Medio/Bajo: validar token en endpoints emulados (`BlockWorkController`/`ReportsController`) antes de exponer datos reales en producción y considerar `UseForwardedHeaders` tras proxy inverso. |
 | 2026-11-22 | Fase 6 (`T6.1`–`T6.5`) | Especialista QA E2E | **Parcial (3 / 5)**. `T6.1`: `dotnet build Vogel.slnx` (0 errores, 0 advertencias) y `dotnet test Vogel.slnx --no-build` (76/76). `T6.2`: `X-System-Key` obtenida vía `POST /creds/create` (`CredId: 19`). `T6.5`: `AuthProvider=Mock` (`jdoe`, `200 OK`, 8 privilegios), cabeceras (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Cache-Control: no-store, no-cache`) y `AuthStrict` Rate Limiting (`429 Too Many Requests` en petición #15) verificados. `T6.3`/`T6.4`: login fallido (`401`) y `/api/auth/privileges` con token inválido (`401`) verificados, pero el login válido de `carlos.gomez` / `UserPass2026*` devolvió `403` en `Vogel.Server` porque MicroID retornó lista vacía de privilegios efectivos (`sin privilegios efectivos`), bloqueando las pruebas con token válido de `T6.3`/`T6.4` (y tras la ráfaga de `429`, MicroID bloqueó temporalmente a `carlos.gomez`). |
+| 2026-11-22 | Fase 6 (`T6.3`–`T6.4`) | Especialista QA E2E | **Completado (5 / 5)**. Reejecución exitosa contra `MicroID` (`http://localhost:8021`) vía `Vogel.Server` (`http://localhost:5269`). `T6.3`: `POST /api/auth/login` con `carlos.gomez` / `UserPass2026*` -> `200 OK`, `success: true`, `X-Session-Token` (JWT, 1311 chars), `user.username = "carlos.gomez"`, `2` privilegios (`first_option`, `first_suboption`), `typeAuthentication` y `allowPasswordChange` nulos/ausentes; login con `qa.invalid.user` -> `401 Unauthorized` (`"Usuario o Clave incorrectos"`). `T6.4`: `GET /api/auth/privileges` con `Bearer <token>` -> `200 OK` (2 privilegios); con token inválido -> `401 Unauthorized`; `POST /api/auth/change-password` (`newPassword: "123"`) -> `400 Bad Request` (`"La contraseña no cumple con las políticas de seguridad requeridas."`), manteniendo intacta `UserPass2026*`. |
