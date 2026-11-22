@@ -2,7 +2,7 @@
 
 - **Rama de trabajo:** `adm-priv-form` (creada desde `main`)
 - **Documento de requerimiento:** `reqs/Requerimiento_AdmPrivForm.md`
-- **Estado general:** Aprobado — En ejecución (Fase 4)
+- **Estado general:** Completado (Fases 1–4 verificadas — pendiente aprobación de cierre de PR)
 
 ---
 
@@ -12,8 +12,8 @@
 | :--- | :--- | :--- | :---: | :--- |
 | **Fase 1** | Contratos compartidos (`Vogel.Shared`) y Backend BFF (`Vogel.Server` — modos `Api` y `Mock`) | Completada | 100% | `9ed21aa` |
 | **Fase 2** | Frontend Blazor (`Vogel.Client` — estado, `AdmPrivForm` y vinculación en `AdmPriv`) | Completada | 100% | `705c1df` |
-| **Fase 3** | Pruebas Unitarias (`Vogel.Tests`) y Auditoría InfoSec (`vogel-infosec-guardian`) | Completada | 100% | `test(adm-priv-form): add phase 3 unit tests and infosec remediations` |
-| **Fase 4** | Verificación QA End-to-End (`vogel-qa-verifier`) y cierre de PR | En curso | 0% | — |
+| **Fase 3** | Pruebas Unitarias (`Vogel.Tests`) y Auditoría InfoSec (`vogel-infosec-guardian`) | Completada | 100% | `19fab86` |
+| **Fase 4** | Verificación QA End-to-End (`vogel-qa-verifier`) y cierre de PR | Verificada (pendiente T4.3) | 90% | `docs(adm-priv-form): record phase 4 QA E2E verification evidence` |
 
 ---
 
@@ -63,13 +63,13 @@
 
 ## Fase 4 — Verificación QA End-to-End y Cierre de PR
 
-- [ ] **T4.1** Ejecutar verificación End-to-End con **`vogel-qa-verifier`** validando todos los criterios de aceptación (`CA-01` a `CA-12`):
+- [x] **T4.1** Ejecutar verificación End-to-End con **`vogel-qa-verifier`** validando todos los criterios de aceptación (`CA-01` a `CA-12`):
   - Navegación desde `/admsec/priv` → Crear (`/admsec/priv/create`) → guardar → alerta de éxito y limpieza.
   - Navegación desde `/admsec/priv` → Editar (`/admsec/priv/edit`, verificando URL limpia sin ID) → actualizar → alerta de éxito y persistencia.
   - Acceso directo o recarga F5 en `/admsec/priv/edit` sin ID en memoria → redirección limpia a `/admsec/priv`.
   - Inactivación desde `/admsec/priv/edit` → confirmación + motivo → alerta de éxito + estado solo lectura + botón `Editar` deshabilitado en listado al volver a `/admsec/priv`.
   - Validación de consola sin errores y respuestas HTTP limpias.
-- [ ] **T4.2** Registrar evidencias y resultados finales en este plan de implementación.
+- [x] **T4.2** Registrar evidencias y resultados finales en este plan de implementación.
 - [ ] **T4.3** Una vez aprobado el cierre para Pull Request hacia `main`: eliminar los 2 documentos temporales de `reqs/` (`reqs/Requerimiento_AdmPrivForm.md` y `reqs/Plan_Implementacion_AdmPrivForm.md`), hacer commit de limpieza y abrir el PR hacia `main`.
 
 ---
@@ -78,5 +78,9 @@
 
 | Fecha | Fase | Evento / Nota |
 | :--- | :--- | :--- |
-| 2026-11-22 | Planificación | Rama `adm-priv-form` creada desde `main`. Levantamiento de requerimientos completado con el usuario y generación de `Requerimiento_AdmPrivForm.md` y `Plan_Implementacion_AdmPrivForm.md`. |
+| 2026-11-22 | Planificación | Rama `adm-priv-form` creada desde `main`. Levantamiento de requerimientos completado con el usuario y generación de `Requerimiento_AdmPrivForm.md` y `Plan_Implementacion_AdmPrivForm.md` (`f82b8af`). |
 | 2026-11-22 | Planificación | Ajuste aprobado (Opción 1): ruta de edición limpia `/admsec/priv/edit` sin exponer `IdPrivilege` en la URL, usando `SelectedEditPrivilegeId` en memoria dentro de `AdmPrivState` con redirección segura a `/admsec/priv` en acceso directo o recarga F5. |
+| 2026-11-22 | Fase 1 | Contratos DTOs en `Vogel.Shared`, endpoints REST en `PrivilegesController` y proveedores `MicroIdPrivilegeAdminService` + `MockPrivilegeAdminService` completados (`9ed21aa`, `dotnet build` 0 errores/advertencias, 81/81 tests). |
+| 2026-11-22 | Fase 2 | `AdmPrivStateService`, formulario reutilizable `AdmPrivForm.razor`/`.razor.cs` con rutas limpias `/admsec/priv/create` y `/admsec/priv/edit` y vinculación de botones en `AdmPrivCapture`/`AdmPrivList` completados (`705c1df`). |
+| 2026-11-22 | Fase 3 | Pruebas unitarias en `Vogel.Tests` (`PrivilegesControllerTests`, `PrivilegeAdminServicesTests`, `AdmPrivStateServiceTests`) + auditoría `vogel-infosec-guardian` con remediaciones de H-01 (validación cross-system en `PUT`/`DELETE`), H-03 y H-04 aprobada (`APROBADO CON OBSERVACIONES`, 0 Críticos/Altos/Medios, 132/132 tests en verde, `19fab86`). |
+| 2026-11-22 | Fase 4 | Verificación QA End-to-End (`vogel-qa-verifier`) **APROBADA (12/12 CAs)** contra MicroID real (`http://localhost:8021`, modo `Api`) y en modo `Mock` (`--AuthProvider=Mock`), con `132/132` pruebas en verde y catálogo limpio tras inactivar privilegio temporal de prueba. |
