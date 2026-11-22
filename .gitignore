@@ -34,6 +34,8 @@ packages/
 
 # Publish outputs
 wwwroot/
+!Vogel.Client/wwwroot/
+!Vogel.Client/wwwroot/**
 dist/
 publish/
 
