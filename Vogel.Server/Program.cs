@@ -56,7 +56,27 @@ builder.Services.AddHttpClient<IMicroIdApiClient, MicroIdApiClient>((sp, client)
     client.Timeout = TimeSpan.FromSeconds(opts.TimeoutSeconds);
 });
 
-builder.Services.AddScoped<IMicroIdAuthService, MicroIdAuthService>();
+// Proveedores de autenticación desacoplados para el BFF (MicroID, Api, Mock)
+builder.Services.AddScoped<MicroIdAuthService>();
+builder.Services.AddScoped<ApiAuthProviderService>();
+builder.Services.AddScoped<MockAuthProviderService>();
+builder.Services.AddScoped<IAuthProviderService>(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var authProvider = configuration.GetValue<string>("AuthProvider", "MicroID") ?? "MicroID";
+
+    if (string.Equals(authProvider, "Mock", StringComparison.OrdinalIgnoreCase))
+    {
+        return sp.GetRequiredService<MockAuthProviderService>();
+    }
+
+    if (string.Equals(authProvider, "Api", StringComparison.OrdinalIgnoreCase))
+    {
+        return sp.GetRequiredService<ApiAuthProviderService>();
+    }
+
+    return sp.GetRequiredService<MicroIdAuthService>();
+});
 
 // Cliente HTTP del BFF hacia el Backend de negocio y autenticación externo
 var apiBackendBaseUrl = builder.Configuration["ApiBackend:BaseUrl"] ?? "https://localhost:7113";

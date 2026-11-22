@@ -8,9 +8,9 @@ using Vogel.Shared.Models;
 namespace Vogel.Server.Services.MicroId;
 
 /// <summary>
-/// Implementación del servicio de autenticación y autorización BFF contra MicroID.
+/// Implementación del proveedor de autenticación y autorización BFF contra MicroID.
 /// </summary>
-public sealed class MicroIdAuthService : IMicroIdAuthService
+public sealed class MicroIdAuthService : IAuthProviderService
 {
     private readonly IMicroIdApiClient _apiClient;
     private readonly ILogger<MicroIdAuthService> _logger;
@@ -23,17 +23,16 @@ public sealed class MicroIdAuthService : IMicroIdAuthService
         _logger = logger;
     }
 
-    public async Task<MicroIdLoginResult> LoginAsync(
-        string username,
-        string password,
+    public async Task<AuthLoginResult> LoginAsync(
+        LoginRequestDto request,
         CancellationToken cancellationToken = default)
     {
-        var trimmedUsername = username.Trim();
+        var trimmedUsername = request.Username.Trim();
         var safeUsername = SanitizeForLog(trimmedUsername);
 
         var loginPayload = new MicroIdLoginRequest(
             Username: trimmedUsername,
-            Credential: new LoginCredentialRequest(Secret: password));
+            Credential: new LoginCredentialRequest(Secret: request.Password));
 
         var loginResult = await _apiClient.PostAsync<MicroIdLoginRequest, MicroIdLoginResponse>(
             "login",
@@ -51,7 +50,7 @@ public sealed class MicroIdAuthService : IMicroIdAuthService
                 statusCode,
                 loginResult.Code);
 
-            return new MicroIdLoginResult(false, statusCode, errorMessage, null, null);
+            return new AuthLoginResult(false, statusCode, errorMessage, null, null);
         }
 
         var token = loginResult.Data.Token;
@@ -62,7 +61,7 @@ public sealed class MicroIdAuthService : IMicroIdAuthService
                 "Acceso denegado en MicroID para usuario '{Username}': sin privilegios efectivos.",
                 safeUsername);
 
-            return new MicroIdLoginResult(
+            return new AuthLoginResult(
                 false,
                 StatusCodes.Status403Forbidden,
                 "El usuario no cuenta con privilegios en el sistema",
@@ -94,12 +93,12 @@ public sealed class MicroIdAuthService : IMicroIdAuthService
             safeUsername,
             privileges.Count);
 
-        return new MicroIdLoginResult(true, StatusCodes.Status200OK, string.Empty, user, token);
+        return new AuthLoginResult(true, StatusCodes.Status200OK, string.Empty, user, token);
     }
 
-    public async Task<MicroIdPrivilegesResult> GetPrivilegesAsync(
+    public async Task<AuthPrivilegesResult> GetPrivilegesAsync(
         string bearerToken,
-        string? username,
+        string? username = null,
         CancellationToken cancellationToken = default)
     {
         var effectiveUsername = !string.IsNullOrWhiteSpace(username)
@@ -108,7 +107,7 @@ public sealed class MicroIdAuthService : IMicroIdAuthService
 
         if (string.IsNullOrWhiteSpace(effectiveUsername))
         {
-            return new MicroIdPrivilegesResult(
+            return new AuthPrivilegesResult(
                 false,
                 StatusCodes.Status401Unauthorized,
                 null,
@@ -132,7 +131,7 @@ public sealed class MicroIdAuthService : IMicroIdAuthService
                 statusCode,
                 authResult.Code);
 
-            return new MicroIdPrivilegesResult(
+            return new AuthPrivilegesResult(
                 false,
                 statusCode,
                 null,
@@ -158,14 +157,14 @@ public sealed class MicroIdAuthService : IMicroIdAuthService
                     Execute: node.Access.Execute)))
             .ToList();
 
-        return new MicroIdPrivilegesResult(
+        return new AuthPrivilegesResult(
             true,
             StatusCodes.Status200OK,
             new BackendPrivilegesResponseDto(effectiveUsername, items),
             null);
     }
 
-    public async Task<MicroIdChangePasswordResult> ChangePasswordAsync(
+    public async Task<AuthChangePasswordResult> ChangePasswordAsync(
         string? bearerToken,
         ChangePasswordRequestDto request,
         CancellationToken cancellationToken = default)
@@ -174,7 +173,7 @@ public sealed class MicroIdAuthService : IMicroIdAuthService
 
         if (string.IsNullOrWhiteSpace(bearerToken))
         {
-            return new MicroIdChangePasswordResult(
+            return new AuthChangePasswordResult(
                 false,
                 StatusCodes.Status401Unauthorized,
                 new ChangePasswordResponseDto
@@ -186,7 +185,7 @@ public sealed class MicroIdAuthService : IMicroIdAuthService
 
         if (!hasVerificationCode && string.IsNullOrWhiteSpace(request.CurrentPassword))
         {
-            return new MicroIdChangePasswordResult(
+            return new AuthChangePasswordResult(
                 false,
                 StatusCodes.Status400BadRequest,
                 new ChangePasswordResponseDto
@@ -199,7 +198,7 @@ public sealed class MicroIdAuthService : IMicroIdAuthService
         var username = ExtractUsernameFromJwt(bearerToken);
         if (string.IsNullOrWhiteSpace(username))
         {
-            return new MicroIdChangePasswordResult(
+            return new AuthChangePasswordResult(
                 false,
                 StatusCodes.Status401Unauthorized,
                 new ChangePasswordResponseDto
@@ -227,7 +226,7 @@ public sealed class MicroIdAuthService : IMicroIdAuthService
                 statusCode,
                 userResult.Code);
 
-            return new MicroIdChangePasswordResult(
+            return new AuthChangePasswordResult(
                 false,
                 statusCode,
                 new ChangePasswordResponseDto
@@ -262,7 +261,7 @@ public sealed class MicroIdAuthService : IMicroIdAuthService
                 statusCode,
                 changeResult.Code);
 
-            return new MicroIdChangePasswordResult(
+            return new AuthChangePasswordResult(
                 false,
                 statusCode,
                 new ChangePasswordResponseDto
@@ -276,7 +275,7 @@ public sealed class MicroIdAuthService : IMicroIdAuthService
             "Contraseña actualizada exitosamente en MicroID para '{Username}'.",
             safeUsername);
 
-        return new MicroIdChangePasswordResult(
+        return new AuthChangePasswordResult(
             true,
             StatusCodes.Status200OK,
             new ChangePasswordResponseDto

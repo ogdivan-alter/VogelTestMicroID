@@ -37,6 +37,8 @@ wwwroot/
 !Vogel.Client/wwwroot/
 !Vogel.Client/wwwroot/**
 dist/
+!Vogel.Client/wwwroot/**/dist/
+!Vogel.Client/wwwroot/**/dist/**
 publish/
 
 # ASP.NET scaffolding
