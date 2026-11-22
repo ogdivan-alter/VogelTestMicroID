@@ -23,7 +23,7 @@ public sealed record AuthChangePasswordResult(
 
 /// <summary>
 /// Abstracción genérica de proveedor de autenticación, privilegios y gestión de credenciales para el BFF.
-/// Permite intercambiar el backend de identidad (MicroID, API externa, Mock, etc.) sin modificar AuthController.
+/// Permite intercambiar el backend de identidad (API externa, Mock, etc.) sin modificar AuthController.
 /// </summary>
 public interface IAuthProviderService
 {

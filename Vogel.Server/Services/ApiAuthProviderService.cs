@@ -64,7 +64,7 @@ public sealed class ApiAuthProviderService : IAuthProviderService
                 null);
         }
 
-        var apiBackendBaseUrl = _configuration.GetValue<string>("ApiBackend:BaseUrl", "https://localhost:7113") ?? "https://localhost:7113";
+        var apiBackendBaseUrl = _configuration.GetValue<string>("ApiBackend:BaseUrl") ?? string.Empty;
         var user = BackendUserMapper.MapToUser(profile, privilegesResponse.Privileges, apiBackendBaseUrl);
 
         _logger.LogInformation("Autenticación exitosa y privilegios mapeados vía BFF para usuario '{Username}'.", safeUsername);

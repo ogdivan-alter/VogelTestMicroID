@@ -41,8 +41,8 @@ public static class BackendUserMapper
                     Create = item.Access.Write, // write mapeado a Create
                     Delete = item.Access.Delete,
                     Approve = item.Access.Approve,
-                    Validate = false,
-                    Execute = false
+                    Validate = item.Access.Validate,
+                    Execute = item.Access.Execute
                 }
             };
         }).ToList();

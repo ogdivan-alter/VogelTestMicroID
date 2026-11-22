@@ -56,34 +56,28 @@ builder.Services.AddHttpClient<IMicroIdApiClient, MicroIdApiClient>((sp, client)
     client.Timeout = TimeSpan.FromSeconds(opts.TimeoutSeconds);
 });
 
-// Proveedores de autenticación desacoplados para el BFF (MicroID, Api, Mock)
+// Proveedores de autenticación desacoplados para el BFF (Api [MicroID] por defecto, Mock explícito)
 builder.Services.AddScoped<MicroIdAuthService>();
-builder.Services.AddScoped<ApiAuthProviderService>();
 builder.Services.AddScoped<MockAuthProviderService>();
 builder.Services.AddScoped<IAuthProviderService>(sp =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();
-    var authProvider = configuration.GetValue<string>("AuthProvider", "MicroID") ?? "MicroID";
+    var authProvider = configuration.GetValue<string>("AuthProvider", "Api") ?? "Api";
 
-    if (string.Equals(authProvider, "Mock", StringComparison.OrdinalIgnoreCase))
-    {
-        return sp.GetRequiredService<MockAuthProviderService>();
-    }
-
-    if (string.Equals(authProvider, "Api", StringComparison.OrdinalIgnoreCase))
-    {
-        return sp.GetRequiredService<ApiAuthProviderService>();
-    }
-
-    return sp.GetRequiredService<MicroIdAuthService>();
+    return string.Equals(authProvider, "Mock", StringComparison.OrdinalIgnoreCase)
+        ? sp.GetRequiredService<MockAuthProviderService>()
+        : sp.GetRequiredService<MicroIdAuthService>();
 });
 
 // Cliente HTTP del BFF hacia el Backend de negocio y autenticación externo
-var apiBackendBaseUrl = builder.Configuration["ApiBackend:BaseUrl"] ?? "https://localhost:7113";
+var apiBackendBaseUrl = builder.Configuration["ApiBackend:BaseUrl"];
 builder.Services.AddHttpClient<IBackendApiService, BackendApiService>(client =>
 {
-    var baseUrl = apiBackendBaseUrl.TrimEnd('/') + "/";
-    client.BaseAddress = new Uri(baseUrl);
+    if (!string.IsNullOrWhiteSpace(apiBackendBaseUrl))
+    {
+        var baseUrl = apiBackendBaseUrl.TrimEnd('/') + "/";
+        client.BaseAddress = new Uri(baseUrl);
+    }
 });
 
 // Servicios de soporte de controladores API con filtro global de excepciones

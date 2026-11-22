@@ -39,11 +39,11 @@ public class AuthController : ControllerBase
         ILogger<AuthController> logger)
     {
         _logger = logger;
-        var provider = configuration.GetValue<string>("AuthProvider", "Mock") ?? "Mock";
+        var provider = configuration.GetValue<string>("AuthProvider", "Api") ?? "Api";
 
-        _authProvider = string.Equals(provider, "Api", StringComparison.OrdinalIgnoreCase)
-            ? new ApiAuthProviderService(backendApiService, configuration, NullLogger<ApiAuthProviderService>.Instance)
-            : new MockAuthProviderService(mockDataService, NullLogger<MockAuthProviderService>.Instance);
+        _authProvider = string.Equals(provider, "Mock", StringComparison.OrdinalIgnoreCase)
+            ? new MockAuthProviderService(mockDataService, NullLogger<MockAuthProviderService>.Instance)
+            : new ApiAuthProviderService(backendApiService, configuration, NullLogger<ApiAuthProviderService>.Instance);
     }
 
     /// <summary>
