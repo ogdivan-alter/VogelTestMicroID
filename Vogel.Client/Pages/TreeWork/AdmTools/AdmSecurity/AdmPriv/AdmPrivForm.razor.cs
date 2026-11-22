@@ -27,6 +27,9 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
     [Inject]
     protected IAdmPrivStateService AdmPrivState { get; set; } = default!;
 
+    [Inject]
+    protected ISecureSessionStorageService SecureStorage { get; set; } = default!;
+
     protected bool IsEditMode { get; private set; }
     protected bool IsLoadingInitial { get; private set; }
     protected bool IsSaving { get; private set; }
@@ -169,8 +172,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
             {
                 if (detailResult.StatusCode == (int)HttpStatusCode.Unauthorized)
                 {
-                    AdmPrivState.ClearSelectedEditPrivilegeId();
-                    NavigationManager.NavigateTo("/login", replace: true);
+                    await HandleUnauthorizedAsync();
                     return;
                 }
 
@@ -255,8 +257,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
                 {
                     if (result.StatusCode == (int)HttpStatusCode.Unauthorized)
                     {
-                        AdmPrivState.ClearSelectedEditPrivilegeId();
-                        NavigationManager.NavigateTo("/login", replace: true);
+                        await HandleUnauthorizedAsync();
                         return;
                     }
 
@@ -285,8 +286,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
                 {
                     if (result.StatusCode == (int)HttpStatusCode.Unauthorized)
                     {
-                        AdmPrivState.ClearSelectedEditPrivilegeId();
-                        NavigationManager.NavigateTo("/login", replace: true);
+                        await HandleUnauthorizedAsync();
                         return;
                     }
 
@@ -306,6 +306,14 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
         {
             IsSaving = false;
         }
+    }
+
+    private async Task HandleUnauthorizedAsync()
+    {
+        AdmPrivState.ClearSelectedEditPrivilegeId();
+        await SecureStorage.ClearAsync();
+        SessionState.ClearUser();
+        NavigationManager.NavigateTo("/login", replace: true);
     }
 
     protected void RequestDeactivateConfirmation()
@@ -365,8 +373,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
             {
                 if (result.StatusCode == (int)HttpStatusCode.Unauthorized)
                 {
-                    AdmPrivState.ClearSelectedEditPrivilegeId();
-                    NavigationManager.NavigateTo("/login", replace: true);
+                    await HandleUnauthorizedAsync();
                     return;
                 }
 

@@ -2,7 +2,7 @@
 
 - **Rama de trabajo:** `adm-priv-form` (creada desde `main`)
 - **Documento de requerimiento:** `reqs/Requerimiento_AdmPrivForm.md`
-- **Estado general:** Aprobado — En ejecución (Fase 3)
+- **Estado general:** Aprobado — En ejecución (Fase 4)
 
 ---
 
@@ -11,9 +11,9 @@
 | Fase | Descripción | Estado | Avance | Commit de Fase |
 | :--- | :--- | :--- | :---: | :--- |
 | **Fase 1** | Contratos compartidos (`Vogel.Shared`) y Backend BFF (`Vogel.Server` — modos `Api` y `Mock`) | Completada | 100% | `9ed21aa` |
-| **Fase 2** | Frontend Blazor (`Vogel.Client` — estado, `AdmPrivForm` y vinculación en `AdmPriv`) | Completada | 100% | `feat(adm-priv-form): implement phase 2 Blazor form and button links` |
-| **Fase 3** | Pruebas Unitarias (`Vogel.Tests`) y Auditoría InfoSec (`vogel-infosec-guardian`) | En curso | 0% | — |
-| **Fase 4** | Verificación QA End-to-End (`vogel-qa-verifier`) y cierre de PR | Pendiente | 0% | — |
+| **Fase 2** | Frontend Blazor (`Vogel.Client` — estado, `AdmPrivForm` y vinculación en `AdmPriv`) | Completada | 100% | `705c1df` |
+| **Fase 3** | Pruebas Unitarias (`Vogel.Tests`) y Auditoría InfoSec (`vogel-infosec-guardian`) | Completada | 100% | `test(adm-priv-form): add phase 3 unit tests and infosec remediations` |
+| **Fase 4** | Verificación QA End-to-End (`vogel-qa-verifier`) y cierre de PR | En curso | 0% | — |
 
 ---
 
@@ -52,12 +52,12 @@
 
 ## Fase 3 — Pruebas Unitarias (`Vogel.Tests`) y Auditoría InfoSec
 
-- [ ] **T3.1** Agregar pruebas unitarias para `PrivilegesController` cubriendo `GET /{id}`, `POST`, `PUT /{id}` y `DELETE /{id}` (casos exitosos, 401 sin token, 400 payload/ID inválido y propagación de errores del proveedor).
-- [ ] **T3.2** Agregar pruebas unitarias para `MicroIdPrivilegeAdminService` y `MockPrivilegeAdminService` cubriendo creación, lectura individual (incluyendo validación de `id_system`), actualización, inactivación, prevención de autorreferencia/ciclos y mapeo de errores.
-- [ ] **T3.3** Agregar pruebas unitarias para `AdmPrivStateService` cubriendo `SelectedEditPrivilegeId` (set/clear), `GetByIdAsync`, `CreateAsync`, `UpdateAsync`, `DeactivateAsync` y recarga del catálogo tras mutaciones.
-- [ ] **T3.4** Ejecutar `dotnet test` y confirmar 100% de pruebas en verde.
-- [ ] **T3.5** Ejecutar auditoría obligatoria con **`vogel-infosec-guardian`** sobre todos los cambios de la rama `adm-priv-form` y remediar cualquier hallazgo antes de pasar a Fase 4.
-- [ ] **T3.6** Realizar commit de Fase 3 en `adm-priv-form`.
+- [x] **T3.1** Agregar pruebas unitarias para `PrivilegesController` cubriendo `GET /{id}`, `POST`, `PUT /{id}` y `DELETE /{id}` (casos exitosos, 401 sin token, 400 payload/ID inválido y propagación de errores del proveedor).
+- [x] **T3.2** Agregar pruebas unitarias para `MicroIdPrivilegeAdminService` y `MockPrivilegeAdminService` cubriendo creación, lectura individual (incluyendo validación de `id_system`), actualización, inactivación, prevención de autorreferencia/ciclos y mapeo de errores.
+- [x] **T3.3** Agregar pruebas unitarias para `AdmPrivStateService` cubriendo `SelectedEditPrivilegeId` (set/clear), `GetByIdAsync`, `CreateAsync`, `UpdateAsync`, `DeactivateAsync` y recarga del catálogo tras mutaciones.
+- [x] **T3.4** Ejecutar `dotnet test` y confirmar 100% de pruebas en verde.
+- [x] **T3.5** Ejecutar auditoría obligatoria con **`vogel-infosec-guardian`** sobre todos los cambios de la rama `adm-priv-form` y remediar cualquier hallazgo antes de pasar a Fase 4.
+- [x] **T3.6** Realizar commit de Fase 3 en `adm-priv-form`.
 
 ---
 

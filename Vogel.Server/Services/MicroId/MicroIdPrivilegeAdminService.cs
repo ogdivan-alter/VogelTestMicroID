@@ -298,6 +298,23 @@ public sealed class MicroIdPrivilegeAdminService : IPrivilegeAdminProviderServic
                 new BackendErrorDto(StatusCodes.Status422UnprocessableEntity, "Un privilegio no puede ser su propio padre jerárquico."));
         }
 
+        var ownershipCheck = await GetPrivilegeAsync(token, idPrivilege, cancellationToken);
+        if (!ownershipCheck.Success)
+        {
+            var ownershipStatus = ownershipCheck.StatusCode == StatusCodes.Status404NotFound
+                ? StatusCodes.Status422UnprocessableEntity
+                : ownershipCheck.StatusCode;
+            var ownershipMessage = ownershipCheck.StatusCode == StatusCodes.Status404NotFound
+                ? "El privilegio o la referencia solicitada no existe o se encuentra inactivo."
+                : ownershipCheck.Error?.Message ?? "No fue posible validar la pertenencia del privilegio.";
+
+            return new UpdatePrivilegeResult(
+                false,
+                ownershipStatus,
+                null,
+                new BackendErrorDto(ownershipStatus, ownershipMessage));
+        }
+
         var payload = new MicroIdUpdatePrivilegeRequest(
             IdPrivilege: idPrivilege,
             IdParent: request.IdParent.HasValue && request.IdParent.Value > 0 ? request.IdParent.Value : 0,
@@ -382,6 +399,23 @@ public sealed class MicroIdPrivilegeAdminService : IPrivilegeAdminProviderServic
                 StatusCodes.Status400BadRequest,
                 null,
                 new BackendErrorDto(StatusCodes.Status400BadRequest, $"El motivo de inactivación no puede exceder los {MaxDelDescriptionLength} caracteres."));
+        }
+
+        var ownershipCheck = await GetPrivilegeAsync(token, idPrivilege, cancellationToken);
+        if (!ownershipCheck.Success)
+        {
+            var ownershipStatus = ownershipCheck.StatusCode == StatusCodes.Status404NotFound
+                ? StatusCodes.Status422UnprocessableEntity
+                : ownershipCheck.StatusCode;
+            var ownershipMessage = ownershipCheck.StatusCode == StatusCodes.Status404NotFound
+                ? "El privilegio o la referencia solicitada no existe o se encuentra inactivo."
+                : ownershipCheck.Error?.Message ?? "No fue posible validar la pertenencia del privilegio.";
+
+            return new DeactivatePrivilegeResult(
+                false,
+                ownershipStatus,
+                null,
+                new BackendErrorDto(ownershipStatus, ownershipMessage));
         }
 
         var payload = new MicroIdDeletePrivilegeRequest(
@@ -522,12 +556,13 @@ public sealed class MicroIdPrivilegeAdminService : IPrivilegeAdminProviderServic
         HttpStatusCode httpStatus,
         string rawMessage)
     {
+        _ = rawMessage;
         return code switch
         {
             MicroIdResponseCodes.AuthFailed =>
-                (StatusCodes.Status401Unauthorized, string.IsNullOrWhiteSpace(rawMessage) ? "Sesión inválida o expirada." : rawMessage),
+                (StatusCodes.Status401Unauthorized, "Sesión inválida o expirada."),
             MicroIdResponseCodes.InactiveMaster or MicroIdResponseCodes.SystemMismatch or MicroIdResponseCodes.EmptyEffectiveList =>
-                (StatusCodes.Status403Forbidden, string.IsNullOrWhiteSpace(rawMessage) ? "Acceso denegado a los privilegios del sistema." : rawMessage),
+                (StatusCodes.Status403Forbidden, "Acceso denegado a los privilegios del sistema."),
             MicroIdResponseCodes.IdpCommunication or MicroIdResponseCodes.InternalServer =>
                 (StatusCodes.Status502BadGateway, "Error de comunicación con el servicio de identidad."),
             _ => ((int)httpStatus >= 400 && (int)httpStatus < 500
