@@ -2,7 +2,7 @@
 
 - **Rama de trabajo:** `adm-priv-form` (creada desde `main`)
 - **Documento de requerimiento:** `reqs/Requerimiento_AdmPrivForm.md`
-- **Estado general:** Aprobado — En ejecución (Fase 2)
+- **Estado general:** Aprobado — En ejecución (Fase 3)
 
 ---
 
@@ -10,9 +10,9 @@
 
 | Fase | Descripción | Estado | Avance | Commit de Fase |
 | :--- | :--- | :--- | :---: | :--- |
-| **Fase 1** | Contratos compartidos (`Vogel.Shared`) y Backend BFF (`Vogel.Server` — modos `Api` y `Mock`) | Completada | 100% | `feat(adm-priv-form): implement phase 1 BFF endpoints and providers` |
-| **Fase 2** | Frontend Blazor (`Vogel.Client` — estado, `AdmPrivForm` y vinculación en `AdmPriv`) | En curso | 0% | — |
-| **Fase 3** | Pruebas Unitarias (`Vogel.Tests`) y Auditoría InfoSec (`vogel-infosec-guardian`) | Pendiente | 0% | — |
+| **Fase 1** | Contratos compartidos (`Vogel.Shared`) y Backend BFF (`Vogel.Server` — modos `Api` y `Mock`) | Completada | 100% | `9ed21aa` |
+| **Fase 2** | Frontend Blazor (`Vogel.Client` — estado, `AdmPrivForm` y vinculación en `AdmPriv`) | Completada | 100% | `feat(adm-priv-form): implement phase 2 Blazor form and button links` |
+| **Fase 3** | Pruebas Unitarias (`Vogel.Tests`) y Auditoría InfoSec (`vogel-infosec-guardian`) | En curso | 0% | — |
 | **Fase 4** | Verificación QA End-to-End (`vogel-qa-verifier`) y cierre de PR | Pendiente | 0% | — |
 
 ---
@@ -31,22 +31,22 @@
 
 ## Fase 2 — Frontend Blazor (`Vogel.Client`)
 
-- [ ] **T2.1** Ampliar `Vogel.Client/Services/IAdmPrivStateService.cs` y `Vogel.Client/Services/AdmPrivStateService.cs` con:
+- [x] **T2.1** Ampliar `Vogel.Client/Services/IAdmPrivStateService.cs` y `Vogel.Client/Services/AdmPrivStateService.cs` con:
   - Estado en memoria `SelectedEditPrivilegeId` (`int?`) más métodos `SetSelectedEditPrivilegeId(int id)` y `ClearSelectedEditPrivilegeId()` para pasar el ID seleccionado hacia la ruta limpia `/admsec/priv/edit` sin exponerlo en la URL.
   - Operaciones contra el BFF (`GetByIdAsync`, `CreateAsync`, `UpdateAsync`, `DeactivateAsync`) adjuntando el token Bearer descifrado y refrescando el catálogo local tras mutaciones exitosas.
-- [ ] **T2.2** Crear la vista reutilizable `Vogel.Client/Pages/TreeWork/AdmTools/AdmSecurity/AdmPriv/AdmPrivForm.razor` y su code-behind `AdmPrivForm.razor.cs` con rutas limpias `@page "/admsec/priv/create"` y `@page "/admsec/priv/edit"`, replicando la estética de `FormMockView.razor` (`HeaderWork`, `.vogel-form-mock-view`, `.vogel-form-card`, alertas y botonera).
-- [ ] **T2.3** Implementar en `AdmPrivForm`:
+- [x] **T2.2** Crear la vista reutilizable `Vogel.Client/Pages/TreeWork/AdmTools/AdmSecurity/AdmPriv/AdmPrivForm.razor` y su code-behind `AdmPrivForm.razor.cs` con rutas limpias `@page "/admsec/priv/create"` y `@page "/admsec/priv/edit"`, replicando la estética de `FormMockView.razor` (`HeaderWork`, `.vogel-form-mock-view`, `.vogel-form-card`, alertas y botonera).
+- [x] **T2.3** Implementar en `AdmPrivForm`:
   - Protección de sesión (`/login` si no autenticado) y guardia de ruta en `/admsec/priv/edit` (si `SelectedEditPrivilegeId` no tiene valor en memoria, p. ej. acceso directo o F5, redirigir limpiamente a `/admsec/priv`).
   - Limpieza de `SelectedEditPrivilegeId` al salir, cancelar o destruir el componente (`Dispose`).
   - Carga del detalle fresco desde el BFF usando `SelectedEditPrivilegeId` y carga del catálogo de privilegios activos para el `<select>` de `id_parent` (con opción `"0 — Ninguno (Raíz)"` y exclusión del propio privilegio en modo edición).
   - Validación cliente de campos obligatorios y longitudes.
   - Panel de inactivación en modo edición con motivo opcional (`del_description`) y confirmación explícita en dos pasos.
   - Estados seguros post-creación (alerta + limpieza del formulario), post-actualización (alerta + datos sincronizados) y post-inactivación (alerta + formulario solo lectura/deshabilitado).
-- [ ] **T2.4** Vincular botones en el módulo `AdmPriv`:
+- [x] **T2.4** Vincular botones en el módulo `AdmPriv`:
   - `AdmPrivCapture.razor.cs`: `HandleCreatePrivilegeClick()` → limpiar `SelectedEditPrivilegeId` en `AdmPrivState` y navegar a `/admsec/priv/create`.
   - `AdmPrivList.razor` y `AdmPrivList.razor.cs`: `HandleEditClick(item)` → guardar `item.IdPrivilege` en `AdmPrivState` (`SetSelectedEditPrivilegeId`) y navegar a `/admsec/priv/edit` solo para activos (`status == "A"`); deshabilitar botón `Editar` para inactivos (`status == "I"`).
-- [ ] **T2.5** Agregar estilos mínimos complementarios en CSS (si se requiere para alerta de error o bloque de inactivación) respetando el diseño de `FormMockView`.
-- [ ] **T2.6** Verificar compilación limpia (`dotnet build`) y realizar commit de Fase 2 en `adm-priv-form`.
+- [x] **T2.5** Agregar estilos mínimos complementarios en CSS (si se requiere para alerta de error o bloque de inactivación) respetando el diseño de `FormMockView`.
+- [x] **T2.6** Verificar compilación limpia (`dotnet build`) y realizar commit de Fase 2 en `adm-priv-form`.
 
 ---
 

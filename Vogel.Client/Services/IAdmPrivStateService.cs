@@ -3,8 +3,18 @@ using Vogel.Shared.DTOs;
 namespace Vogel.Client.Services;
 
 /// <summary>
+/// Resultado tipado de operaciones individuales (lectura, creación, edición e inactivación)
+/// contra los endpoints BFF de administración de privilegios.
+/// </summary>
+public sealed record PrivilegeOperationResult<T>(
+    bool Success,
+    T? Data,
+    int StatusCode,
+    string? ErrorMessage);
+
+/// <summary>
 /// Servicio de estado compartido (Scoped) para coordinar las vistas dinámicas
-/// de Administración de Privilegios (AdmPrivInfo, AdmPrivCapture, AdmPrivFilter y AdmPrivList).
+/// de Administración de Privilegios (AdmPrivInfo, AdmPrivCapture, AdmPrivFilter, AdmPrivList y AdmPrivForm).
 /// </summary>
 public interface IAdmPrivStateService
 {
@@ -74,6 +84,12 @@ public interface IAdmPrivStateService
     int TotalFilteredCount { get; }
 
     /// <summary>
+    /// Identificador del privilegio seleccionado en memoria para la vista de edición (/admsec/priv/edit).
+    /// Se mantiene únicamente en memoria para evitar exponer IDs en la URL.
+    /// </summary>
+    int? SelectedEditPrivilegeId { get; }
+
+    /// <summary>
     /// Evento disparado cada vez que cambia el estado, los datos o los filtros.
     /// </summary>
     event Action? OnStateChanged;
@@ -82,6 +98,36 @@ public interface IAdmPrivStateService
     /// Consulta el catálogo administrativo de privilegios al BFF (GET api/privileges).
     /// </summary>
     Task LoadAsync();
+
+    /// <summary>
+    /// Almacena en memoria el identificador del privilegio que se editará en /admsec/priv/edit.
+    /// </summary>
+    void SetSelectedEditPrivilegeId(int id);
+
+    /// <summary>
+    /// Limpia el identificador de privilegio seleccionado para edición.
+    /// </summary>
+    void ClearSelectedEditPrivilegeId();
+
+    /// <summary>
+    /// Obtiene el detalle fresco de un privilegio activo desde el BFF (GET api/privileges/{id}).
+    /// </summary>
+    Task<PrivilegeOperationResult<PrivilegeAdminItemDto>> GetByIdAsync(int id);
+
+    /// <summary>
+    /// Crea un nuevo privilegio en el BFF (POST api/privileges) y refresca el catálogo local si tiene éxito.
+    /// </summary>
+    Task<PrivilegeOperationResult<CreatePrivilegeResponseDto>> CreateAsync(CreatePrivilegeRequestDto request);
+
+    /// <summary>
+    /// Actualiza un privilegio activo en el BFF (PUT api/privileges/{id}) y refresca el catálogo local si tiene éxito.
+    /// </summary>
+    Task<PrivilegeOperationResult<UpdatePrivilegeResponseDto>> UpdateAsync(int id, UpdatePrivilegeRequestDto request);
+
+    /// <summary>
+    /// Inactiva lógicamente un privilegio activo en el BFF (DELETE api/privileges/{id}) y refresca el catálogo local si tiene éxito.
+    /// </summary>
+    Task<PrivilegeOperationResult<DeactivatePrivilegeResponseDto>> DeactivateAsync(int id, DeactivatePrivilegeRequestDto? request = null);
 
     /// <summary>
     /// Actualiza el filtro por estado ("A", "I" o "ALL") y reinicia la paginación.

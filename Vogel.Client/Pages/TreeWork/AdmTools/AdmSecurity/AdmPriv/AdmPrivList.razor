@@ -35,8 +35,13 @@
             <input type="checkbox" checked="@(item.Status == "A")" disabled aria-label="Estado activo" />
         </td>
         <td class="text-center">
+            @{
+                var isActive = string.Equals(item.Status, "A", StringComparison.OrdinalIgnoreCase);
+            }
             <button type="button"
                     class="vogel-btn vogel-btn--outline vogel-btn--sm"
+                    disabled="@(!isActive)"
+                    title="@(isActive ? "Editar privilegio" : "Solo se pueden editar privilegios activos")"
                     @onclick="() => HandleEditClick(item)">
                 Editar
             </button>
