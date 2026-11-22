@@ -1,0 +1,26 @@
+@page "/admsec/priv"
+@namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv
+
+@{
+    var blockWork = new BlockWork
+    {
+        Codename = "adm_priv",
+        Title = "Administración de Privilegios",
+        ShowInfo = true,
+        KeyMasterAttribute = "SystemId",
+        KeyDetailAttribute = "IdPrivilege",
+        ActionSet = new ActionBlockWork
+        {
+            Exit = "/admsec/menu"
+        },
+        ViewSet = new ViewBlockWork
+        {
+            Info = nameof(AdmPrivInfo),
+            Capture = nameof(AdmPrivCapture),
+            Filter = nameof(AdmPrivFilter),
+            List = nameof(AdmPrivList)
+        }
+    };
+}
+
+<WorkViewFrame BlockWork="@blockWork" ShowActionToolbar="false" />

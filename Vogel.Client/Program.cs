@@ -12,6 +12,7 @@ builder.Services.AddScoped<IClientLogger, ClientLogger>();
 builder.Services.AddScoped<SessionState>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<ISessionValidationService, SessionValidationService>();
+builder.Services.AddScoped<IAdmPrivStateService, AdmPrivStateService>();
 
 // Soporte de Autorización nativa de Blazor (AuthorizeView)
 builder.Services.AddAuthorizationCore();

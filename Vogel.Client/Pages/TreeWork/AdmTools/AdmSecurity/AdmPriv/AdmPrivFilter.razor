@@ -1,0 +1,69 @@
+@namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv
+
+<div class="vogel-filter-panel adm-priv-filter" role="search" aria-label="Filtros de privilegios">
+    <div class="adm-priv-filter__status" role="radiogroup" aria-label="Estado de privilegios">
+        <span class="vogel-master-field__label">Estado:</span>
+        <label class="adm-priv-filter__radio">
+            <input type="radio"
+                   name="admPrivStatus"
+                   value="A"
+                   checked="@(AdmPrivState.StatusFilter == "A")"
+                   @onchange="@(() => HandleStatusChanged("A"))" />
+            <span>Activos</span>
+        </label>
+        <label class="adm-priv-filter__radio">
+            <input type="radio"
+                   name="admPrivStatus"
+                   value="I"
+                   checked="@(AdmPrivState.StatusFilter == "I")"
+                   @onchange="@(() => HandleStatusChanged("I"))" />
+            <span>Inactivos</span>
+        </label>
+        <label class="adm-priv-filter__radio">
+            <input type="radio"
+                   name="admPrivStatus"
+                   value="ALL"
+                   checked="@(AdmPrivState.StatusFilter == "ALL")"
+                   @onchange="@(() => HandleStatusChanged("ALL"))" />
+            <span>Todos</span>
+        </label>
+    </div>
+
+    <div class="vogel-filter-panel__search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-search-icon">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text"
+               class="vogel-input vogel-filter-input"
+               placeholder="Filtrar por título (title)..."
+               aria-label="Filtrar por título"
+               value="@AdmPrivState.TitleFilter"
+               @oninput="HandleTitleInput" />
+        @if (!string.IsNullOrWhiteSpace(AdmPrivState.TitleFilter))
+        {
+            <button type="button"
+                    class="vogel-btn-clear"
+                    title="Limpiar filtro de título"
+                    aria-label="Limpiar filtro de título"
+                    @onclick="ClearTitleFilter">&times;</button>
+        }
+    </div>
+
+    <div class="adm-priv-filter__parent">
+        <input type="number"
+               class="vogel-input vogel-filter-input adm-priv-filter__parent-input"
+               placeholder="Filtrar por id_parent..."
+               aria-label="Filtrar por id_parent"
+               value="@AdmPrivState.IdParentFilter"
+               @oninput="HandleIdParentInput" />
+        @if (!string.IsNullOrWhiteSpace(AdmPrivState.IdParentFilter))
+        {
+            <button type="button"
+                    class="vogel-btn-clear"
+                    title="Limpiar filtro de id_parent"
+                    aria-label="Limpiar filtro de id_parent"
+                    @onclick="ClearIdParentFilter">&times;</button>
+        }
+    </div>
+</div>
