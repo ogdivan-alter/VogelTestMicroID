@@ -13,6 +13,11 @@ public interface IAuthenticationService
     Task<(bool Success, string ErrorMessage)> LoginAsync(string username, string password, bool rememberMe = false);
 
     /// <summary>
+    /// Cambia la contraseña del usuario autenticado (o mediante código de verificación) a través del BFF.
+    /// </summary>
+    Task<(bool Success, string ErrorMessage)> ChangePasswordAsync(string currentPassword, string newPassword, string? verificationCode = null);
+
+    /// <summary>
     /// Cierra la sesión actual, limpia el estado y el almacenamiento cifrado.
     /// </summary>
     Task LogoutAsync();

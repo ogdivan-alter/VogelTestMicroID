@@ -69,13 +69,13 @@
 
 ## Fase 4: Integración en `Vogel.Client`
 
-- [ ] **T4.1 — Extender `IAuthenticationService` / `AuthenticationService` con `ChangePasswordAsync`**
+- [x] **T4.1 — Extender `IAuthenticationService` / `AuthenticationService` con `ChangePasswordAsync`**
   - Recuperar token cifrado desde `ISecureSessionStorageService` (`BackendTokenKey`), enviar `POST api/auth/change-password` con `Authorization: Bearer <token>` y manejar respuesta/errores.
-- [ ] **T4.2 — Conectar `Vogel.Client/Pages/Auth/ChangePasswordView.razor.cs` con el BFF real**
+- [x] **T4.2 — Conectar `Vogel.Client/Pages/Auth/ChangePasswordView.razor.cs` con el BFF real**
   - Reemplazar la simulación `await Task.Delay(500)` por la llamada real a `AuthenticationService.ChangePasswordAsync`, mostrando errores de política (`400`) o éxito.
-- [ ] **T4.3 — Verificar compatibilidad de privilegios y sesión en `Vogel.Client`**
+- [x] **T4.3 — Verificar compatibilidad de privilegios y sesión en `Vogel.Client`**
   - Confirmar que `SessionState`, `MainMenu`, `SecondaryMenu`, `OptionMenu` y `SuboptionMenu` rendericen correctamente la jerarquía `Privilege` (`IdParent`, `Id`, `Codename`, `Group`, `Title`, `Action`, `Icon`, `Access`) proveniente de MicroID.
-- [ ] **T4.4 — Verificar limpieza de sesión y manejo de `401 Unauthorized` en cliente**
+- [x] **T4.4 — Verificar limpieza de sesión y manejo de `401 Unauthorized` en cliente**
   - Confirmar que `LogoutAsync` limpie `SecureSessionStorageService`, `SessionState` y llame a `POST api/auth/logout`.
 
 ---
@@ -115,3 +115,4 @@
 | Fecha | Tarea | Responsable | Resultado / Observaciones |
 |---|---|---|---|
 | 2026-11-22 | Reevaluación sobre fuentes `aaf0722` | Agente | Requerimiento y plan actualizados a la arquitectura real de Vogel (`Blazor Web App` + `Vogel.Server` BFF). |
+| 2026-11-22 | Fase 4 (`T4.1`–`T4.4`) | Especialista Blazor WASM | `ChangePasswordAsync` integrado con BFF (`Bearer`), `ChangePasswordView` conectado, jerarquía de privilegios y `LogoutAsync` verificados. |

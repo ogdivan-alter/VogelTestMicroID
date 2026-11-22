@@ -14,6 +14,7 @@ public class ChangePasswordViewBase : ComponentBase
 {
     [Inject] protected SessionState SessionState { get; set; } = default!;
     [Inject] protected NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] protected IAuthenticationService AuthenticationService { get; set; } = default!;
     [Inject] protected IClientLogger Logger { get; set; } = default!;
 
     protected ChangePasswordModel Model { get; set; } = new();
@@ -70,8 +71,18 @@ public class ChangePasswordViewBase : ComponentBase
 
         try
         {
-            // Simulación de cambio de contraseña exitoso (Fase 2 Mock)
-            await Task.Delay(500);
+            var (success, errorMessage) = await AuthenticationService.ChangePasswordAsync(
+                Model.CurrentPassword,
+                Model.NewPassword);
+
+            if (!success)
+            {
+                ErrorMessage = string.IsNullOrWhiteSpace(errorMessage)
+                    ? "No fue posible actualizar la contraseña."
+                    : errorMessage;
+                return;
+            }
+
             Model = new();
             SuccessMessage = "Contraseña actualizada exitosamente. Redirigiendo a inicio...";
             await Logger.LogInformationAsync($"Contraseña actualizada para usuario '{SessionState.CurrentUser?.Username}'.", nameof(ChangePasswordViewBase));

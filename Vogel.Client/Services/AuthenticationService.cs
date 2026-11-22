@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.Extensions.Configuration;
 using Vogel.Shared.DTOs;
@@ -114,6 +115,83 @@ public class AuthenticationService : IAuthenticationService
         {
             _sessionState.ClearUser();
             await _logger.LogErrorAsync("Error inesperado durante la autenticación con el BFF.", ex, nameof(AuthenticationService));
+            return (false, "Ha ocurrido un error inesperado al conectar con el servidor. Por favor intente nuevamente.");
+        }
+    }
+
+    /// <summary>
+    /// Envía la solicitud de cambio de contraseña al BFF (Vogel.Server) adjuntando el token de sesión Bearer.
+    /// </summary>
+    public async Task<(bool Success, string ErrorMessage)> ChangePasswordAsync(
+        string currentPassword,
+        string newPassword,
+        string? verificationCode = null)
+    {
+        try
+        {
+            var token = await _sessionStorage.GetItemDecryptedAsync(BackendTokenKey);
+
+            var requestDto = new ChangePasswordRequestDto
+            {
+                CurrentPassword = currentPassword,
+                NewPassword = newPassword,
+                VerificationCode = verificationCode
+            };
+
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "api/auth/change-password")
+            {
+                Content = JsonContent.Create(requestDto)
+            };
+
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
+
+            var response = await _httpClient.SendAsync(httpRequest);
+            var statusCode = (int)response.StatusCode;
+
+            ChangePasswordResponseDto? changeResponse = null;
+            try
+            {
+                changeResponse = await response.Content.ReadFromJsonAsync<ChangePasswordResponseDto>();
+            }
+            catch (Exception)
+            {
+                // En caso de respuesta de error no JSON
+            }
+
+            if (!response.IsSuccessStatusCode || changeResponse == null || !changeResponse.Success)
+            {
+                var errorMsg = changeResponse?.Message;
+                if (string.IsNullOrWhiteSpace(errorMsg))
+                {
+                    errorMsg = statusCode switch
+                    {
+                        400 => "La nueva contraseña no cumple con la política de seguridad requerida.",
+                        401 => "Su sesión ha expirado o no es válida. Por favor inicie sesión nuevamente.",
+                        _ => "No fue posible actualizar la contraseña. Intente nuevamente."
+                    };
+                }
+
+                await _logger.LogWarningAsync(
+                    $"Cambio de contraseña rechazado por el BFF con código {statusCode}.",
+                    nameof(AuthenticationService));
+                return (false, errorMsg);
+            }
+
+            var username = _sessionState.CurrentUser?.Username ?? "desconocido";
+            await _logger.LogInformationAsync(
+                $"Contraseña actualizada exitosamente en el BFF para usuario '{username}'.",
+                nameof(AuthenticationService));
+            return (true, string.Empty);
+        }
+        catch (Exception ex)
+        {
+            await _logger.LogErrorAsync(
+                "Error inesperado durante el cambio de contraseña con el BFF.",
+                ex,
+                nameof(AuthenticationService));
             return (false, "Ha ocurrido un error inesperado al conectar con el servidor. Por favor intente nuevamente.");
         }
     }
