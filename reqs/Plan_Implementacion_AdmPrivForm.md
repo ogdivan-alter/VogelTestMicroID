@@ -2,7 +2,7 @@
 
 - **Rama de trabajo:** `adm-priv-form` (creada desde `main`)
 - **Documento de requerimiento:** `reqs/Requerimiento_AdmPrivForm.md`
-- **Estado general:** Aprobado — En ejecución (Fase 1)
+- **Estado general:** Aprobado — En ejecución (Fase 2)
 
 ---
 
@@ -10,8 +10,8 @@
 
 | Fase | Descripción | Estado | Avance | Commit de Fase |
 | :--- | :--- | :--- | :---: | :--- |
-| **Fase 1** | Contratos compartidos (`Vogel.Shared`) y Backend BFF (`Vogel.Server` — modos `Api` y `Mock`) | Pendiente | 0% | — |
-| **Fase 2** | Frontend Blazor (`Vogel.Client` — estado, `AdmPrivForm` y vinculación en `AdmPriv`) | Pendiente | 0% | — |
+| **Fase 1** | Contratos compartidos (`Vogel.Shared`) y Backend BFF (`Vogel.Server` — modos `Api` y `Mock`) | Completada | 100% | `feat(adm-priv-form): implement phase 1 BFF endpoints and providers` |
+| **Fase 2** | Frontend Blazor (`Vogel.Client` — estado, `AdmPrivForm` y vinculación en `AdmPriv`) | En curso | 0% | — |
 | **Fase 3** | Pruebas Unitarias (`Vogel.Tests`) y Auditoría InfoSec (`vogel-infosec-guardian`) | Pendiente | 0% | — |
 | **Fase 4** | Verificación QA End-to-End (`vogel-qa-verifier`) y cierre de PR | Pendiente | 0% | — |
 
@@ -19,13 +19,13 @@
 
 ## Fase 1 — Contratos Compartidos (`Vogel.Shared`) y Backend BFF (`Vogel.Server`)
 
-- [ ] **T1.1** Ampliar `Vogel.Shared/DTOs/PrivilegeAdminDtos.cs` con los DTOs de solicitud y respuesta para creación (`CreatePrivilegeRequestDto`, `CreatePrivilegeResponseDto`), edición (`UpdatePrivilegeRequestDto`, `UpdatePrivilegeResponseDto`) e inactivación (`DeactivatePrivilegeRequestDto`, `DeactivatePrivilegeResponseDto`), incluyendo atributos de validación (`DataAnnotations` / longitudes máximas).
-- [ ] **T1.2** Ampliar `Vogel.Server/Services/IPrivilegeAdminProviderService.cs` con los records de resultado y métodos `GetPrivilegeAsync`, `CreatePrivilegeAsync`, `UpdatePrivilegeAsync` y `DeactivatePrivilegeAsync`.
-- [ ] **T1.3** Ampliar `Vogel.Server/Models/MicroId/MicroIdPrivilegeModels.cs` con los modelos de solicitud y respuesta para `POST /priv/get`, `POST /priv/create`, `POST /priv/update` y `POST /priv/delete`.
-- [ ] **T1.4** Implementar los 4 nuevos métodos en `Vogel.Server/Services/MicroId/MicroIdPrivilegeAdminService.cs` (modo `"Api"`), inyectando siempre `_options.SystemNumericId`, validando pertenencia al sistema en `GetPrivilegeAsync`, y mapeando códigos de error de MicroID (`ERR_INVALID_PAYLOAD`, `ERR_INACTIVE_MASTER`, `ERR_SYSTEM_MISMATCH`, `ERR_AUTH_FAILED`, etc.) a códigos HTTP sanitizados.
-- [ ] **T1.5** Implementar los 4 nuevos métodos en `Vogel.Server/Services/MockPrivilegeAdminService.cs` (modo `"Mock"`) con estado en memoria sincronizado (thread-safe), validación de `id_parent` y prevención de autorreferencia/ciclos.
-- [ ] **T1.6** Ampliar `Vogel.Server/Controllers/PrivilegesController.cs` con los endpoints `GET /api/privileges/{id:int}`, `POST /api/privileges`, `PUT /api/privileges/{id:int}` y `DELETE /api/privileges/{id:int}`, exigiendo token de sesión y validando entrada antes de delegar en `IPrivilegeAdminProviderService`.
-- [ ] **T1.7** Verificar compilación limpia (`dotnet build`) y realizar commit de Fase 1 en `adm-priv-form`.
+- [x] **T1.1** Ampliar `Vogel.Shared/DTOs/PrivilegeAdminDtos.cs` con los DTOs de solicitud y respuesta para creación (`CreatePrivilegeRequestDto`, `CreatePrivilegeResponseDto`), edición (`UpdatePrivilegeRequestDto`, `UpdatePrivilegeResponseDto`) e inactivación (`DeactivatePrivilegeRequestDto`, `DeactivatePrivilegeResponseDto`), incluyendo atributos de validación (`DataAnnotations` / longitudes máximas).
+- [x] **T1.2** Ampliar `Vogel.Server/Services/IPrivilegeAdminProviderService.cs` con los records de resultado y métodos `GetPrivilegeAsync`, `CreatePrivilegeAsync`, `UpdatePrivilegeAsync` y `DeactivatePrivilegeAsync`.
+- [x] **T1.3** Ampliar `Vogel.Server/Models/MicroId/MicroIdPrivilegeModels.cs` con los modelos de solicitud y respuesta para `POST /priv/get`, `POST /priv/create`, `POST /priv/update` y `POST /priv/delete`.
+- [x] **T1.4** Implementar los 4 nuevos métodos en `Vogel.Server/Services/MicroId/MicroIdPrivilegeAdminService.cs` (modo `"Api"`), inyectando siempre `_options.SystemNumericId`, validando pertenencia al sistema en `GetPrivilegeAsync`, y mapeando códigos de error de MicroID (`ERR_INVALID_PAYLOAD`, `ERR_INACTIVE_MASTER`, `ERR_SYSTEM_MISMATCH`, `ERR_AUTH_FAILED`, etc.) a códigos HTTP sanitizados.
+- [x] **T1.5** Implementar los 4 nuevos métodos en `Vogel.Server/Services/MockPrivilegeAdminService.cs` (modo `"Mock"`) con estado en memoria sincronizado (thread-safe), validación de `id_parent` y prevención de autorreferencia/ciclos.
+- [x] **T1.6** Ampliar `Vogel.Server/Controllers/PrivilegesController.cs` con los endpoints `GET /api/privileges/{id:int}`, `POST /api/privileges`, `PUT /api/privileges/{id:int}` y `DELETE /api/privileges/{id:int}`, exigiendo token de sesión y validando entrada antes de delegar en `IPrivilegeAdminProviderService`.
+- [x] **T1.7** Verificar compilación limpia (`dotnet build`) y realizar commit de Fase 1 en `adm-priv-form`.
 
 ---
 
