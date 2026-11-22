@@ -1,0 +1,45 @@
+@namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv
+
+@if (!string.IsNullOrWhiteSpace(AdmPrivState.ErrorMessage))
+{
+    <div class="vogel-work-view-frame__alert vogel-work-view-frame__alert--info" role="alert">
+        <span>@AdmPrivState.ErrorMessage</span>
+    </div>
+}
+
+<ListViewFrame TItem="PrivilegeAdminItemDto"
+               PageSize="@AdmPrivState.PageSize"
+               CurrentPage="@AdmPrivState.CurrentPage"
+               TotalCount="@AdmPrivState.TotalFilteredCount"
+               Data="@AdmPrivState.PagedItems"
+               PageMethod="HandlePageChangedAsync"
+               IsLoading="@AdmPrivState.IsLoading">
+    <HeaderContent>
+        <th scope="col">codename</th>
+        <th scope="col">title</th>
+        <th scope="col">id_parent</th>
+        <th scope="col">groupname</th>
+        <th scope="col" class="text-center">status</th>
+        <th scope="col" class="text-center"></th>
+    </HeaderContent>
+    <RowTemplate Context="item">
+        <td>
+            <span class="vogel-item-code">@item.Codename</span>
+        </td>
+        <td>@item.Title</td>
+        <td class="font-mono">@item.IdParent</td>
+        <td>
+            <span class="vogel-badge vogel-badge--muted">@item.GroupName</span>
+        </td>
+        <td class="text-center">
+            <input type="checkbox" checked="@(item.Status == "A")" disabled aria-label="Estado activo" />
+        </td>
+        <td class="text-center">
+            <button type="button"
+                    class="vogel-btn vogel-btn--outline vogel-btn--sm"
+                    @onclick="() => HandleEditClick(item)">
+                Editar
+            </button>
+        </td>
+    </RowTemplate>
+</ListViewFrame>
