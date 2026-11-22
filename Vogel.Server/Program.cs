@@ -54,6 +54,8 @@ builder.Services.AddHttpClient<IMicroIdApiClient, MicroIdApiClient>((sp, client)
     client.Timeout = TimeSpan.FromSeconds(opts.TimeoutSeconds);
 });
 
+builder.Services.AddScoped<IMicroIdAuthService, MicroIdAuthService>();
+
 // Cliente HTTP del BFF hacia el Backend de negocio y autenticación externo
 var apiBackendBaseUrl = builder.Configuration["ApiBackend:BaseUrl"] ?? "https://localhost:7113";
 builder.Services.AddHttpClient<IBackendApiService, BackendApiService>(client =>

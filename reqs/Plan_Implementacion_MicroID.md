@@ -12,7 +12,7 @@
 |---|---|---|---|
 | Fase 1 | Configuración y Contratos Compartidos (`Vogel.Shared` & `appsettings`) | Completado | 4 / 4 |
 | Fase 2 | Cliente HTTP MicroID y Gestión Automática de `X-System-Key` (`Vogel.Server`) | Completado | 5 / 5 |
-| Fase 3 | Integración BFF en `AuthController` y `IMicroIdAuthService` (`Vogel.Server`) | Pendiente | 0 / 5 |
+| Fase 3 | Integración BFF en `AuthController` y `IMicroIdAuthService` (`Vogel.Server`) | Completado | 5 / 5 |
 | Fase 4 | Integración en `Vogel.Client` (Cambio de Clave Real y Validación de Privilegios) | Pendiente | 0 / 4 |
 | Fase 5 | Hardening de Seguridad del Servicio Vogel y Auditoría InfoSec | Pendiente | 0 / 5 |
 | Fase 6 | Pruebas Funcionales End-to-End (`carlos.gomez`) y Verificación | Pendiente | 0 / 5 |
@@ -53,16 +53,16 @@
 
 ## Fase 3: Integración BFF en `AuthController` y `MicroIdAuthService`
 
-- [ ] **T3.1 — Implementar `IMicroIdAuthService` / `MicroIdAuthService` en `Vogel.Server/Services/`**
+- [x] **T3.1 — Implementar `IMicroIdAuthService` / `MicroIdAuthService` en `Vogel.Server/Services/`**
   - `LoginAsync`: consumir `POST /login` y `POST /user/get`, mapear `PrivilegeNodeDto` -> `Vogel.Shared.Models.Privilege` (jerarquía completa + 7 verbos de `PrivilegeAccess`) y `User` (`TypeAuthentication`, `AllowPasswordChange`).
   - Manejar caso de usuario sin privilegios si aplica (`ERR_EMPTY_EFFECTIVE_LIST` o lista vacía según política de `AuthController`).
-- [ ] **T3.2 — Integrar `AuthProvider = "MicroID"` en `AuthController.Login`**
+- [x] **T3.2 — Integrar `AuthProvider = "MicroID"` en `AuthController.Login`**
   - Emitir `X-Session-Token` y `Authorization: Bearer <token>` en la respuesta y retornar `LoginResponseDto` con `User`.
-- [ ] **T3.3 — Integrar `AuthProvider = "MicroID"` en `AuthController.Privileges` (`GET /api/auth/privileges`)**
+- [x] **T3.3 — Integrar `AuthProvider = "MicroID"` en `AuthController.Privileges` (`GET /api/auth/privileges`)**
   - Extraer `username` del JWT (claims `preferred_username` / `unique_name` / `sub`) o parámetro, invocar `POST /auth` en MicroID y retornar `BackendPrivilegesResponseDto` con privilegios vigentes.
-- [ ] **T3.4 — Implementar `POST /api/auth/change-password` en `AuthController` y `MicroIdAuthService`**
+- [x] **T3.4 — Implementar `POST /api/auth/change-password` en `AuthController` y `MicroIdAuthService`**
   - Resolver `id_user` del usuario autenticado vía `POST /user/get` usando su `Bearer` token (anti-BOLA/IDOR) e invocar `POST /user/changepw`, propagando errores de política (`ERR_PASSWORD_POLICY` -> `400`).
-- [ ] **T3.5 — Verificar convivencia con `AuthProvider = "Mock"` y `"Api"`**
+- [x] **T3.5 — Verificar convivencia con `AuthProvider = "Mock"` y `"Api"`**
   - Asegurar que `IMockDataService` (`Mock`) e `IBackendApiService` (`Api`, `BlockWorkController`) sigan funcionando sin regresiones.
 
 ---
