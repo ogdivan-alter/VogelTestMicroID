@@ -12,7 +12,7 @@
 |---|---|---|---|
 | Fase 1 | Contratos Compartidos (`Vogel.Shared`) y Proveedor BFF Desacoplado (`Vogel.Server`) | Completada | 4 / 4 |
 | Fase 2 | Estado Compartido y Vistas en `AdmPriv` (`Vogel.Client`) | Completada | 6 / 6 |
-| Fase 3 | Auditoría InfoSec (`vogel-infosec-guardian`) y Verificación QA (`vogel-qa-verifier`) | Pendiente | 0 / 4 |
+| Fase 3 | Auditoría InfoSec (`vogel-infosec-guardian`) y Verificación QA (`vogel-qa-verifier`) | Completado | 4 / 4 |
 
 ---
 
@@ -56,13 +56,13 @@
 
 ## Fase 3: Auditoría InfoSec y Verificación QA
 
-- [ ] **T3.1 — Compilación y pruebas unitarias (`dotnet build Vogel.slnx` y `dotnet test Vogel.slnx`)**
+- [x] **T3.1 — Compilación y pruebas unitarias (`dotnet build Vogel.slnx` y `dotnet test Vogel.slnx`)**
   - Verificar 0 errores y 0 advertencias.
 - [x] **T3.2 — Auditoría de `vogel-infosec-guardian`**
   - Verificar desacoplamiento de `PrivilegesController`, exigencia de token Bearer, cabeceras `no-store` y ausencia de secretos en cliente/logs.
-- [ ] **T3.3 — Prueba funcional contra MicroID (`http://localhost:8021`)**
+- [x] **T3.3 — Prueba funcional contra MicroID (`http://localhost:8021`)**
   - Verificar que `GET /api/privileges` con token de sesión válido consulta `POST /priv/list` en MicroID y retorna los privilegios del sistema `"MICROID"` con sus estados `"A"` / `"I"`.
-- [ ] **T3.4 — Verificación de filtros y renderizado de `AdmPriv`**
+- [x] **T3.4 — Verificación de filtros y renderizado de `AdmPriv`**
   - Verificar filtro por estado (`Activos` por defecto, `Inactivos`, `Todos`), filtro *ignorecase* por `title`, filtro por `id_parent` y checkbox no editable de `status`.
 
 ---
@@ -75,3 +75,4 @@
 | 2026-11-22 | T3.2 — Auditoría InfoSec (`AdmPriv`) | `vogel-infosec-guardian` | **APROBADO (0 Críticos, 0 Altos, 0 Medios, 2 Bajos / 1 Informativo no bloqueantes)**. Verificado: desacoplamiento total en `PrivilegesController`, validación de Bearer/`X-Session-Token` (401), lista blanca de `status` y cero secretos en logs (`MicroIdPrivilegeAdminService` / `MockPrivilegeAdminService`), `Cache-Control: no-store, no-cache` + `Pragma: no-cache` en `/api/privileges` y `/api/v1/privileges`, cliente sin `X-System-Key`/`8021`/`MarkupString` y `F:\LABORATORIO\2026\MICROID` intacto. |
 | 2026-11-22 | T2.1–T2.6 — Estado compartido y vistas `AdmPriv` (`Vogel.Client`) | Especialista Frontend Blazor | Implementados `IAdmPrivStateService`/`AdmPrivStateService` (registrado Scoped en `Program.cs`) y las 5 vistas con Code-Behind en `AdmPriv` (`AdmPriv`, `AdmPrivInfo`, `AdmPrivCapture`, `AdmPrivFilter`, `AdmPrivList`). `dotnet build Vogel.slnx` (0 errores, 0 advertencias) y `dotnet test Vogel.slnx --no-build` (76/76 superadas). |
 | 2026-11-22 | T1.1–T1.4 — Contratos compartidos y proveedor BFF desacoplado (`Vogel.Shared` / `Vogel.Server`) | Especialista Backend BFF | Creados `PrivilegeAdminDtos.cs`, `MicroIdPrivilegeModels.cs`, `IPrivilegeAdminProviderService.cs`, `MicroIdPrivilegeAdminService.cs`, `MockPrivilegeAdminService.cs` y `PrivilegesController.cs`; actualizados `SecurityHeadersMiddleware.cs` (`no-store`/`no-cache` en `/api/privileges` y `/api/v1/privileges`) y `Program.cs` (registro Scoped con resolución por `AuthProvider`). `dotnet build Vogel.slnx` (0 errores, 0 advertencias) y `dotnet test Vogel.slnx --no-build` (76/76 superadas). |
+| 2026-11-22 | T3.1, T3.3 y T3.4 — Verificación QA y E2E (`AdmPriv`) | `vogel-qa-verifier` | **APROBADO**. **T3.1:** Agregadas 5 pruebas unitarias en `Vogel.Tests/AdmPrivStateServiceTests.cs` (`StatusFilter="A"` por defecto, `"I"`, `"ALL"`, filtro *ignorecase* por `title`, filtro exacto por `id_parent`, token Bearer y manejo `401`); `dotnet build Vogel.slnx` (0 errores, 0 advertencias) y `dotnet test Vogel.slnx --no-build` (**81/81 superadas**). **T3.3:** Contra MicroID (`http://localhost:8021`) vía `Vogel.Server` temporal (`http://localhost:5031`): login `carlos.gomez` -> `200 OK` + `X-Session-Token`; `GET /api/privileges` sin token -> `401 Unauthorized`; `GET /api/privileges` con Bearer -> `200 OK`, `Cache-Control: no-store, no-cache`, `Pragma: no-cache`, `systemCode = "MICROID"`, `idSystem = 1`, 3 privilegios (`main_access`, `first_option`, `first_suboption`). **T3.4:** `GET /admsec/priv` -> `200 OK`; validados `CA-01` a `CA-06` en `AdmPriv`, `AdmPrivInfo`, `AdmPrivCapture`, `AdmPrivFilter` y `AdmPrivList`. Servidor temporal detenido limpiamente y `F:\LABORATORIO\2026\MICROID` intacto. |
