@@ -14,7 +14,7 @@
 | Fase 2 | Cliente HTTP MicroID y Gestión Automática de `X-System-Key` (`Vogel.Server`) | Completado | 5 / 5 |
 | Fase 3 | Integración BFF en `AuthController` y `IMicroIdAuthService` (`Vogel.Server`) | Completado | 5 / 5 |
 | Fase 4 | Integración en `Vogel.Client` (Cambio de Clave Real y Validación de Privilegios) | Pendiente | 0 / 4 |
-| Fase 5 | Hardening de Seguridad del Servicio Vogel y Auditoría InfoSec | En progreso | 4 / 5 |
+| Fase 5 | Hardening de Seguridad del Servicio Vogel y Auditoría InfoSec | Completado | 5 / 5 |
 | Fase 6 | Pruebas Funcionales End-to-End (`carlos.gomez`) y Verificación | Pendiente | 0 / 5 |
 
 ---
@@ -90,7 +90,7 @@
   - Verificar que no se registren contraseñas, `X-System-Key`, `plain_api_key` ni JWT en `Serilog` (consola/archivo), sanitizar `\r`/`\n` en `username`, y validar que `GlobalExceptionFilter` no filtre detalles internos en producción.
 - [x] **T5.4 — Auditar validación de DTOs y superficie de controladores en `Vogel.Server`**
   - Verificar `[Required]` / `[MaxLength]` en DTOs de entrada y revisar controladores (`AuthController`, `BlockWorkController`, `SessionController`, `LogsController`, `ReportsController`).
-- [ ] **T5.5 — Auditoría integral de `vogel-infosec-guardian` (OWASP / NIST SP 800-63B / RFC 7519)**
+- [x] **T5.5 — Auditoría integral de `vogel-infosec-guardian` (OWASP / NIST SP 800-63B / RFC 7519)**
   - Emitir dictamen final con 0 hallazgos Críticos/Altos abiertos.
 
 ---
@@ -116,3 +116,4 @@
 |---|---|---|---|
 | 2026-11-22 | Reevaluación sobre fuentes `aaf0722` | Agente | Requerimiento y plan actualizados a la arquitectura real de Vogel (`Blazor Web App` + `Vogel.Server` BFF). |
 | 2026-11-22 | Fase 4 (`T4.1`–`T4.4`) | Especialista Blazor WASM | `ChangePasswordAsync` integrado con BFF (`Bearer`), `ChangePasswordView` conectado, jerarquía de privilegios y `LogoutAsync` verificados. |
+| 2026-11-22 | `T5.5` Auditoría InfoSec | `vogel-infosec-guardian` | **APROBADO (0 Críticos, 0 Altos)**. Verificados `SecurityHeadersMiddleware`, `AuthStrict` Rate Limiting (`429`), `CookiePolicyOptions`, `MicroIdOptions` (HTTPS fuera de loopback), gestión en memoria de `X-System-Key`, anti-replay (`X-Request-Id`/`X-Timestamp`), anti-BOLA/IDOR en `ChangePasswordAsync`, sanitización anti-Log Forging y cero secretos en `Serilog`/`Vogel.Client`. `MICROID` intacto. `dotnet build` (0 errores) y `dotnet test` (76/76). Observaciones Medio/Bajo: validar token en endpoints emulados (`BlockWorkController`/`ReportsController`) antes de exponer datos reales en producción y considerar `UseForwardedHeaders` tras proxy inverso. |
