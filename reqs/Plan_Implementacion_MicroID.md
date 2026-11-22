@@ -10,8 +10,8 @@
 
 | Fase | Descripción | Estado | Avance |
 |---|---|---|---|
-| Fase 1 | Configuración y Contratos Compartidos (`Vogel.Shared` & `appsettings`) | Pendiente | 0 / 4 |
-| Fase 2 | Cliente HTTP MicroID y Gestión Automática de `X-System-Key` (`Vogel.Server`) | Pendiente | 0 / 5 |
+| Fase 1 | Configuración y Contratos Compartidos (`Vogel.Shared` & `appsettings`) | Completado | 4 / 4 |
+| Fase 2 | Cliente HTTP MicroID y Gestión Automática de `X-System-Key` (`Vogel.Server`) | Completado | 5 / 5 |
 | Fase 3 | Integración BFF en `AuthController` y `IMicroIdAuthService` (`Vogel.Server`) | Pendiente | 0 / 5 |
 | Fase 4 | Integración en `Vogel.Client` (Cambio de Clave Real y Validación de Privilegios) | Pendiente | 0 / 4 |
 | Fase 5 | Hardening de Seguridad del Servicio Vogel y Auditoría InfoSec | Pendiente | 0 / 5 |
@@ -21,16 +21,16 @@
 
 ## Fase 1: Configuración y Contratos Compartidos
 
-- [ ] **T1.1 — Configurar opciones de MicroID y `AuthProvider` en `Vogel.Server/appsettings.json`**
+- [x] **T1.1 — Configurar opciones de MicroID y `AuthProvider` en `Vogel.Server/appsettings.json`**
   - Actualizar `AuthProvider` a `"MicroID"` (manteniendo soporte para `"Mock"` y `"Api"`).
   - Agregar sección `MicroId`: `BaseUrl` (`"http://localhost:8021"`), `SystemId` (`"MICROID"`), `SystemNumericId` (`1`), `TimeoutSeconds` (`30`), `CredRenovation` (`"MONTHLY"`).
   - Verificar que `SecurityHeaders:Content-Security-Policy` permita los recursos locales necesarios sin romper Blazor WASM.
-- [ ] **T1.2 — Crear `MicroIdOptions` en `Vogel.Server/Configuration/MicroIdOptions.cs`**
+- [x] **T1.2 — Crear `MicroIdOptions` en `Vogel.Server/Configuration/MicroIdOptions.cs`**
   - Implementar validación con `DataAnnotations` + `IValidatableObject` (exigir `https://` si `BaseUrl` no es loopback, validar `CredRenovation` en `MONTHLY | ANNUAL | TEMPORARY`).
-- [ ] **T1.3 — Crear/extender DTOs en `Vogel.Shared/DTOs/`**
+- [x] **T1.3 — Crear/extender DTOs en `Vogel.Shared/DTOs/`**
   - Crear `ChangePasswordRequestDto` (`CurrentPassword`, `NewPassword`, `VerificationCode?` con `[Required]` y `[MaxLength]`) y `ChangePasswordResponseDto` (`Success`, `Message`).
   - Agregar `[MaxLength]` en `LoginRequestDto` si aplica y asegurar compatibilidad de `BackendAccessDto` / `PrivilegeAccess` con los 7 verbos.
-- [ ] **T1.4 — Crear DTOs internos de protocolo MicroID en `Vogel.Server/Models/MicroId/`**
+- [x] **T1.4 — Crear DTOs internos de protocolo MicroID en `Vogel.Server/Models/MicroId/`**
   - `MicroIdEnvelope.cs` (`MicroIdRequestMessage<T>`, `MicroIdResponseMessage<T>`, `MicroIdResponseCodes`).
   - `MicroIdCredsModels.cs`, `MicroIdAuthModels.cs` (`PrivilegeNodeDto` con los 7 verbos), `MicroIdUserModels.cs` (`UserDetailResponse`, `MicroIdChangePasswordRequest/Response`).
 
@@ -38,15 +38,15 @@
 
 ## Fase 2: Cliente HTTP MicroID y Gestión Automática de `X-System-Key`
 
-- [ ] **T2.1 — Implementar `IMicroIdSystemKeyProvider` / `MicroIdSystemKeyProvider` (Singleton)**
+- [x] **T2.1 — Implementar `IMicroIdSystemKeyProvider` / `MicroIdSystemKeyProvider` (Singleton)**
   - Caché *thread-safe* en memoria (`SemaphoreSlim`) para `PlainApiKey` y `DateExpiration`, con método `InvalidateKey()`.
-- [ ] **T2.2 — Implementar consumo de `POST /creds/create`**
+- [x] **T2.2 — Implementar consumo de `POST /creds/create`**
   - Enviar `X-Request-Id` (UUID v4), `X-Timestamp` (UTC ISO 8601 `"O"`) y `{ "data": { "id_system": 1, "renovation": "MONTHLY" } }`.
-- [ ] **T2.3 — Implementar `IMicroIdApiClient` / `MicroIdApiClient` con `IHttpClientFactory`**
+- [x] **T2.3 — Implementar `IMicroIdApiClient` / `MicroIdApiClient` con `IHttpClientFactory`**
   - Inyectar `X-Request-Id`, `X-Timestamp`, `X-System-Id`, `X-System-Key` y `Authorization: Bearer <token>` opcional.
-- [ ] **T2.4 — Implementar reintento único automático ante `ERR_INVALID_SYSTEM_KEY`**
+- [x] **T2.4 — Implementar reintento único automático ante `ERR_INVALID_SYSTEM_KEY`**
   - Invalidar llave en caché, solicitar nueva vía `/creds/create` y reintentar la petición una vez.
-- [ ] **T2.5 — Registrar opciones y clientes HTTP en `Vogel.Server/Program.cs`**
+- [x] **T2.5 — Registrar opciones y clientes HTTP en `Vogel.Server/Program.cs`**
   - Registrar `MicroIdOptions` (`ValidateDataAnnotations().ValidateOnStart()`), `IMicroIdSystemKeyProvider` e `IMicroIdApiClient`.
 
 ---

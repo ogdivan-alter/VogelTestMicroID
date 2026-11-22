@@ -47,7 +47,9 @@ public record BackendAccessDto(
     [property: JsonPropertyName("modify")] bool Modify,
     [property: JsonPropertyName("write")] bool Write,
     [property: JsonPropertyName("delete")] bool Delete,
-    [property: JsonPropertyName("approve")] bool Approve);
+    [property: JsonPropertyName("approve")] bool Approve,
+    [property: JsonPropertyName("validate")] bool Validate = false,
+    [property: JsonPropertyName("execute")] bool Execute = false);
 
 /// <summary>
 /// Estructura de error devuelta por el MockBackend API (401, 403, etc.).

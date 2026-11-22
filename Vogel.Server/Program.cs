@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.CookiePolicy;
+using Microsoft.Extensions.Options;
 using Serilog;
 using Vogel.Server.Components;
+using Vogel.Server.Configuration;
 using Vogel.Server.Filters;
 using Vogel.Server.Middleware;
 using Vogel.Server.Services;
+using Vogel.Server.Services.MicroId;
 using Vogel.Shared.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +31,28 @@ builder.Services.AddSingleton<ServerSessionInfo>();
 
 // Servicio de datos simulados local (soporte para modo Mock)
 builder.Services.AddSingleton<IMockDataService, MockDataService>();
+
+// Configuración y clientes HTTP para integración con MicroID
+builder.Services.AddOptions<MicroIdOptions>()
+    .Bind(builder.Configuration.GetSection(MicroIdOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddHttpClient(MicroIdSystemKeyProvider.HttpClientName, (sp, client) =>
+{
+    var opts = sp.GetRequiredService<IOptions<MicroIdOptions>>().Value;
+    client.BaseAddress = new Uri(opts.BaseUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(opts.TimeoutSeconds);
+});
+
+builder.Services.AddSingleton<IMicroIdSystemKeyProvider, MicroIdSystemKeyProvider>();
+
+builder.Services.AddHttpClient<IMicroIdApiClient, MicroIdApiClient>((sp, client) =>
+{
+    var opts = sp.GetRequiredService<IOptions<MicroIdOptions>>().Value;
+    client.BaseAddress = new Uri(opts.BaseUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(opts.TimeoutSeconds);
+});
 
 // Cliente HTTP del BFF hacia el Backend de negocio y autenticación externo
 var apiBackendBaseUrl = builder.Configuration["ApiBackend:BaseUrl"] ?? "https://localhost:7113";
