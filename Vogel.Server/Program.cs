@@ -69,6 +69,19 @@ builder.Services.AddScoped<IAuthProviderService>(sp =>
         : sp.GetRequiredService<MicroIdAuthService>();
 });
 
+// Proveedores de administración de privilegios desacoplados para el BFF (Api [MicroID] por defecto, Mock explícito)
+builder.Services.AddScoped<MicroIdPrivilegeAdminService>();
+builder.Services.AddScoped<MockPrivilegeAdminService>();
+builder.Services.AddScoped<IPrivilegeAdminProviderService>(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var authProvider = configuration.GetValue<string>("AuthProvider", "Api") ?? "Api";
+
+    return string.Equals(authProvider, "Mock", StringComparison.OrdinalIgnoreCase)
+        ? sp.GetRequiredService<MockPrivilegeAdminService>()
+        : sp.GetRequiredService<MicroIdPrivilegeAdminService>();
+});
+
 // Cliente HTTP del BFF hacia el Backend de negocio y autenticación externo
 var apiBackendBaseUrl = builder.Configuration["ApiBackend:BaseUrl"];
 builder.Services.AddHttpClient<IBackendApiService, BackendApiService>(client =>
