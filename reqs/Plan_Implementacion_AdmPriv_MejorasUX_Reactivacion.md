@@ -12,8 +12,8 @@
 | Fase | Descripción | Estado | Responsable |
 | :--- | :--- | :---: | :--- |
 | **Fase 1** | Contratos compartidos (`Vogel.Shared`) y Backend BFF (`Vogel.Server` — `Api` y `Mock`) | ✅ Completada | Backend |
-| **Fase 2** | Assets SVG (`wwwroot/icons/`), Estado Cliente y Mejoras UI/UX (`Vogel.Client` — Issues #3, #4, #6) | 🔄 En progreso | Frontend |
-| **Fase 3** | Pruebas Unitarias y de Integración (`Vogel.Tests`) | ⏳ Pendiente | Backend / Frontend |
+| **Fase 2** | Assets SVG (`wwwroot/icons/`), Estado Cliente y Mejoras UI/UX (`Vogel.Client` — Issues #3, #4, #6) | ✅ Completada | Frontend |
+| **Fase 3** | Pruebas Unitarias y de Integración (`Vogel.Tests`) | 🔄 En progreso | Backend / Frontend |
 | **Fase 4** | Auditoría de Seguridad de la Información (`vogel-infosec-guardian`) | ⏳ Pendiente | InfoSec |
 | **Fase 5** | Verificación QA End-to-End (`vogel-qa-verifier` — Modo `Api` MicroID real y Modo `Mock`) | ⏳ Pendiente | QA |
 
@@ -36,20 +36,20 @@
 
 ## Fase 2 — Assets SVG, Estado Cliente y Mejoras UI/UX (`Vogel.Client`)
 
-- [ ] **T2.1** Crear los archivos SVG limpios (sin scripts ni eventos inline) en `Vogel.Client/wwwroot/icons/`:
+- [x] **T2.1** Crear los archivos SVG limpios (sin scripts ni eventos inline) en `Vogel.Client/wwwroot/icons/`:
   - `plus.svg` (Crear privilegio en `AdmPrivCapture`).
   - `edit.svg` (Editar privilegio en `AdmPrivList`).
   - `reactivate.svg` (Reactivar privilegio en `AdmPrivList`).
-- [ ] **T2.2** Extender `IAdmPrivStateService` y `AdmPrivStateService`:
+- [x] **T2.2** Extender `IAdmPrivStateService` y `AdmPrivStateService`:
   - Agregar `ReactivateAsync(int id)` llamando a `POST api/privileges/{id}/reactivate` con cabecera de sesión.
   - Recargar el catálogo local (`LoadAsync()`) tras reactivación exitosa y manejar mensajes de éxito/error limpios.
-- [ ] **T2.3** Refactorizar `AdmPrivFilter.razor` y `AdmPrivFilter.razor.css` (Issue #3):
+- [x] **T2.3** Refactorizar `AdmPrivFilter.razor` y `AdmPrivFilter.razor.css` (Issue #3):
   - Apilar verticalmente las 3 opciones de filtro con etiquetas explícitas a la izquierda (`ESTADO`, `TÍTULO`, `ID_PARENT`) y controles a la derecha.
   - Verificar asociación semántica `for`/`id` y `aria-labelledby`, comportamiento responsive y botones limpiar (`×`).
-- [ ] **T2.4** Refactorizar `AdmPrivCapture.razor` y estilos asociados (Issue #4):
+- [x] **T2.4** Refactorizar `AdmPrivCapture.razor` y estilos asociados (Issue #4):
   - Alinear a la derecha el botón **Crear privilegio**.
   - Aplicar la convención visual del botón `Salir` de `HeaderWork` (`FormMockView`) y referenciar el SVG desde `wwwroot/icons/plus.svg`.
-- [ ] **T2.5** Refactorizar `AdmPrivList.razor` y `AdmPrivList.razor.cs` (Issues #4 y #6):
+- [x] **T2.5** Refactorizar `AdmPrivList.razor` y `AdmPrivList.razor.cs` (Issues #4 y #6):
   - Para registros activos (`Status == "A"`): renderizar únicamente el botón **Editar** con patrón de botón de lista (solo ícono `icons/edit.svg`, sin texto, `title="Editar privilegio"`, `aria-label="Editar privilegio"`).
   - Para registros inactivos (`Status == "I"`): ocultar **Editar** y renderizar el botón **Reactivar** (solo ícono `icons/reactivate.svg`, sin texto, `title="Reactivar privilegio"`, `aria-label="Reactivar privilegio"`).
   - Implementar `HandleReactivateClickAsync(PrivilegeAdminItemDto item)` en Code-Behind con protección contra doble clic por fila (`ReactivatingPrivilegeId`), manejo de errores y alerta de éxito/error descartable.
@@ -94,3 +94,4 @@
 | :--- | :--- | :--- |
 | 2026-11-23 | Levantamiento | Se consolidaron los issues `#3`, `#4` y `#6`, se verificó el contrato real `POST /priv/reactivate` en MicroID (solo lectura), se creó la rama `adm-priv-ux-reactivate` desde `main` y se generaron los 2 documentos en `reqs/`. Aprobado por el usuario para iniciar ejecución. |
 | 2026-11-23 | Fase 1 (`T1.1`–`T1.6`) | Implementados DTOs, contratos, modelos MicroID, `MicroIdPrivilegeAdminService.ReactivatePrivilegeAsync` (con ownership check anti-BOLA/IDOR), `MockPrivilegeAdminService.ReactivatePrivilegeAsync` y endpoint `POST api/privileges/{id}/reactivate`. Build `Vogel.Server` verde (0 errores, 0 warnings). |
+| 2026-11-23 | Fase 2 (`T2.1`–`T2.5`) | Creados SVGs limpios (`plus.svg`, `edit.svg`, `reactivate.svg`), extendido `AdmPrivStateService.ReactivateAsync`, refactorizados `AdmPrivFilter` (apilado vertical), `AdmPrivCapture` (botón alineado a la derecha estilo `HeaderWork`) y `AdmPrivList` (botones solo ícono + reactivación). Build `Vogel.Client` verde (0 errores, 0 warnings). |

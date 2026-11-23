@@ -40,6 +40,8 @@ public sealed class AdmPrivStateService : IAdmPrivStateService
 
     public string? ErrorMessage { get; private set; }
 
+    public string? SuccessMessage { get; private set; }
+
     public string StatusFilter { get; private set; } = "A";
 
     public string TitleFilter { get; private set; } = string.Empty;
@@ -420,6 +422,106 @@ public sealed class AdmPrivStateService : IAdmPrivStateService
                 (int)HttpStatusCode.InternalServerError,
                 "Ocurrió un error al inactivar el privilegio.");
         }
+    }
+
+    public async Task<PrivilegeOperationResult<ReactivatePrivilegeResponseDto>> ReactivateAsync(int id)
+    {
+        SuccessMessage = null;
+
+        if (id <= 0)
+        {
+            ErrorMessage = "El identificador del privilegio no es válido.";
+            NotifyStateChanged();
+            return new PrivilegeOperationResult<ReactivatePrivilegeResponseDto>(
+                false,
+                null,
+                (int)HttpStatusCode.BadRequest,
+                ErrorMessage);
+        }
+
+        try
+        {
+            using var request = await CreateAuthenticatedRequestAsync(HttpMethod.Post, $"api/privileges/{id}/reactivate");
+            using var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorMessage = await ExtractErrorMessageAsync(
+                    response,
+                    "No fue posible reactivar el privilegio.");
+
+                await _logger.LogWarningAsync(
+                    $"Solicitud POST api/privileges/{id}/reactivate rechazada con código {(int)response.StatusCode}.",
+                    nameof(AdmPrivStateService));
+
+                ErrorMessage = errorMessage;
+                SuccessMessage = null;
+                NotifyStateChanged();
+
+                return new PrivilegeOperationResult<ReactivatePrivilegeResponseDto>(
+                    false,
+                    null,
+                    (int)response.StatusCode,
+                    errorMessage);
+            }
+
+            var data = await response.Content.ReadFromJsonAsync<ReactivatePrivilegeResponseDto>();
+            if (data is null)
+            {
+                ErrorMessage = "Respuesta vacía del servidor al reactivar el privilegio.";
+                SuccessMessage = null;
+                NotifyStateChanged();
+
+                return new PrivilegeOperationResult<ReactivatePrivilegeResponseDto>(
+                    false,
+                    null,
+                    (int)HttpStatusCode.InternalServerError,
+                    ErrorMessage);
+            }
+
+            await LoadAsync();
+
+            if (string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                SuccessMessage = "Privilegio reactivado exitosamente.";
+                NotifyStateChanged();
+            }
+
+            return new PrivilegeOperationResult<ReactivatePrivilegeResponseDto>(
+                true,
+                data,
+                (int)response.StatusCode,
+                null);
+        }
+        catch (Exception ex)
+        {
+            await _logger.LogErrorAsync(
+                $"Error inesperado al reactivar privilegio en api/privileges/{id}/reactivate.",
+                ex,
+                nameof(AdmPrivStateService));
+
+            ErrorMessage = "Ocurrió un error al reactivar el privilegio.";
+            SuccessMessage = null;
+            NotifyStateChanged();
+
+            return new PrivilegeOperationResult<ReactivatePrivilegeResponseDto>(
+                false,
+                null,
+                (int)HttpStatusCode.InternalServerError,
+                ErrorMessage);
+        }
+    }
+
+    public void ClearMessages()
+    {
+        if (ErrorMessage is null && SuccessMessage is null)
+        {
+            return;
+        }
+
+        ErrorMessage = null;
+        SuccessMessage = null;
+        NotifyStateChanged();
     }
 
     public void SetStatusFilter(string statusFilter)

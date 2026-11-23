@@ -1,0 +1,89 @@
+.adm-priv-list__alert {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.adm-priv-list__alert--success {
+    background: rgba(16, 185, 129, 0.14);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #6ee7b7;
+}
+
+.adm-priv-list__alert--error {
+    background: rgba(239, 68, 68, 0.14);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+}
+
+.adm-priv-list__alert-close {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.8;
+    padding: 0 0.25rem;
+}
+
+.adm-priv-list__alert-close:hover {
+    opacity: 1;
+}
+
+.adm-priv-list__action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: var(--radius-sm);
+    color: #ffffff;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.adm-priv-list__action-btn--edit:hover:not(:disabled) {
+    background: rgba(59, 130, 246, 0.18);
+    border-color: #3b82f6;
+    transform: translateY(-1px);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.35);
+}
+
+.adm-priv-list__action-btn--reactivate:hover:not(:disabled) {
+    background: rgba(16, 185, 129, 0.18);
+    border-color: #10b981;
+    transform: translateY(-1px);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+}
+
+.adm-priv-list__action-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.adm-priv-list__action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.adm-priv-list__action-icon {
+    width: 16px;
+    height: 16px;
+    display: block;
+    flex-shrink: 0;
+}
+
+.adm-priv-list__spinner {
+    width: 14px;
+    height: 14px;
+}
