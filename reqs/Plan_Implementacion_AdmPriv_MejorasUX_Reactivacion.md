@@ -15,7 +15,7 @@
 | **Fase 2** | Assets SVG (`wwwroot/icons/`), Estado Cliente y Mejoras UI/UX (`Vogel.Client` — Issues #3, #4, #6) | ✅ Completada | Frontend |
 | **Fase 3** | Pruebas Unitarias y de Integración (`Vogel.Tests`) | ✅ Completada | Backend / Frontend |
 | **Fase 4** | Auditoría de Seguridad de la Información (`vogel-infosec-guardian`) | ✅ Completada | InfoSec |
-| **Fase 5** | Verificación QA End-to-End (`vogel-qa-verifier` — Modo `Api` MicroID real y Modo `Mock`) | 🔄 En progreso | QA |
+| **Fase 5** | Verificación QA End-to-End (`vogel-qa-verifier` — Modo `Api` MicroID real y Modo `Mock`) | ✅ Completada | QA |
 
 ---
 
@@ -77,12 +77,12 @@
 
 ## Fase 5 — Verificación QA End-to-End (`vogel-qa-verifier`)
 
-- [ ] **T5.1** Verificar E2E en modo **`Api`** contra MicroID real (`http://localhost:8021`):
+- [x] **T5.1** Verificar E2E en modo **`Api`** contra MicroID real (`http://localhost:8021`):
   - Validar filtros apilados con labels (`CA-01`, `CA-02`).
   - Validar botón **Crear privilegio** alineado a la derecha con estilo `HeaderWork` y SVG en `wwwroot/icons/` (`CA-03`).
   - Validar botones **Editar** / **Reactivar** en `AdmPrivList` en formato solo ícono + tooltip (`CA-04`, `CA-05`).
   - Ejecutar ciclo completo: inactivar un privilegio de prueba → filtrar por Inactivos → verificar que solo aparece **Reactivar** → reactivar → verificar cambio real a `Status == "A"` en MicroID y aparición nuevamente en Activos (`CA-06`, `CA-07`).
-- [ ] **T5.2** Verificar E2E en modo **`Mock`**:
+- [x] **T5.2** Verificar E2E en modo **`Mock`**:
   - Validar que todos los criterios `CA-01` a `CA-07` funcionan correctamente sin dependencia externa.
 - [ ] **T5.3** Confirmar cierre del plan y, cuando el usuario solicite crear el Pull Request hacia `main`, eliminar ambos documentos de `reqs/` antes de abrir el PR.
 
@@ -97,3 +97,4 @@
 | 2026-11-23 | Fase 2 (`T2.1`–`T2.5`) | Creados SVGs limpios (`plus.svg`, `edit.svg`, `reactivate.svg`), extendido `AdmPrivStateService.ReactivateAsync`, refactorizados `AdmPrivFilter` (apilado vertical), `AdmPrivCapture` (botón alineado a la derecha estilo `HeaderWork`) y `AdmPrivList` (botones solo ícono + reactivación). Build `Vogel.Client` verde (0 errores, 0 warnings). |
 | 2026-11-23 | Fase 3 (`T3.1`–`T3.4`) | Agregadas pruebas unitarias de reactivación en `PrivilegesControllerTests`, `PrivilegeAdminServicesTests` (`Api` y `Mock`) y `AdmPrivStateServiceTests`. Suite `dotnet test`: 149/149 pruebas en verde (0 errores, 0 warnings). |
 | 2026-11-23 | Fase 4 (`T4.1`–`T4.2`) | Auditoría `vogel-infosec-guardian`: **APROBADO CON OBSERVACIONES MENORES** (0 Críticos, 0 Altos, 0 Medios, 2 Bajos informativos). Confirmada prevención BOLA/IDOR, desacoplamiento, cero URLs hardcodeadas, sanitización de logs y SVGs limpios. |
+| 2026-11-23 | Fase 5 (`T5.1`–`T5.2`) | Verificación QA E2E (`vogel-qa-verifier`): **APROBADO (100% en verde)**. Validados `CA-01` a `CA-08` en modo `Api` contra MicroID real (`http://localhost:8021`: padre inactivo `422`, reactivación padre/hijo `200 OK status="A"`, ya activo `422`, limpieza completada) y en modo `Mock`. |
