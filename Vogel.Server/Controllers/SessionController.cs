@@ -14,13 +14,19 @@ public class SessionController : ControllerBase
 {
     private readonly ServerSessionInfo _serverSessionInfo;
     private readonly IConfiguration _configuration;
-    private readonly IBackendApiService? _backendApiService;
+    private readonly IAuthProviderService? _authProviderService;
+    private readonly ILogger<SessionController>? _logger;
 
-    public SessionController(ServerSessionInfo serverSessionInfo, IConfiguration configuration, IBackendApiService? backendApiService = null)
+    public SessionController(
+        ServerSessionInfo serverSessionInfo,
+        IConfiguration configuration,
+        IAuthProviderService? authProviderService = null,
+        ILogger<SessionController>? logger = null)
     {
         _serverSessionInfo = serverSessionInfo;
         _configuration = configuration;
-        _backendApiService = backendApiService;
+        _authProviderService = authProviderService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -31,8 +37,8 @@ public class SessionController : ControllerBase
     {
         var ttlSeconds = _configuration.GetValue<int>("SessionValidation:TtlSeconds", 10);
 
-        var authProvider = _configuration.GetValue<string>("AuthProvider", "Mock") ?? "Mock";
-        if (string.Equals(authProvider, "Api", StringComparison.OrdinalIgnoreCase) && _backendApiService != null)
+        var authProvider = _configuration.GetValue<string>("AuthProvider", "Api") ?? "Api";
+        if (string.Equals(authProvider, "Api", StringComparison.OrdinalIgnoreCase) && _authProviderService != null)
         {
             string? token = null;
 
@@ -53,11 +59,11 @@ public class SessionController : ControllerBase
             if (!string.IsNullOrWhiteSpace(token))
             {
                 var cancellationToken = HttpContext?.RequestAborted ?? CancellationToken.None;
-                var (data, error, statusCode) = await _backendApiService.GetPrivilegesAsync(token, cancellationToken);
+                var result = await _authProviderService.GetPrivilegesAsync(token, cancellationToken: cancellationToken);
 
-                if (statusCode == 401 || statusCode == 403 || data == null)
+                if (!result.Success || result.StatusCode == StatusCodes.Status401Unauthorized || result.StatusCode == StatusCodes.Status403Forbidden || result.Data == null)
                 {
-                    Console.WriteLine($"[SessionController] Token rechazado por backend remoto (Código {statusCode}). Sesión inválida.");
+                    _logger?.LogWarning("Token rechazado por el proveedor de identidad durante /api/session/validate (Código {StatusCode}). Sesión inválida.", result.StatusCode);
                     return Ok(new SessionValidationDto
                     {
                         ServerStartUtc = _serverSessionInfo.StartTimeUtc,

@@ -58,6 +58,8 @@ public sealed class AdmPrivStateService : IAdmPrivStateService
 
     public int TotalFilteredCount => _filteredItems.Count;
 
+    public int? SelectedEditPrivilegeId { get; private set; }
+
     public event Action? OnStateChanged;
 
     public async Task LoadAsync()
@@ -123,6 +125,300 @@ public sealed class AdmPrivStateService : IAdmPrivStateService
         {
             IsLoading = false;
             NotifyStateChanged();
+        }
+    }
+
+    public void SetSelectedEditPrivilegeId(int id)
+    {
+        var normalized = id > 0 ? id : (int?)null;
+        if (SelectedEditPrivilegeId == normalized)
+        {
+            return;
+        }
+
+        SelectedEditPrivilegeId = normalized;
+        NotifyStateChanged();
+    }
+
+    public void ClearSelectedEditPrivilegeId()
+    {
+        if (!SelectedEditPrivilegeId.HasValue)
+        {
+            return;
+        }
+
+        SelectedEditPrivilegeId = null;
+        NotifyStateChanged();
+    }
+
+    public async Task<PrivilegeOperationResult<PrivilegeAdminItemDto>> GetByIdAsync(int id)
+    {
+        if (id <= 0)
+        {
+            return new PrivilegeOperationResult<PrivilegeAdminItemDto>(
+                false,
+                null,
+                (int)HttpStatusCode.BadRequest,
+                "El identificador del privilegio no es válido.");
+        }
+
+        try
+        {
+            using var request = await CreateAuthenticatedRequestAsync(HttpMethod.Get, $"api/privileges/{id}");
+            using var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorMessage = await ExtractErrorMessageAsync(
+                    response,
+                    "No fue posible consultar el detalle del privilegio.");
+
+                await _logger.LogWarningAsync(
+                    $"Consulta a api/privileges/{id} rechazada con código {(int)response.StatusCode}.",
+                    nameof(AdmPrivStateService));
+
+                return new PrivilegeOperationResult<PrivilegeAdminItemDto>(
+                    false,
+                    null,
+                    (int)response.StatusCode,
+                    errorMessage);
+            }
+
+            var data = await response.Content.ReadFromJsonAsync<PrivilegeAdminItemDto>();
+            if (data is null)
+            {
+                return new PrivilegeOperationResult<PrivilegeAdminItemDto>(
+                    false,
+                    null,
+                    (int)HttpStatusCode.InternalServerError,
+                    "Respuesta vacía del servidor al consultar el privilegio.");
+            }
+
+            return new PrivilegeOperationResult<PrivilegeAdminItemDto>(
+                true,
+                data,
+                (int)response.StatusCode,
+                null);
+        }
+        catch (Exception ex)
+        {
+            await _logger.LogErrorAsync(
+                $"Error inesperado al consultar api/privileges/{id}.",
+                ex,
+                nameof(AdmPrivStateService));
+
+            return new PrivilegeOperationResult<PrivilegeAdminItemDto>(
+                false,
+                null,
+                (int)HttpStatusCode.InternalServerError,
+                "Ocurrió un error al consultar el detalle del privilegio.");
+        }
+    }
+
+    public async Task<PrivilegeOperationResult<CreatePrivilegeResponseDto>> CreateAsync(CreatePrivilegeRequestDto requestDto)
+    {
+        if (requestDto is null)
+        {
+            return new PrivilegeOperationResult<CreatePrivilegeResponseDto>(
+                false,
+                null,
+                (int)HttpStatusCode.BadRequest,
+                "Los datos del privilegio son obligatorios.");
+        }
+
+        try
+        {
+            using var request = await CreateAuthenticatedRequestAsync(HttpMethod.Post, "api/privileges", requestDto);
+            using var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorMessage = await ExtractErrorMessageAsync(
+                    response,
+                    "No fue posible crear el privilegio. Verifique los datos e intente nuevamente.");
+
+                await _logger.LogWarningAsync(
+                    $"Solicitud POST api/privileges rechazada con código {(int)response.StatusCode}.",
+                    nameof(AdmPrivStateService));
+
+                return new PrivilegeOperationResult<CreatePrivilegeResponseDto>(
+                    false,
+                    null,
+                    (int)response.StatusCode,
+                    errorMessage);
+            }
+
+            var data = await response.Content.ReadFromJsonAsync<CreatePrivilegeResponseDto>();
+            if (data is null)
+            {
+                return new PrivilegeOperationResult<CreatePrivilegeResponseDto>(
+                    false,
+                    null,
+                    (int)HttpStatusCode.InternalServerError,
+                    "Respuesta vacía del servidor al crear el privilegio.");
+            }
+
+            await LoadAsync();
+
+            return new PrivilegeOperationResult<CreatePrivilegeResponseDto>(
+                true,
+                data,
+                (int)response.StatusCode,
+                null);
+        }
+        catch (Exception ex)
+        {
+            await _logger.LogErrorAsync(
+                "Error inesperado al crear privilegio en api/privileges.",
+                ex,
+                nameof(AdmPrivStateService));
+
+            return new PrivilegeOperationResult<CreatePrivilegeResponseDto>(
+                false,
+                null,
+                (int)HttpStatusCode.InternalServerError,
+                "Ocurrió un error al crear el privilegio.");
+        }
+    }
+
+    public async Task<PrivilegeOperationResult<UpdatePrivilegeResponseDto>> UpdateAsync(int id, UpdatePrivilegeRequestDto requestDto)
+    {
+        if (id <= 0)
+        {
+            return new PrivilegeOperationResult<UpdatePrivilegeResponseDto>(
+                false,
+                null,
+                (int)HttpStatusCode.BadRequest,
+                "El identificador del privilegio no es válido.");
+        }
+
+        if (requestDto is null)
+        {
+            return new PrivilegeOperationResult<UpdatePrivilegeResponseDto>(
+                false,
+                null,
+                (int)HttpStatusCode.BadRequest,
+                "Los datos del privilegio son obligatorios.");
+        }
+
+        try
+        {
+            using var request = await CreateAuthenticatedRequestAsync(HttpMethod.Put, $"api/privileges/{id}", requestDto);
+            using var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorMessage = await ExtractErrorMessageAsync(
+                    response,
+                    "No fue posible actualizar el privilegio. Verifique los datos e intente nuevamente.");
+
+                await _logger.LogWarningAsync(
+                    $"Solicitud PUT api/privileges/{id} rechazada con código {(int)response.StatusCode}.",
+                    nameof(AdmPrivStateService));
+
+                return new PrivilegeOperationResult<UpdatePrivilegeResponseDto>(
+                    false,
+                    null,
+                    (int)response.StatusCode,
+                    errorMessage);
+            }
+
+            var data = await response.Content.ReadFromJsonAsync<UpdatePrivilegeResponseDto>();
+            if (data is null)
+            {
+                return new PrivilegeOperationResult<UpdatePrivilegeResponseDto>(
+                    false,
+                    null,
+                    (int)HttpStatusCode.InternalServerError,
+                    "Respuesta vacía del servidor al actualizar el privilegio.");
+            }
+
+            await LoadAsync();
+
+            return new PrivilegeOperationResult<UpdatePrivilegeResponseDto>(
+                true,
+                data,
+                (int)response.StatusCode,
+                null);
+        }
+        catch (Exception ex)
+        {
+            await _logger.LogErrorAsync(
+                $"Error inesperado al actualizar privilegio en api/privileges/{id}.",
+                ex,
+                nameof(AdmPrivStateService));
+
+            return new PrivilegeOperationResult<UpdatePrivilegeResponseDto>(
+                false,
+                null,
+                (int)HttpStatusCode.InternalServerError,
+                "Ocurrió un error al actualizar el privilegio.");
+        }
+    }
+
+    public async Task<PrivilegeOperationResult<DeactivatePrivilegeResponseDto>> DeactivateAsync(int id, DeactivatePrivilegeRequestDto? requestDto = null)
+    {
+        if (id <= 0)
+        {
+            return new PrivilegeOperationResult<DeactivatePrivilegeResponseDto>(
+                false,
+                null,
+                (int)HttpStatusCode.BadRequest,
+                "El identificador del privilegio no es válido.");
+        }
+
+        try
+        {
+            using var request = await CreateAuthenticatedRequestAsync(HttpMethod.Delete, $"api/privileges/{id}", requestDto);
+            using var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorMessage = await ExtractErrorMessageAsync(
+                    response,
+                    "No fue posible inactivar el privilegio.");
+
+                await _logger.LogWarningAsync(
+                    $"Solicitud DELETE api/privileges/{id} rechazada con código {(int)response.StatusCode}.",
+                    nameof(AdmPrivStateService));
+
+                return new PrivilegeOperationResult<DeactivatePrivilegeResponseDto>(
+                    false,
+                    null,
+                    (int)response.StatusCode,
+                    errorMessage);
+            }
+
+            var data = await response.Content.ReadFromJsonAsync<DeactivatePrivilegeResponseDto>();
+            if (data is null)
+            {
+                return new PrivilegeOperationResult<DeactivatePrivilegeResponseDto>(
+                    false,
+                    null,
+                    (int)HttpStatusCode.InternalServerError,
+                    "Respuesta vacía del servidor al inactivar el privilegio.");
+            }
+
+            await LoadAsync();
+
+            return new PrivilegeOperationResult<DeactivatePrivilegeResponseDto>(
+                true,
+                data,
+                (int)response.StatusCode,
+                null);
+        }
+        catch (Exception ex)
+        {
+            await _logger.LogErrorAsync(
+                $"Error inesperado al inactivar privilegio en api/privileges/{id}.",
+                ex,
+                nameof(AdmPrivStateService));
+
+            return new PrivilegeOperationResult<DeactivatePrivilegeResponseDto>(
+                false,
+                null,
+                (int)HttpStatusCode.InternalServerError,
+                "Ocurrió un error al inactivar el privilegio.");
         }
     }
 
@@ -239,6 +535,50 @@ public sealed class AdmPrivStateService : IAdmPrivStateService
             .Skip((CurrentPage - 1) * PageSize)
             .Take(PageSize)
             .ToList();
+    }
+
+    private async Task<HttpRequestMessage> CreateAuthenticatedRequestAsync(
+        HttpMethod method,
+        string relativeUri,
+        object? payload = null)
+    {
+        var token = await _sessionStorage.GetItemDecryptedAsync(AuthenticationService.BackendTokenKey);
+        var request = new HttpRequestMessage(method, relativeUri);
+
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+
+        if (payload is not null)
+        {
+            request.Content = JsonContent.Create(payload);
+        }
+
+        return request;
+    }
+
+    private static async Task<string> ExtractErrorMessageAsync(HttpResponseMessage response, string defaultMessage)
+    {
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            return "Su sesión ha expirado o no es válida. Por favor inicie sesión nuevamente.";
+        }
+
+        try
+        {
+            var errorDto = await response.Content.ReadFromJsonAsync<BackendErrorDto>();
+            if (!string.IsNullOrWhiteSpace(errorDto?.Message))
+            {
+                return errorDto.Message;
+            }
+        }
+        catch
+        {
+            // Ignorar errores de deserialización y retornar el mensaje genérico sanitizado.
+        }
+
+        return defaultMessage;
     }
 
     private void NotifyStateChanged() => OnStateChanged?.Invoke();

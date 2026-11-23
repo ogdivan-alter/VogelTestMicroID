@@ -1,0 +1,301 @@
+@page "/admsec/priv/create"
+@page "/admsec/priv/edit"
+@namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv
+
+<PageTitle>@PageTitleText</PageTitle>
+
+<div class="vogel-form-mock-view">
+    <HeaderWork Title="@HeaderTitle"
+                Color="#0c0e14"
+                TextExit="Salir"
+                ActionExit="/admsec/priv" />
+
+    <main class="vogel-form-mock-body" role="main">
+        <div class="vogel-form-mock-container">
+            @if (!string.IsNullOrWhiteSpace(SuccessMessage))
+            {
+                <div class="vogel-form-alert-success" role="alert">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <span>@SuccessMessage</span>
+                    <button type="button" class="vogel-alert-close" aria-label="Cerrar alerta" @onclick="ClearSuccessMessage">&times;</button>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                <div class="vogel-form-alert-error" role="alert">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span>@ErrorMessage</span>
+                    <button type="button" class="vogel-alert-close" aria-label="Cerrar alerta" @onclick="ClearErrorMessage">&times;</button>
+                </div>
+            }
+
+            <div class="vogel-form-card">
+                @if (IsLoadingInitial)
+                {
+                    <div class="vogel-form-loading" role="status" aria-live="polite">
+                        <span class="vogel-spinner-small"></span>
+                        <span>Cargando información del privilegio...</span>
+                    </div>
+                }
+                else
+                {
+                    <!-- SECCIÓN 1: DATOS GENERALES -->
+                    <section class="vogel-form-section" aria-labelledby="section-priv-general">
+                        <h3 id="section-priv-general" class="vogel-form-section-title">Datos Generales</h3>
+
+                        <div class="vogel-form-row @(IsEditMode ? "vogel-form-row--3col" : "vogel-form-row--2col")">
+                            <div class="vogel-form-group">
+                                <label class="vogel-form-label" for="txtPrivSystem">Sistema</label>
+                                <input id="txtPrivSystem"
+                                       type="text"
+                                       class="vogel-form-input"
+                                       value="@SystemDisplayText"
+                                       readonly
+                                       disabled />
+                                <small class="vogel-form-helper">Asignado automáticamente por la configuración del sistema.</small>
+                            </div>
+
+                            @if (IsEditMode)
+                            {
+                                <div class="vogel-form-group">
+                                    <label class="vogel-form-label" for="txtPrivId">ID Privilegio</label>
+                                    <input id="txtPrivId"
+                                           type="text"
+                                           class="vogel-form-input"
+                                           value="@IdPrivilege"
+                                           readonly
+                                           disabled />
+                                </div>
+                            }
+
+                            <div class="vogel-form-group">
+                                <label class="vogel-form-label" for="txtPrivStatus">Estado</label>
+                                <input id="txtPrivStatus"
+                                       type="text"
+                                       class="vogel-form-input"
+                                       value="@StatusDisplayText"
+                                       readonly
+                                       disabled />
+                            </div>
+                        </div>
+
+                        <div class="vogel-form-row vogel-form-row--2col">
+                            <div class="vogel-form-group">
+                                <label class="vogel-form-label" for="txtPrivCodename">Codename *</label>
+                                <input id="txtPrivCodename"
+                                       type="text"
+                                       class="vogel-form-input @(HasFieldError("Codename") ? "vogel-form-input--error" : string.Empty)"
+                                       maxlength="@MaxCodenameLength"
+                                       @bind="Codename"
+                                       disabled="@IsFormDisabled"
+                                       placeholder="Ej. adm_priv" />
+                                @if (HasFieldError("Codename"))
+                                {
+                                    <span class="vogel-form-field-error">@GetFieldError("Codename")</span>
+                                }
+                            </div>
+
+                            <div class="vogel-form-group">
+                                <label class="vogel-form-label" for="txtPrivTitle">Título (Title) *</label>
+                                <input id="txtPrivTitle"
+                                       type="text"
+                                       class="vogel-form-input @(HasFieldError("Title") ? "vogel-form-input--error" : string.Empty)"
+                                       maxlength="@MaxTitleLength"
+                                       @bind="Title"
+                                       disabled="@IsFormDisabled"
+                                       placeholder="Ej. Administrar Privilegios" />
+                                @if (HasFieldError("Title"))
+                                {
+                                    <span class="vogel-form-field-error">@GetFieldError("Title")</span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="vogel-form-row vogel-form-row--2col">
+                            <div class="vogel-form-group">
+                                <label class="vogel-form-label" for="txtPrivGroup">Grupo (GroupName) *</label>
+                                <input id="txtPrivGroup"
+                                       type="text"
+                                       class="vogel-form-input @(HasFieldError("GroupName") ? "vogel-form-input--error" : string.Empty)"
+                                       maxlength="@MaxGroupNameLength"
+                                       @bind="GroupName"
+                                       disabled="@IsFormDisabled"
+                                       placeholder="Ej. SEGURIDAD" />
+                                @if (HasFieldError("GroupName"))
+                                {
+                                    <span class="vogel-form-field-error">@GetFieldError("GroupName")</span>
+                                }
+                            </div>
+
+                            <div class="vogel-form-group">
+                                <label class="vogel-form-label" for="txtPrivAction">Acción / Ruta (Action) *</label>
+                                <input id="txtPrivAction"
+                                       type="text"
+                                       class="vogel-form-input @(HasFieldError("Action") ? "vogel-form-input--error" : string.Empty)"
+                                       maxlength="@MaxActionLength"
+                                       @bind="ActionPath"
+                                       disabled="@IsFormDisabled"
+                                       placeholder="Ej. /admsec/priv" />
+                                @if (HasFieldError("Action"))
+                                {
+                                    <span class="vogel-form-field-error">@GetFieldError("Action")</span>
+                                }
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- SECCIÓN 2: JERARQUÍA Y PRESENTACIÓN -->
+                    <section class="vogel-form-section" aria-labelledby="section-priv-hierarchy">
+                        <h3 id="section-priv-hierarchy" class="vogel-form-section-title">Jerarquía y Presentación</h3>
+
+                        <div class="vogel-form-row vogel-form-row--2col">
+                            <div class="vogel-form-group">
+                                <label class="vogel-form-label" for="selPrivParent">Privilegio Padre (id_parent)</label>
+                                <div class="vogel-select-container">
+                                    <select id="selPrivParent"
+                                            class="vogel-form-select @(HasFieldError("IdParent") ? "vogel-form-select--error" : string.Empty)"
+                                            @bind="IdParent"
+                                            disabled="@IsFormDisabled">
+                                        <option value="0">0 — Ninguno (Raíz)</option>
+                                        @foreach (var parentItem in AvailableParentPrivileges)
+                                        {
+                                            <option value="@parentItem.IdPrivilege">@($"{parentItem.IdPrivilege} — {parentItem.Title} ({parentItem.Codename})")</option>
+                                        }
+                                    </select>
+                                    <span class="vogel-select-chevron" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                    </span>
+                                </div>
+                                @if (HasFieldError("IdParent"))
+                                {
+                                    <span class="vogel-form-field-error">@GetFieldError("IdParent")</span>
+                                }
+                                else
+                                {
+                                    <small class="vogel-form-helper">Seleccione un privilegio padre activo o deje 0 para nivel raíz.</small>
+                                }
+                            </div>
+
+                            <div class="vogel-form-group">
+                                <label class="vogel-form-label" for="txtPrivIcon">Ícono (Icon)</label>
+                                <input id="txtPrivIcon"
+                                       type="text"
+                                       class="vogel-form-input @(HasFieldError("Icon") ? "vogel-form-input--error" : string.Empty)"
+                                       maxlength="@MaxIconLength"
+                                       @bind="Icon"
+                                       disabled="@IsFormDisabled"
+                                       placeholder="Opcional (ej. shield, lock)" />
+                                @if (HasFieldError("Icon"))
+                                {
+                                    <span class="vogel-form-field-error">@GetFieldError("Icon")</span>
+                                }
+                                else
+                                {
+                                    <small class="vogel-form-helper">Identificador de ícono opcional (máximo 100 caracteres).</small>
+                                }
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- SECCIÓN 3: INACTIVACIÓN DEL PRIVILEGIO (SOLO EN EDICIÓN Y ACTIVO) -->
+                    @if (CanShowDeactivateSection)
+                    {
+                        <section class="vogel-form-section vogel-form-danger-zone" aria-labelledby="section-priv-deactivate">
+                            <h3 id="section-priv-deactivate" class="vogel-form-section-title vogel-form-danger-zone__title">Inactivación del Privilegio</h3>
+                            <p class="vogel-form-danger-zone__desc">
+                                La inactivación lógica cambia el estado del privilegio a <strong>Inactivo</strong> y traslada al histórico las asignaciones vigentes en roles. Esta operación no puede deshacerse desde este formulario.
+                            </p>
+
+                            <div class="vogel-form-group">
+                                <label class="vogel-form-label" for="txtDelDescription">Motivo de inactivación (del_description)</label>
+                                <textarea id="txtDelDescription"
+                                          class="vogel-form-textarea @(HasFieldError("DelDescription") ? "vogel-form-textarea--error" : string.Empty)"
+                                          rows="3"
+                                          maxlength="@MaxDelDescriptionLength"
+                                          @bind="DelDescription"
+                                          disabled="@(IsSaving || IsDeactivating)"
+                                          placeholder="Opcional: indique el motivo de la inactivación (máximo 500 caracteres)."></textarea>
+                                @if (HasFieldError("DelDescription"))
+                                {
+                                    <span class="vogel-form-field-error">@GetFieldError("DelDescription")</span>
+                                }
+                            </div>
+
+                            @if (!ShowDeactivateConfirm)
+                            {
+                                <div class="vogel-form-danger-zone__actions">
+                                    <button type="button"
+                                            class="vogel-btn-form-danger-outline"
+                                            @onclick="RequestDeactivateConfirmation"
+                                            disabled="@(IsSaving || IsDeactivating)">
+                                        Inactivar privilegio
+                                    </button>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="vogel-form-danger-confirm" role="alertdialog" aria-labelledby="confirm-deactivate-title">
+                                    <p id="confirm-deactivate-title" class="vogel-form-danger-confirm__text">
+                                        ¿Confirma que desea inactivar el privilegio <strong>@Title (@Codename)</strong>? Esta acción también revocará sus asignaciones en roles.
+                                    </p>
+                                    <div class="vogel-form-danger-confirm__buttons">
+                                        <button type="button"
+                                                class="vogel-btn-form-danger"
+                                                @onclick="HandleConfirmDeactivateAsync"
+                                                disabled="@IsDeactivating">
+                                            @if (IsDeactivating)
+                                            {
+                                                <span class="vogel-spinner-small"></span>
+                                            }
+                                            <span>Confirmar inactivación</span>
+                                        </button>
+                                        <button type="button"
+                                                class="vogel-btn-form-cancel"
+                                                @onclick="CancelDeactivateConfirmation"
+                                                disabled="@IsDeactivating">
+                                            Cancelar inactivación
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </section>
+                    }
+
+                    <!-- BOTONERA DE ACCIONES -->
+                    <div class="vogel-form-actions">
+                        @if (CanSubmitForm)
+                        {
+                            <button type="button"
+                                    class="vogel-btn-form-save"
+                                    @onclick="HandleSubmitAsync"
+                                    disabled="@(IsSaving || IsDeactivating)">
+                                @if (IsSaving)
+                                {
+                                    <span class="vogel-spinner-small"></span>
+                                }
+                                <span>@SubmitButtonText</span>
+                            </button>
+                        }
+
+                        <button type="button"
+                                class="vogel-btn-form-cancel"
+                                @onclick="HandleCancel"
+                                disabled="@(IsSaving || IsDeactivating)">
+                            @SecondaryButtonText
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </main>
+</div>

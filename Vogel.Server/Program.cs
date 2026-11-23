@@ -71,7 +71,7 @@ builder.Services.AddScoped<IAuthProviderService>(sp =>
 
 // Proveedores de administración de privilegios desacoplados para el BFF (Api [MicroID] por defecto, Mock explícito)
 builder.Services.AddScoped<MicroIdPrivilegeAdminService>();
-builder.Services.AddScoped<MockPrivilegeAdminService>();
+builder.Services.AddSingleton<MockPrivilegeAdminService>();
 builder.Services.AddScoped<IPrivilegeAdminProviderService>(sp =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();

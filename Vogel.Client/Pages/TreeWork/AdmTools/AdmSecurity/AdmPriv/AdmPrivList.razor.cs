@@ -14,6 +14,9 @@ public partial class AdmPrivList : ComponentBase, IDisposable
     [Inject]
     protected IAdmPrivStateService AdmPrivState { get; set; } = default!;
 
+    [Inject]
+    protected NavigationManager NavigationManager { get; set; } = default!;
+
     [Parameter]
     public BlockWork? BlockWork { get; set; }
 
@@ -29,12 +32,17 @@ public partial class AdmPrivList : ComponentBase, IDisposable
     }
 
     /// <summary>
-    /// Handler reservado para abrir el formulario de edición del privilegio en la siguiente fase.
+    /// Almacena en memoria el identificador del privilegio activo y navega a la ruta limpia /admsec/priv/edit.
     /// </summary>
     protected void HandleEditClick(PrivilegeAdminItemDto item)
     {
-        // Pendiente de implementación del formulario de edición de privilegio.
-        _ = item;
+        if (item is null || !string.Equals(item.Status, "A", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        AdmPrivState.SetSelectedEditPrivilegeId(item.IdPrivilege);
+        NavigationManager.NavigateTo("/admsec/priv/edit");
     }
 
     private void HandleStateChanged()
