@@ -11,8 +11,8 @@
 
 | Fase | Descripción | Estado | Responsable |
 | :--- | :--- | :---: | :--- |
-| **Fase 1** | Contratos compartidos (`Vogel.Shared`) y Backend BFF (`Vogel.Server` — `Api` y `Mock`) | ⏳ Pendiente | Backend |
-| **Fase 2** | Assets SVG (`wwwroot/icons/`), Estado Cliente y Mejoras UI/UX (`Vogel.Client` — Issues #3, #4, #6) | ⏳ Pendiente | Frontend |
+| **Fase 1** | Contratos compartidos (`Vogel.Shared`) y Backend BFF (`Vogel.Server` — `Api` y `Mock`) | ✅ Completada | Backend |
+| **Fase 2** | Assets SVG (`wwwroot/icons/`), Estado Cliente y Mejoras UI/UX (`Vogel.Client` — Issues #3, #4, #6) | 🔄 En progreso | Frontend |
 | **Fase 3** | Pruebas Unitarias y de Integración (`Vogel.Tests`) | ⏳ Pendiente | Backend / Frontend |
 | **Fase 4** | Auditoría de Seguridad de la Información (`vogel-infosec-guardian`) | ⏳ Pendiente | InfoSec |
 | **Fase 5** | Verificación QA End-to-End (`vogel-qa-verifier` — Modo `Api` MicroID real y Modo `Mock`) | ⏳ Pendiente | QA |
@@ -21,16 +21,16 @@
 
 ## Fase 1 — Contratos Compartidos y Backend BFF (`Vogel.Shared`, `Vogel.Server`)
 
-- [ ] **T1.1** Agregar `ReactivatePrivilegeResponseDto` en `Vogel.Shared/DTOs/PrivilegeAdminDtos.cs` (`IdPrivilege`, `Status`, `DateModification`).
-- [ ] **T1.2** Agregar `ReactivatePrivilegeResult` y el método `ReactivatePrivilegeAsync(string token, int idPrivilege, CancellationToken cancellationToken = default)` en `Vogel.Server/Services/IPrivilegeAdminProviderService.cs`.
-- [ ] **T1.3** Agregar los modelos `MicroIdReactivatePrivilegeRequest` y `MicroIdReactivatePrivilegeResponse` en `Vogel.Server/Models/MicroId/MicroIdPrivilegeModels.cs` alineados al contrato real de MicroID (`POST /priv/reactivate`).
-- [ ] **T1.4** Implementar `ReactivatePrivilegeAsync` en `Vogel.Server/Services/MicroId/MicroIdPrivilegeAdminService.cs`:
+- [x] **T1.1** Agregar `ReactivatePrivilegeResponseDto` en `Vogel.Shared/DTOs/PrivilegeAdminDtos.cs` (`IdPrivilege`, `Status`, `DateModification`).
+- [x] **T1.2** Agregar `ReactivatePrivilegeResult` y el método `ReactivatePrivilegeAsync(string token, int idPrivilege, CancellationToken cancellationToken = default)` en `Vogel.Server/Services/IPrivilegeAdminProviderService.cs`.
+- [x] **T1.3** Agregar los modelos `MicroIdReactivatePrivilegeRequest` y `MicroIdReactivatePrivilegeResponse` en `Vogel.Server/Models/MicroId/MicroIdPrivilegeModels.cs` alineados al contrato real de MicroID (`POST /priv/reactivate`).
+- [x] **T1.4** Implementar `ReactivatePrivilegeAsync` en `Vogel.Server/Services/MicroId/MicroIdPrivilegeAdminService.cs`:
   - Validar token (`401`) e `idPrivilege > 0` (`400`).
   - Ejecutar *ownership check* contra el `IdSystem` configurado mediante `ListPrivilegesAsync(token, status: "I", cancellationToken)` (prevención de BOLA/IDOR sin usar `/priv/get`).
   - Invocar `POST /priv/reactivate` usando el `HttpClient` configurado por `MicroId:BaseUrl` (cero URLs hardcodeadas) con `RequestMessage<MicroIdReactivatePrivilegeRequest>`.
   - Mapear errores de MicroID (`400`, `401`, `403`, `422`, `502`/`503`) a `BackendErrorDto` normalizado y sanitizar logs.
-- [ ] **T1.5** Implementar `ReactivatePrivilegeAsync` en `Vogel.Server/Services/MockPrivilegeAdminService.cs` replicando las validaciones de negocio (token, `id > 0`, existencia, estado inactivo, padre activo si `IdParent > 0`) y cambiando `Status = "A"` de forma thread-safe (`_syncLock`).
-- [ ] **T1.6** Exponer el endpoint `POST api/privileges/{id:int}/reactivate` (con alias `api/v1/privileges/{id:int}/reactivate`) en `Vogel.Server/Controllers/PrivilegesController.cs` delegando exclusivamente en `IPrivilegeAdminProviderService`.
+- [x] **T1.5** Implementar `ReactivatePrivilegeAsync` en `Vogel.Server/Services/MockPrivilegeAdminService.cs` replicando las validaciones de negocio (token, `id > 0`, existencia, estado inactivo, padre activo si `IdParent > 0`) y cambiando `Status = "A"` de forma thread-safe (`_syncLock`).
+- [x] **T1.6** Exponer el endpoint `POST api/privileges/{id:int}/reactivate` (con alias `api/v1/privileges/{id:int}/reactivate`) en `Vogel.Server/Controllers/PrivilegesController.cs` delegando exclusivamente en `IPrivilegeAdminProviderService`.
 
 ---
 
@@ -93,3 +93,4 @@
 | Fecha | Fase / Tarea | Evento / Observación |
 | :--- | :--- | :--- |
 | 2026-11-23 | Levantamiento | Se consolidaron los issues `#3`, `#4` y `#6`, se verificó el contrato real `POST /priv/reactivate` en MicroID (solo lectura), se creó la rama `adm-priv-ux-reactivate` desde `main` y se generaron los 2 documentos en `reqs/`. Aprobado por el usuario para iniciar ejecución. |
+| 2026-11-23 | Fase 1 (`T1.1`–`T1.6`) | Implementados DTOs, contratos, modelos MicroID, `MicroIdPrivilegeAdminService.ReactivatePrivilegeAsync` (con ownership check anti-BOLA/IDOR), `MockPrivilegeAdminService.ReactivatePrivilegeAsync` y endpoint `POST api/privileges/{id}/reactivate`. Build `Vogel.Server` verde (0 errores, 0 warnings). |

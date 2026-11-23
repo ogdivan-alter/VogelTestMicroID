@@ -104,3 +104,17 @@ public sealed record MicroIdDeletePrivilegeResponse(
     [property: JsonPropertyName("id_privilege")] int IdPrivilege,
     [property: JsonPropertyName("status")] string Status,
     [property: JsonPropertyName("cascaded_role_privileges")] int CascadedRolePrivileges);
+
+/// <summary>
+/// Payload de solicitud para POST /priv/reactivate en MicroID.
+/// </summary>
+public sealed record MicroIdReactivatePrivilegeRequest(
+    [property: JsonPropertyName("id_privilege")] int IdPrivilege);
+
+/// <summary>
+/// Respuesta de POST /priv/reactivate en MicroID.
+/// </summary>
+public sealed record MicroIdReactivatePrivilegeResponse(
+    [property: JsonPropertyName("id_privilege")] int IdPrivilege,
+    [property: JsonPropertyName("status")] string Status,
+    [property: JsonPropertyName("date_modification")] DateTimeOffset DateModification);
