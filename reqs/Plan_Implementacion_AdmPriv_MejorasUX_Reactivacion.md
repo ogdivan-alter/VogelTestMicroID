@@ -14,8 +14,8 @@
 | **Fase 1** | Contratos compartidos (`Vogel.Shared`) y Backend BFF (`Vogel.Server` — `Api` y `Mock`) | ✅ Completada | Backend |
 | **Fase 2** | Assets SVG (`wwwroot/icons/`), Estado Cliente y Mejoras UI/UX (`Vogel.Client` — Issues #3, #4, #6) | ✅ Completada | Frontend |
 | **Fase 3** | Pruebas Unitarias y de Integración (`Vogel.Tests`) | ✅ Completada | Backend / Frontend |
-| **Fase 4** | Auditoría de Seguridad de la Información (`vogel-infosec-guardian`) | 🔄 En progreso | InfoSec |
-| **Fase 5** | Verificación QA End-to-End (`vogel-qa-verifier` — Modo `Api` MicroID real y Modo `Mock`) | ⏳ Pendiente | QA |
+| **Fase 4** | Auditoría de Seguridad de la Información (`vogel-infosec-guardian`) | ✅ Completada | InfoSec |
+| **Fase 5** | Verificación QA End-to-End (`vogel-qa-verifier` — Modo `Api` MicroID real y Modo `Mock`) | 🔄 En progreso | QA |
 
 ---
 
@@ -67,11 +67,11 @@
 
 ## Fase 4 — Auditoría de Seguridad de la Información (`vogel-infosec-guardian`)
 
-- [ ] **T4.1** Invocar a `vogel-infosec-guardian` para auditar:
+- [x] **T4.1** Invocar a `vogel-infosec-guardian` para auditar:
   - Prevención de BOLA/IDOR en `ReactivatePrivilegeAsync` (ownership check contra `IdSystem` configurado).
   - Desacoplamiento en `PrivilegesController` y ausencia de URLs hardcodeadas.
   - Manejo seguro de tokens, sanitización de logs y validación de archivos SVG en `wwwroot/icons/`.
-- [ ] **T4.2** Corregir cualquier hallazgo reportado por `vogel-infosec-guardian` y confirmar aprobación de seguridad.
+- [x] **T4.2** Corregir cualquier hallazgo reportado por `vogel-infosec-guardian` y confirmar aprobación de seguridad.
 
 ---
 
@@ -96,3 +96,4 @@
 | 2026-11-23 | Fase 1 (`T1.1`–`T1.6`) | Implementados DTOs, contratos, modelos MicroID, `MicroIdPrivilegeAdminService.ReactivatePrivilegeAsync` (con ownership check anti-BOLA/IDOR), `MockPrivilegeAdminService.ReactivatePrivilegeAsync` y endpoint `POST api/privileges/{id}/reactivate`. Build `Vogel.Server` verde (0 errores, 0 warnings). |
 | 2026-11-23 | Fase 2 (`T2.1`–`T2.5`) | Creados SVGs limpios (`plus.svg`, `edit.svg`, `reactivate.svg`), extendido `AdmPrivStateService.ReactivateAsync`, refactorizados `AdmPrivFilter` (apilado vertical), `AdmPrivCapture` (botón alineado a la derecha estilo `HeaderWork`) y `AdmPrivList` (botones solo ícono + reactivación). Build `Vogel.Client` verde (0 errores, 0 warnings). |
 | 2026-11-23 | Fase 3 (`T3.1`–`T3.4`) | Agregadas pruebas unitarias de reactivación en `PrivilegesControllerTests`, `PrivilegeAdminServicesTests` (`Api` y `Mock`) y `AdmPrivStateServiceTests`. Suite `dotnet test`: 149/149 pruebas en verde (0 errores, 0 warnings). |
+| 2026-11-23 | Fase 4 (`T4.1`–`T4.2`) | Auditoría `vogel-infosec-guardian`: **APROBADO CON OBSERVACIONES MENORES** (0 Críticos, 0 Altos, 0 Medios, 2 Bajos informativos). Confirmada prevención BOLA/IDOR, desacoplamiento, cero URLs hardcodeadas, sanitización de logs y SVGs limpios. |
