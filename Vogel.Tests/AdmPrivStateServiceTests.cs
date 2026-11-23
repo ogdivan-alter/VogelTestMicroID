@@ -423,6 +423,89 @@ public class AdmPrivStateServiceTests
         Assert.Empty(handler.Requests);
     }
 
+    [Fact]
+    public async Task ReactivateAsync_WhenSuccess_ShouldPostReloadCatalogAndSetSuccessMessage()
+    {
+        var reactivatedDto = new ReactivatePrivilegeResponseDto
+        {
+            IdPrivilege = 3,
+            Status = "A",
+            DateModification = DateTimeOffset.UtcNow
+        };
+        var reloadedCatalog = CreateSampleResponse();
+        reloadedCatalog.Items[2].Status = "A";
+
+        var handler = new QueueHttpMessageHandler(
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(reactivatedDto) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(reloadedCatalog) });
+
+        var (service, _) = CreateServiceWithHandler(handler, "jwt-reactivate");
+
+        var result = await service.ReactivateAsync(3);
+
+        Assert.True(result.Success);
+        Assert.Equal(200, result.StatusCode);
+        Assert.Equal("A", result.Data!.Status);
+        Assert.False(string.IsNullOrWhiteSpace(service.SuccessMessage));
+        Assert.Null(service.ErrorMessage);
+        Assert.Equal(2, handler.Requests.Count);
+        Assert.Equal(HttpMethod.Post, handler.Requests[0].Method);
+        Assert.EndsWith("api/privileges/3/reactivate", handler.Requests[0].RequestUri!.ToString());
+        Assert.Equal("jwt-reactivate", handler.Requests[0].Headers.Authorization?.Parameter);
+        Assert.Equal(HttpMethod.Get, handler.Requests[1].Method);
+    }
+
+    [Fact]
+    public async Task ReactivateAsync_When422Error_ShouldSetErrorMessageWithoutReloadingCatalog()
+    {
+        var handler = new QueueHttpMessageHandler(
+            new HttpResponseMessage(HttpStatusCode.UnprocessableEntity)
+            {
+                Content = JsonContent.Create(new BackendErrorDto(422, "El privilegio padre se encuentra inactivo."))
+            });
+
+        var (service, _) = CreateServiceWithHandler(handler);
+
+        var result = await service.ReactivateAsync(4);
+
+        Assert.False(result.Success);
+        Assert.Equal(422, result.StatusCode);
+        Assert.Equal("El privilegio padre se encuentra inactivo.", result.ErrorMessage);
+        Assert.Equal("El privilegio padre se encuentra inactivo.", service.ErrorMessage);
+        Assert.Null(service.SuccessMessage);
+        Assert.Single(handler.Requests);
+    }
+
+    [Fact]
+    public async Task ReactivateAsync_WhenWithoutToken_ShouldReturn401AndSetErrorMessage()
+    {
+        var handler = new QueueHttpMessageHandler(
+            new HttpResponseMessage(HttpStatusCode.Unauthorized));
+        var (service, _) = CreateServiceWithHandler(handler, token: null);
+
+        var result = await service.ReactivateAsync(3);
+
+        Assert.False(result.Success);
+        Assert.Equal(401, result.StatusCode);
+        Assert.False(string.IsNullOrWhiteSpace(service.ErrorMessage));
+        Assert.Null(service.SuccessMessage);
+        Assert.Single(handler.Requests);
+        Assert.Null(handler.Requests[0].Headers.Authorization);
+    }
+
+    [Fact]
+    public async Task ReactivateAsync_WhenIdInvalid_ShouldReturn400WithoutHttpCall()
+    {
+        var handler = new QueueHttpMessageHandler();
+        var (service, _) = CreateServiceWithHandler(handler);
+
+        var result = await service.ReactivateAsync(0);
+
+        Assert.False(result.Success);
+        Assert.Equal(400, result.StatusCode);
+        Assert.Empty(handler.Requests);
+    }
+
     private static (AdmPrivStateService Service, QueueHttpMessageHandler Handler) CreateServiceWithHandler(
         QueueHttpMessageHandler handler,
         string? token = "jwt-session-token")

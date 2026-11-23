@@ -415,6 +415,85 @@ public class PrivilegesControllerTests
         Assert.Equal("Ya se encuentra inactivo.", error.Message);
     }
 
+    // ==================== POST /api/privileges/{id}/reactivate ====================
+
+    [Fact]
+    public async Task Reactivate_WithoutToken_ShouldReturn401Unauthorized()
+    {
+        var provider = new StubPrivilegeAdminProviderService();
+        var controller = CreateController(provider, bearerToken: null);
+
+        var actionResult = await controller.Reactivate(7);
+
+        var unauthorized = Assert.IsType<UnauthorizedObjectResult>(actionResult);
+        var error = Assert.IsType<BackendErrorDto>(unauthorized.Value);
+        Assert.Equal(StatusCodes.Status401Unauthorized, error.Status);
+        Assert.Equal(0, provider.ReactivateCalls);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-5)]
+    public async Task Reactivate_WithInvalidId_ShouldReturn400BadRequest(int invalidId)
+    {
+        var provider = new StubPrivilegeAdminProviderService();
+        var controller = CreateController(provider);
+
+        var actionResult = await controller.Reactivate(invalidId);
+
+        var badRequest = Assert.IsType<BadRequestObjectResult>(actionResult);
+        var error = Assert.IsType<BackendErrorDto>(badRequest.Value);
+        Assert.Equal(StatusCodes.Status400BadRequest, error.Status);
+        Assert.Equal(0, provider.ReactivateCalls);
+    }
+
+    [Fact]
+    public async Task Reactivate_WhenProviderSucceeds_ShouldReturn200OkAndForwardToken()
+    {
+        var reactivated = new ReactivatePrivilegeResponseDto
+        {
+            IdPrivilege = 12,
+            Status = "A",
+            DateModification = DateTimeOffset.UtcNow
+        };
+        var provider = new StubPrivilegeAdminProviderService
+        {
+            ReactivateResult = new ReactivatePrivilegeResult(true, StatusCodes.Status200OK, reactivated, null)
+        };
+        var controller = CreateController(provider, bearerToken: "jwt-reactivate");
+
+        var actionResult = await controller.Reactivate(12);
+
+        var ok = Assert.IsType<OkObjectResult>(actionResult);
+        var dto = Assert.IsType<ReactivatePrivilegeResponseDto>(ok.Value);
+        Assert.Equal(12, dto.IdPrivilege);
+        Assert.Equal("A", dto.Status);
+        Assert.Equal("jwt-reactivate", provider.LastToken);
+        Assert.Equal(12, provider.LastIdPrivilege);
+        Assert.Equal(1, provider.ReactivateCalls);
+    }
+
+    [Fact]
+    public async Task Reactivate_WhenProviderFails_ShouldPropagateBusinessError()
+    {
+        var provider = new StubPrivilegeAdminProviderService
+        {
+            ReactivateResult = new ReactivatePrivilegeResult(
+                false,
+                StatusCodes.Status422UnprocessableEntity,
+                null,
+                new BackendErrorDto(StatusCodes.Status422UnprocessableEntity, "El privilegio padre está inactivo."))
+        };
+        var controller = CreateController(provider);
+
+        var actionResult = await controller.Reactivate(12);
+
+        var objectResult = Assert.IsType<ObjectResult>(actionResult);
+        Assert.Equal(StatusCodes.Status422UnprocessableEntity, objectResult.StatusCode);
+        var error = Assert.IsType<BackendErrorDto>(objectResult.Value);
+        Assert.Equal("El privilegio padre está inactivo.", error.Message);
+    }
+
     private sealed class StubPrivilegeAdminProviderService : IPrivilegeAdminProviderService
     {
         public string? LastToken { get; private set; }
@@ -425,6 +504,7 @@ public class PrivilegesControllerTests
         public int CreateCalls { get; private set; }
         public int UpdateCalls { get; private set; }
         public int DeactivateCalls { get; private set; }
+        public int ReactivateCalls { get; private set; }
 
         public PrivilegeAdminListResult ListResult { get; set; } =
             new(true, StatusCodes.Status200OK, new PrivilegeAdminListResponseDto(), null);
@@ -440,6 +520,9 @@ public class PrivilegesControllerTests
 
         public DeactivatePrivilegeResult DeactivateResult { get; set; } =
             new(true, StatusCodes.Status200OK, new DeactivatePrivilegeResponseDto(), null);
+
+        public ReactivatePrivilegeResult ReactivateResult { get; set; } =
+            new(true, StatusCodes.Status200OK, new ReactivatePrivilegeResponseDto(), null);
 
         public Task<PrivilegeAdminListResult> ListPrivilegesAsync(
             string token,
@@ -494,6 +577,17 @@ public class PrivilegesControllerTests
             LastIdPrivilege = idPrivilege;
             LastDeactivateRequest = request;
             return Task.FromResult(DeactivateResult);
+        }
+
+        public Task<ReactivatePrivilegeResult> ReactivatePrivilegeAsync(
+            string token,
+            int idPrivilege,
+            CancellationToken cancellationToken = default)
+        {
+            ReactivateCalls++;
+            LastToken = token;
+            LastIdPrivilege = idPrivilege;
+            return Task.FromResult(ReactivateResult);
         }
     }
 }

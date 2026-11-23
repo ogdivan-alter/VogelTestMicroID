@@ -418,7 +418,127 @@ public class PrivilegeAdminServicesTests
         Assert.Equal(StatusCodes.Status401Unauthorized, (await service.CreatePrivilegeAsync("", new CreatePrivilegeRequestDto())).StatusCode);
         Assert.Equal(StatusCodes.Status401Unauthorized, (await service.UpdatePrivilegeAsync("", 1, new UpdatePrivilegeRequestDto())).StatusCode);
         Assert.Equal(StatusCodes.Status401Unauthorized, (await service.DeactivatePrivilegeAsync("", 1)).StatusCode);
+        Assert.Equal(StatusCodes.Status401Unauthorized, (await service.ReactivatePrivilegeAsync("", 1)).StatusCode);
         Assert.Equal(0, apiClient.CallCount);
+    }
+
+    [Fact]
+    public async Task MicroId_ReactivatePrivilegeAsync_WhenValid_ShouldVerifyOwnershipAndCallPrivReactivate()
+    {
+        var modifiedAt = DateTimeOffset.UtcNow;
+        var apiClient = new StubMicroIdApiClient();
+        apiClient.EnqueueResponse(new MicroIdApiResult<MicroIdListPrivilegeResponse>(
+            HttpStatusCode.OK,
+            MicroIdResponseCodes.Success,
+            "OK",
+            new MicroIdListPrivilegeResponse(
+                IdSystem: 1,
+                Items: new[]
+                {
+                    new MicroIdPrivilegeDetailResponse(
+                        IdPrivilege: 12,
+                        IdSystem: 1,
+                        IdParent: 0,
+                        Codename: "adm_inactive",
+                        GroupName: "SEGURIDAD",
+                        Title: "Inactivo",
+                        Action: "adm/inactive",
+                        Icon: null,
+                        Status: "I",
+                        DateCreation: DateTimeOffset.UtcNow,
+                        UserCreation: "admin")
+                },
+                Total: 1)));
+        apiClient.EnqueueResponse(new MicroIdApiResult<MicroIdReactivatePrivilegeResponse>(
+            HttpStatusCode.OK,
+            MicroIdResponseCodes.Success,
+            "Reactivated",
+            new MicroIdReactivatePrivilegeResponse(12, "A", modifiedAt)));
+
+        var service = CreateMicroIdService(apiClient, systemNumericId: 1);
+
+        var result = await service.ReactivatePrivilegeAsync("jwt-react", 12);
+
+        Assert.True(result.Success);
+        Assert.Equal(StatusCodes.Status200OK, result.StatusCode);
+        Assert.NotNull(result.Data);
+        Assert.Equal(12, result.Data!.IdPrivilege);
+        Assert.Equal("A", result.Data.Status);
+        Assert.Equal(2, apiClient.CallCount);
+        Assert.Equal("priv/reactivate", apiClient.LastEndpoint);
+
+        var sentPayload = Assert.IsType<MicroIdReactivatePrivilegeRequest>(apiClient.LastPayload);
+        Assert.Equal(12, sentPayload.IdPrivilege);
+    }
+
+    [Fact]
+    public async Task MicroId_ReactivatePrivilegeAsync_WhenNotInConfiguredSystemInactiveList_ShouldReturn422WithoutCallingReactivate()
+    {
+        var apiClient = new StubMicroIdApiClient();
+        apiClient.EnqueueResponse(new MicroIdApiResult<MicroIdListPrivilegeResponse>(
+            HttpStatusCode.OK,
+            MicroIdResponseCodes.Success,
+            "OK",
+            new MicroIdListPrivilegeResponse(
+                IdSystem: 1,
+                Items: Array.Empty<MicroIdPrivilegeDetailResponse>(),
+                Total: 0)));
+
+        var service = CreateMicroIdService(apiClient, systemNumericId: 1);
+
+        var result = await service.ReactivatePrivilegeAsync("jwt-react", 999);
+
+        Assert.False(result.Success);
+        Assert.Equal(StatusCodes.Status422UnprocessableEntity, result.StatusCode);
+        Assert.Equal(1, apiClient.CallCount);
+        Assert.Equal("priv/list", apiClient.LastEndpoint);
+    }
+
+    [Theory]
+    [InlineData(MicroIdResponseCodes.InactiveMaster, HttpStatusCode.UnprocessableEntity, StatusCodes.Status422UnprocessableEntity)]
+    [InlineData(MicroIdResponseCodes.InvalidPayload, HttpStatusCode.BadRequest, StatusCodes.Status400BadRequest)]
+    public async Task MicroId_ReactivatePrivilegeAsync_ErrorMapping_ShouldReturnExpectedStatusCode(
+        string microIdCode,
+        HttpStatusCode httpStatus,
+        int expectedStatusCode)
+    {
+        var apiClient = new StubMicroIdApiClient();
+        apiClient.EnqueueResponse(new MicroIdApiResult<MicroIdListPrivilegeResponse>(
+            HttpStatusCode.OK,
+            MicroIdResponseCodes.Success,
+            "OK",
+            new MicroIdListPrivilegeResponse(
+                IdSystem: 1,
+                Items: new[]
+                {
+                    new MicroIdPrivilegeDetailResponse(
+                        IdPrivilege: 15,
+                        IdSystem: 1,
+                        IdParent: 5,
+                        Codename: "adm_child",
+                        GroupName: "SEGURIDAD",
+                        Title: "Hijo",
+                        Action: "adm/child",
+                        Icon: null,
+                        Status: "I",
+                        DateCreation: DateTimeOffset.UtcNow,
+                        UserCreation: "admin")
+                },
+                Total: 1)));
+        apiClient.EnqueueResponse(new MicroIdApiResult<MicroIdReactivatePrivilegeResponse>(
+            httpStatus,
+            microIdCode,
+            "error",
+            null));
+
+        var service = CreateMicroIdService(apiClient, systemNumericId: 1);
+
+        var result = await service.ReactivatePrivilegeAsync("jwt-react", 15);
+
+        Assert.False(result.Success);
+        Assert.Equal(expectedStatusCode, result.StatusCode);
+        Assert.Equal(2, apiClient.CallCount);
+        Assert.Equal("priv/reactivate", apiClient.LastEndpoint);
     }
 
     // =========================================================================
@@ -606,6 +726,67 @@ public class PrivilegeAdminServicesTests
         });
         Assert.False(updateInactive.Success);
         Assert.Equal(StatusCodes.Status422UnprocessableEntity, updateInactive.StatusCode);
+    }
+
+    [Fact]
+    public async Task Mock_ReactivatePrivilegeAsync_ShouldValidateBusinessRulesAndRestoreActiveStatus()
+    {
+        var service = CreateMockService();
+        const string token = "mock-session-token";
+
+        // 1. Inexistente -> 422
+        var missing = await service.ReactivatePrivilegeAsync(token, 999999);
+        Assert.False(missing.Success);
+        Assert.Equal(StatusCodes.Status422UnprocessableEntity, missing.StatusCode);
+
+        // 2. Crear padre e hijo
+        var parentId = (await service.CreatePrivilegeAsync(token, new CreatePrivilegeRequestDto
+        {
+            IdParent = 0,
+            Codename = "react_parent",
+            GroupName = "QA",
+            Title = "Padre Reactivar",
+            Action = "qa/react-parent"
+        })).Data!.IdPrivilege;
+
+        var childId = (await service.CreatePrivilegeAsync(token, new CreatePrivilegeRequestDto
+        {
+            IdParent = parentId,
+            Codename = "react_child",
+            GroupName = "QA",
+            Title = "Hijo Reactivar",
+            Action = "qa/react-child"
+        })).Data!.IdPrivilege;
+
+        // 3. Ya activo -> 400
+        var alreadyActive = await service.ReactivatePrivilegeAsync(token, parentId);
+        Assert.False(alreadyActive.Success);
+        Assert.Equal(StatusCodes.Status400BadRequest, alreadyActive.StatusCode);
+
+        // 4. Inactivar hijo y padre
+        await service.DeactivatePrivilegeAsync(token, childId);
+        await service.DeactivatePrivilegeAsync(token, parentId);
+
+        // 5. Intentar reactivar hijo mientras padre está inactivo -> 422
+        var childWithInactiveParent = await service.ReactivatePrivilegeAsync(token, childId);
+        Assert.False(childWithInactiveParent.Success);
+        Assert.Equal(StatusCodes.Status422UnprocessableEntity, childWithInactiveParent.StatusCode);
+
+        // 6. Reactivar padre -> 200 OK y Status == "A"
+        var reactivatedParent = await service.ReactivatePrivilegeAsync(token, parentId);
+        Assert.True(reactivatedParent.Success);
+        Assert.Equal(StatusCodes.Status200OK, reactivatedParent.StatusCode);
+        Assert.Equal("A", reactivatedParent.Data!.Status);
+
+        // 7. Ahora reactivar hijo -> 200 OK y accesible por GetPrivilegeAsync
+        var reactivatedChild = await service.ReactivatePrivilegeAsync(token, childId);
+        Assert.True(reactivatedChild.Success);
+        Assert.Equal(StatusCodes.Status200OK, reactivatedChild.StatusCode);
+        Assert.Equal("A", reactivatedChild.Data!.Status);
+
+        var fetchedChild = await service.GetPrivilegeAsync(token, childId);
+        Assert.True(fetchedChild.Success);
+        Assert.Equal("A", fetchedChild.Data!.Status);
     }
 
     private sealed class StubMicroIdApiClient : IMicroIdApiClient

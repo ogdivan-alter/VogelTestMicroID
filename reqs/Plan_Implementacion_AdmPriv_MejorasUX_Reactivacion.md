@@ -13,8 +13,8 @@
 | :--- | :--- | :---: | :--- |
 | **Fase 1** | Contratos compartidos (`Vogel.Shared`) y Backend BFF (`Vogel.Server` — `Api` y `Mock`) | ✅ Completada | Backend |
 | **Fase 2** | Assets SVG (`wwwroot/icons/`), Estado Cliente y Mejoras UI/UX (`Vogel.Client` — Issues #3, #4, #6) | ✅ Completada | Frontend |
-| **Fase 3** | Pruebas Unitarias y de Integración (`Vogel.Tests`) | 🔄 En progreso | Backend / Frontend |
-| **Fase 4** | Auditoría de Seguridad de la Información (`vogel-infosec-guardian`) | ⏳ Pendiente | InfoSec |
+| **Fase 3** | Pruebas Unitarias y de Integración (`Vogel.Tests`) | ✅ Completada | Backend / Frontend |
+| **Fase 4** | Auditoría de Seguridad de la Información (`vogel-infosec-guardian`) | 🔄 En progreso | InfoSec |
 | **Fase 5** | Verificación QA End-to-End (`vogel-qa-verifier` — Modo `Api` MicroID real y Modo `Mock`) | ⏳ Pendiente | QA |
 
 ---
@@ -58,10 +58,10 @@
 
 ## Fase 3 — Pruebas Unitarias y Compilación (`Vogel.Tests`)
 
-- [ ] **T3.1** Agregar pruebas en `Vogel.Tests/PrivilegesControllerTests.cs` para `POST /api/privileges/{id}/reactivate` (sin token → `401`, `id <= 0` → `400`, éxito → `200`, propagación de error de negocio → `422`).
-- [ ] **T3.2** Agregar pruebas en `Vogel.Tests/PrivilegeAdminServicesTests.cs` para `MicroIdPrivilegeAdminService.ReactivatePrivilegeAsync` (éxito, ownership check BOLA/IDOR, padre inactivo `422`, ya activo `400`) y `MockPrivilegeAdminService.ReactivatePrivilegeAsync` (éxito, inexistente, ya activo, padre inactivo).
-- [ ] **T3.3** Agregar pruebas en `Vogel.Tests/AdmPrivStateServiceTests.cs` para `ReactivateAsync` (éxito con recarga del catálogo, manejo de error `422` y sin token).
-- [ ] **T3.4** Ejecutar `dotnet build` y `dotnet test` verificando 0 errores y 100% de pruebas en verde.
+- [x] **T3.1** Agregar pruebas en `Vogel.Tests/PrivilegesControllerTests.cs` para `POST /api/privileges/{id}/reactivate` (sin token → `401`, `id <= 0` → `400`, éxito → `200`, propagación de error de negocio → `422`).
+- [x] **T3.2** Agregar pruebas en `Vogel.Tests/PrivilegeAdminServicesTests.cs` para `MicroIdPrivilegeAdminService.ReactivatePrivilegeAsync` (éxito, ownership check BOLA/IDOR, padre inactivo `422`, ya activo `400`) y `MockPrivilegeAdminService.ReactivatePrivilegeAsync` (éxito, inexistente, ya activo, padre inactivo).
+- [x] **T3.3** Agregar pruebas en `Vogel.Tests/AdmPrivStateServiceTests.cs` para `ReactivateAsync` (éxito con recarga del catálogo, manejo de error `422` y sin token).
+- [x] **T3.4** Ejecutar `dotnet build` y `dotnet test` verificando 0 errores y 100% de pruebas en verde.
 
 ---
 
@@ -95,3 +95,4 @@
 | 2026-11-23 | Levantamiento | Se consolidaron los issues `#3`, `#4` y `#6`, se verificó el contrato real `POST /priv/reactivate` en MicroID (solo lectura), se creó la rama `adm-priv-ux-reactivate` desde `main` y se generaron los 2 documentos en `reqs/`. Aprobado por el usuario para iniciar ejecución. |
 | 2026-11-23 | Fase 1 (`T1.1`–`T1.6`) | Implementados DTOs, contratos, modelos MicroID, `MicroIdPrivilegeAdminService.ReactivatePrivilegeAsync` (con ownership check anti-BOLA/IDOR), `MockPrivilegeAdminService.ReactivatePrivilegeAsync` y endpoint `POST api/privileges/{id}/reactivate`. Build `Vogel.Server` verde (0 errores, 0 warnings). |
 | 2026-11-23 | Fase 2 (`T2.1`–`T2.5`) | Creados SVGs limpios (`plus.svg`, `edit.svg`, `reactivate.svg`), extendido `AdmPrivStateService.ReactivateAsync`, refactorizados `AdmPrivFilter` (apilado vertical), `AdmPrivCapture` (botón alineado a la derecha estilo `HeaderWork`) y `AdmPrivList` (botones solo ícono + reactivación). Build `Vogel.Client` verde (0 errores, 0 warnings). |
+| 2026-11-23 | Fase 3 (`T3.1`–`T3.4`) | Agregadas pruebas unitarias de reactivación en `PrivilegesControllerTests`, `PrivilegeAdminServicesTests` (`Api` y `Mock`) y `AdmPrivStateServiceTests`. Suite `dotnet test`: 149/149 pruebas en verde (0 errores, 0 warnings). |
