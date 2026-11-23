@@ -1,9 +1,24 @@
 @namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv
 
-@if (!string.IsNullOrWhiteSpace(AdmPrivState.ErrorMessage))
+@if (HasSuccessMessage)
 {
-    <div class="vogel-work-view-frame__alert vogel-work-view-frame__alert--info" role="alert">
+    <div class="adm-priv-list__alert adm-priv-list__alert--success" role="status">
+        <span>@AdmPrivState.SuccessMessage</span>
+        <button type="button"
+                class="adm-priv-list__alert-close"
+                aria-label="Cerrar notificación"
+                @onclick="DismissAlert">&times;</button>
+    </div>
+}
+
+@if (HasErrorMessage)
+{
+    <div class="adm-priv-list__alert adm-priv-list__alert--error" role="alert">
         <span>@AdmPrivState.ErrorMessage</span>
+        <button type="button"
+                class="adm-priv-list__alert-close"
+                aria-label="Cerrar alerta"
+                @onclick="DismissAlert">&times;</button>
     </div>
 }
 
@@ -32,19 +47,43 @@
             <span class="vogel-badge vogel-badge--muted">@item.GroupName</span>
         </td>
         <td class="text-center">
-            <input type="checkbox" checked="@(item.Status == "A")" disabled aria-label="Estado activo" />
+            <input type="checkbox" checked="@IsActive(item)" disabled aria-label="Estado activo" />
         </td>
         <td class="text-center">
-            @{
-                var isActive = string.Equals(item.Status, "A", StringComparison.OrdinalIgnoreCase);
+            @if (IsActive(item))
+            {
+                <button type="button"
+                        class="adm-priv-list__action-btn adm-priv-list__action-btn--edit"
+                        title="Editar privilegio"
+                        aria-label="Editar privilegio"
+                        @onclick="() => HandleEditClick(item)">
+                    <img src="icons/edit.svg"
+                         alt=""
+                         aria-hidden="true"
+                         class="adm-priv-list__action-icon" />
+                </button>
             }
-            <button type="button"
-                    class="vogel-btn vogel-btn--outline vogel-btn--sm"
-                    disabled="@(!isActive)"
-                    title="@(isActive ? "Editar privilegio" : "Solo se pueden editar privilegios activos")"
-                    @onclick="() => HandleEditClick(item)">
-                Editar
-            </button>
+            else if (IsInactive(item))
+            {
+                <button type="button"
+                        class="adm-priv-list__action-btn adm-priv-list__action-btn--reactivate"
+                        title="Reactivar privilegio"
+                        aria-label="Reactivar privilegio"
+                        disabled="@IsReactivating(item.IdPrivilege)"
+                        @onclick="() => HandleReactivateClickAsync(item)">
+                    @if (IsReactivating(item.IdPrivilege))
+                    {
+                        <span class="vogel-spinner-small adm-priv-list__spinner" aria-hidden="true"></span>
+                    }
+                    else
+                    {
+                        <img src="icons/reactivate.svg"
+                             alt=""
+                             aria-hidden="true"
+                             class="adm-priv-list__action-icon" />
+                    }
+                </button>
+            }
         </td>
     </RowTemplate>
 </ListViewFrame>

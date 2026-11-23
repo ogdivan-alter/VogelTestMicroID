@@ -219,6 +219,36 @@ public class PrivilegesController : ControllerBase
         return Ok(result.Data);
     }
 
+    /// <summary>
+    /// Reactiva lógicamente un privilegio inactivo cambiando su estado a activo.
+    /// </summary>
+    [HttpPost("{id:int}/reactivate")]
+    public async Task<IActionResult> Reactivate(int id)
+    {
+        var token = ExtractSessionToken();
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            _logger.LogWarning("Solicitud a POST /api/privileges/{PrivilegeId}/reactivate rechazada: token de sesión no proporcionado.", id);
+            return Unauthorized(new BackendErrorDto(StatusCodes.Status401Unauthorized, "Token de sesión no proporcionado."));
+        }
+
+        if (id <= 0)
+        {
+            return BadRequest(new BackendErrorDto(StatusCodes.Status400BadRequest, "El identificador del privilegio debe ser mayor a 0."));
+        }
+
+        var result = await _privilegeAdminProvider.ReactivatePrivilegeAsync(token, id, HttpContext.RequestAborted);
+
+        if (!result.Success || result.Data is null)
+        {
+            return StatusCode(
+                result.StatusCode,
+                result.Error ?? new BackendErrorDto(result.StatusCode, "Error al reactivar el privilegio."));
+        }
+
+        return Ok(result.Data);
+    }
+
     private static string? ValidatePrivilegePayload(
         int? idParent,
         string? codename,

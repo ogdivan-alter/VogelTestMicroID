@@ -411,6 +411,87 @@ public sealed class MockPrivilegeAdminService : IPrivilegeAdminProviderService
         }
     }
 
+    public async Task<ReactivatePrivilegeResult> ReactivatePrivilegeAsync(
+        string token,
+        int idPrivilege,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return new ReactivatePrivilegeResult(
+                false,
+                StatusCodes.Status401Unauthorized,
+                null,
+                new BackendErrorDto(StatusCodes.Status401Unauthorized, "Token de sesión no proporcionado."));
+        }
+
+        if (idPrivilege <= 0)
+        {
+            return new ReactivatePrivilegeResult(
+                false,
+                StatusCodes.Status400BadRequest,
+                null,
+                new BackendErrorDto(StatusCodes.Status400BadRequest, "El identificador del privilegio debe ser mayor a 0."));
+        }
+
+        await EnsureInitializedAsync(cancellationToken);
+
+        await _syncLock.WaitAsync(cancellationToken);
+        try
+        {
+            var item = _items.FirstOrDefault(p => p.IdPrivilege == idPrivilege);
+            if (item is null)
+            {
+                return new ReactivatePrivilegeResult(
+                    false,
+                    StatusCodes.Status422UnprocessableEntity,
+                    null,
+                    new BackendErrorDto(StatusCodes.Status422UnprocessableEntity, "El privilegio solicitado no existe."));
+            }
+
+            if (string.Equals(item.Status, "A", StringComparison.OrdinalIgnoreCase))
+            {
+                return new ReactivatePrivilegeResult(
+                    false,
+                    StatusCodes.Status400BadRequest,
+                    null,
+                    new BackendErrorDto(StatusCodes.Status400BadRequest, "El privilegio ya se encuentra activo."));
+            }
+
+            if (item.IdParent > 0)
+            {
+                var parent = _items.FirstOrDefault(p => p.IdPrivilege == item.IdParent);
+                if (parent is null || !string.Equals(parent.Status, "A", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new ReactivatePrivilegeResult(
+                        false,
+                        StatusCodes.Status422UnprocessableEntity,
+                        null,
+                        new BackendErrorDto(StatusCodes.Status422UnprocessableEntity, "El privilegio padre especificado no existe o se encuentra inactivo."));
+                }
+            }
+
+            item.Status = "A";
+
+            var response = new ReactivatePrivilegeResponseDto
+            {
+                IdPrivilege = item.IdPrivilege,
+                Status = "A",
+                DateModification = DateTimeOffset.UtcNow
+            };
+
+            _logger.LogInformation(
+                "Privilegio {PrivilegeId} reactivado exitosamente en proveedor Mock BFF.",
+                response.IdPrivilege);
+
+            return new ReactivatePrivilegeResult(true, StatusCodes.Status200OK, response, null);
+        }
+        finally
+        {
+            _syncLock.Release();
+        }
+    }
+
     private async Task EnsureInitializedAsync(CancellationToken cancellationToken)
     {
         if (_initialized)

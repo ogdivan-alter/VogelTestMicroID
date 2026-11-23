@@ -34,9 +34,14 @@ public interface IAdmPrivStateService
     bool IsLoading { get; }
 
     /// <summary>
-    /// Mensaje de error en caso de falla al consultar el catálogo de privilegios.
+    /// Mensaje de error en caso de falla al consultar o operar sobre el catálogo de privilegios.
     /// </summary>
     string? ErrorMessage { get; }
+
+    /// <summary>
+    /// Mensaje de confirmación tras completar una operación exitosa en la vista de lista (p. ej. reactivación).
+    /// </summary>
+    string? SuccessMessage { get; }
 
     /// <summary>
     /// Filtro de estado activo: "A" (Activos, por defecto), "I" (Inactivos) o "ALL" (Todos).
@@ -128,6 +133,16 @@ public interface IAdmPrivStateService
     /// Inactiva lógicamente un privilegio activo en el BFF (DELETE api/privileges/{id}) y refresca el catálogo local si tiene éxito.
     /// </summary>
     Task<PrivilegeOperationResult<DeactivatePrivilegeResponseDto>> DeactivateAsync(int id, DeactivatePrivilegeRequestDto? request = null);
+
+    /// <summary>
+    /// Reactiva lógicamente un privilegio inactivo en el BFF (POST api/privileges/{id}/reactivate) y refresca el catálogo local si tiene éxito.
+    /// </summary>
+    Task<PrivilegeOperationResult<ReactivatePrivilegeResponseDto>> ReactivateAsync(int id);
+
+    /// <summary>
+    /// Limpia los mensajes de éxito y error publicados en el estado compartido.
+    /// </summary>
+    void ClearMessages();
 
     /// <summary>
     /// Actualiza el filtro por estado ("A", "I" o "ALL") y reinicia la paginación.

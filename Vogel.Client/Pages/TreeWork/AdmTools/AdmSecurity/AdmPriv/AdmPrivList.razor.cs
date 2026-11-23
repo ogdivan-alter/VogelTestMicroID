@@ -7,7 +7,8 @@ namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv;
 
 /// <summary>
 /// Code-behind de la vista List de Administración de Privilegios.
-/// Renderiza los privilegios filtrados en ListViewFrame y se suscribe reactivamente a AdmPrivState.
+/// Renderiza los privilegios filtrados en ListViewFrame, se suscribe reactivamente a AdmPrivState
+/// y coordina la navegación a edición (activos) y la reactivación lógica (inactivos).
 /// </summary>
 public partial class AdmPrivList : ComponentBase, IDisposable
 {
@@ -20,9 +21,34 @@ public partial class AdmPrivList : ComponentBase, IDisposable
     [Parameter]
     public BlockWork? BlockWork { get; set; }
 
+    /// <summary>
+    /// Identificador del privilegio que actualmente se encuentra en proceso de reactivación
+    /// para bloquear clics duplicados en esa fila.
+    /// </summary>
+    protected int? ReactivatingPrivilegeId { get; private set; }
+
+    protected bool HasSuccessMessage => !string.IsNullOrWhiteSpace(AdmPrivState.SuccessMessage);
+
+    protected bool HasErrorMessage => !string.IsNullOrWhiteSpace(AdmPrivState.ErrorMessage);
+
     protected override void OnInitialized()
     {
         AdmPrivState.OnStateChanged += HandleStateChanged;
+    }
+
+    protected bool IsActive(PrivilegeAdminItemDto item)
+    {
+        return item is not null && string.Equals(item.Status, "A", StringComparison.OrdinalIgnoreCase);
+    }
+
+    protected bool IsInactive(PrivilegeAdminItemDto item)
+    {
+        return item is not null && string.Equals(item.Status, "I", StringComparison.OrdinalIgnoreCase);
+    }
+
+    protected bool IsReactivating(int idPrivilege)
+    {
+        return ReactivatingPrivilegeId == idPrivilege;
     }
 
     protected Task HandlePageChangedAsync(int page)
@@ -36,13 +62,43 @@ public partial class AdmPrivList : ComponentBase, IDisposable
     /// </summary>
     protected void HandleEditClick(PrivilegeAdminItemDto item)
     {
-        if (item is null || !string.Equals(item.Status, "A", StringComparison.OrdinalIgnoreCase))
+        if (!IsActive(item))
         {
             return;
         }
 
+        AdmPrivState.ClearMessages();
         AdmPrivState.SetSelectedEditPrivilegeId(item.IdPrivilege);
         NavigationManager.NavigateTo("/admsec/priv/edit");
+    }
+
+    /// <summary>
+    /// Reactiva lógicamente un privilegio inactivo contra el BFF con protección contra doble clic por fila.
+    /// </summary>
+    protected async Task HandleReactivateClickAsync(PrivilegeAdminItemDto item)
+    {
+        if (!IsInactive(item) || ReactivatingPrivilegeId.HasValue)
+        {
+            return;
+        }
+
+        ReactivatingPrivilegeId = item.IdPrivilege;
+        StateHasChanged();
+
+        try
+        {
+            await AdmPrivState.ReactivateAsync(item.IdPrivilege);
+        }
+        finally
+        {
+            ReactivatingPrivilegeId = null;
+            StateHasChanged();
+        }
+    }
+
+    protected void DismissAlert()
+    {
+        AdmPrivState.ClearMessages();
     }
 
     private void HandleStateChanged()

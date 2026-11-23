@@ -143,3 +143,15 @@ public sealed class DeactivatePrivilegeResponseDto
 
     public int CascadedRolePrivileges { get; set; }
 }
+
+/// <summary>
+/// Respuesta del BFF tras reactivar lógicamente un privilegio inactivo.
+/// </summary>
+public sealed class ReactivatePrivilegeResponseDto
+{
+    public int IdPrivilege { get; set; }
+
+    public string Status { get; set; } = "A";
+
+    public DateTimeOffset DateModification { get; set; }
+}

@@ -463,6 +463,104 @@ public sealed class MicroIdPrivilegeAdminService : IPrivilegeAdminProviderServic
         return new DeactivatePrivilegeResult(true, StatusCodes.Status200OK, response, null);
     }
 
+    public async Task<ReactivatePrivilegeResult> ReactivatePrivilegeAsync(
+        string token,
+        int idPrivilege,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return new ReactivatePrivilegeResult(
+                false,
+                StatusCodes.Status401Unauthorized,
+                null,
+                new BackendErrorDto(StatusCodes.Status401Unauthorized, "Token de sesión no proporcionado."));
+        }
+
+        if (idPrivilege <= 0)
+        {
+            return new ReactivatePrivilegeResult(
+                false,
+                StatusCodes.Status400BadRequest,
+                null,
+                new BackendErrorDto(StatusCodes.Status400BadRequest, "El identificador del privilegio debe ser mayor a 0."));
+        }
+
+        var ownershipList = await ListPrivilegesAsync(token, status: "I", cancellationToken);
+        if (!ownershipList.Success || ownershipList.Data is null)
+        {
+            return new ReactivatePrivilegeResult(
+                false,
+                ownershipList.StatusCode,
+                null,
+                ownershipList.Error ?? new BackendErrorDto(
+                    ownershipList.StatusCode,
+                    "No fue posible validar la pertenencia del privilegio."));
+        }
+
+        var belongsToConfiguredSystem = ownershipList.Data.Items.Any(item =>
+            item.IdPrivilege == idPrivilege &&
+            item.IdSystem == _options.SystemNumericId &&
+            string.Equals(item.Status, "I", StringComparison.OrdinalIgnoreCase));
+
+        if (!belongsToConfiguredSystem)
+        {
+            _logger.LogWarning(
+                "Reactivación bloqueada en /priv/reactivate: el privilegio {PrivilegeId} no existe como inactivo en el sistema configurado {ConfiguredSystemId}.",
+                idPrivilege,
+                _options.SystemNumericId);
+
+            return new ReactivatePrivilegeResult(
+                false,
+                StatusCodes.Status422UnprocessableEntity,
+                null,
+                new BackendErrorDto(
+                    StatusCodes.Status422UnprocessableEntity,
+                    "El privilegio solicitado no existe como inactivo en el sistema configurado."));
+        }
+
+        var payload = new MicroIdReactivatePrivilegeRequest(IdPrivilege: idPrivilege);
+
+        var result = await _apiClient.PostAsync<MicroIdReactivatePrivilegeRequest, MicroIdReactivatePrivilegeResponse>(
+            "priv/reactivate",
+            payload,
+            bearerToken: token,
+            cancellationToken: cancellationToken);
+
+        if (!result.IsSuccess || result.Data is null)
+        {
+            var (statusCode, errorMessage) = MapOperationError(
+                result.Code,
+                result.StatusCode,
+                notFoundOnInactiveMaster: false);
+
+            _logger.LogWarning(
+                "Reactivación de privilegio {PrivilegeId} en MicroID (/priv/reactivate) rechazada (StatusCode: {StatusCode}, Code: {Code}).",
+                idPrivilege,
+                statusCode,
+                SanitizeForLog(result.Code));
+
+            return new ReactivatePrivilegeResult(
+                false,
+                statusCode,
+                null,
+                new BackendErrorDto(statusCode, errorMessage));
+        }
+
+        var response = new ReactivatePrivilegeResponseDto
+        {
+            IdPrivilege = result.Data.IdPrivilege,
+            Status = result.Data.Status,
+            DateModification = result.Data.DateModification
+        };
+
+        _logger.LogInformation(
+            "Privilegio {PrivilegeId} reactivado exitosamente en MicroID.",
+            response.IdPrivilege);
+
+        return new ReactivatePrivilegeResult(true, StatusCodes.Status200OK, response, null);
+    }
+
     private static PrivilegeAdminItemDto MapToAdminItemDto(MicroIdPrivilegeDetailResponse item)
     {
         return new PrivilegeAdminItemDto

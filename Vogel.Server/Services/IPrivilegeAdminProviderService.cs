@@ -48,6 +48,15 @@ public sealed record DeactivatePrivilegeResult(
     BackendErrorDto? Error);
 
 /// <summary>
+/// Resultado normalizado de la reactivación lógica de un privilegio en el BFF.
+/// </summary>
+public sealed record ReactivatePrivilegeResult(
+    bool Success,
+    int StatusCode,
+    ReactivatePrivilegeResponseDto? Data,
+    BackendErrorDto? Error);
+
+/// <summary>
 /// Abstracción genérica de proveedor para administración de privilegios del sistema en el BFF.
 /// Permite intercambiar la fuente de datos (API externa, Mock, etc.) sin acoplar los controladores.
 /// </summary>
@@ -93,5 +102,13 @@ public interface IPrivilegeAdminProviderService
         string token,
         int idPrivilege,
         DeactivatePrivilegeRequestDto? request = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Reactiva lógicamente un privilegio inactivo cambiando su estado a activo.
+    /// </summary>
+    Task<ReactivatePrivilegeResult> ReactivatePrivilegeAsync(
+        string token,
+        int idPrivilege,
         CancellationToken cancellationToken = default);
 }

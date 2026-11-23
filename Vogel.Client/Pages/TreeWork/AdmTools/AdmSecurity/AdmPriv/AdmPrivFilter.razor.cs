@@ -17,9 +17,18 @@ public partial class AdmPrivFilter : ComponentBase, IDisposable
     [Parameter]
     public BlockWork? BlockWork { get; set; }
 
+    protected bool HasTitleFilter => !string.IsNullOrWhiteSpace(AdmPrivState.TitleFilter);
+
+    protected bool HasIdParentFilter => !string.IsNullOrWhiteSpace(AdmPrivState.IdParentFilter);
+
     protected override void OnInitialized()
     {
         AdmPrivState.OnStateChanged += HandleStateChanged;
+    }
+
+    protected bool IsStatusSelected(string status)
+    {
+        return string.Equals(AdmPrivState.StatusFilter, status, StringComparison.OrdinalIgnoreCase);
     }
 
     protected void HandleStatusChanged(string status)
