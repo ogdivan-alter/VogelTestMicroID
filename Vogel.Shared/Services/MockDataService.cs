@@ -11,6 +11,7 @@ public class MockDataService : IMockDataService
 {
     private readonly List<(User User, string Password)> _mockUsers;
     private readonly List<Privilege> _mockPrivileges;
+    private readonly Privilege _admPrivDefaultPrivilege;
     private readonly List<BlockWork> _mockBlockWorks;
     private readonly List<Dictionary<string, object>> _mockDetailRecords;
 
@@ -128,6 +129,15 @@ public class MockDataService : IMockDataService
             }
         };
 
+        // Privilegio de Administración de Privilegios (adm_priv) bajo Administración / Seguridad.
+        // Se asigna por usuario para configurar combinaciones RBAC sin alterar el árbol base
+        // validado por pruebas de menús existentes.
+        _admPrivDefaultPrivilege = CreateAdmPrivPrivilege(
+            read: true,
+            create: true,
+            modify: true,
+            delete: true);
+
         // 2. Definición de Usuarios simulados
         _mockUsers = new List<(User User, string Password)>
         {
@@ -141,7 +151,7 @@ public class MockDataService : IMockDataService
                     TypeAuthentication = "INTERNA",
                     AllowPasswordChange = true,
                     BaseRole = "Único",
-                    Privileges = new List<Privilege>(_mockPrivileges)
+                    Privileges = BuildUserPrivileges(CreateAdmPrivPrivilege(read: true, create: true, modify: true, delete: true))
                 },
                 "SecurePassword123!"
             ),
@@ -155,7 +165,7 @@ public class MockDataService : IMockDataService
                     TypeAuthentication = "INTERNA",
                     AllowPasswordChange = true,
                     BaseRole = "Único",
-                    Privileges = new List<Privilege>(_mockPrivileges)
+                    Privileges = BuildUserPrivileges(CreateAdmPrivPrivilege(read: true, create: true, modify: true, delete: true))
                 },
                 "Vogel2026*"
             ),
@@ -172,6 +182,48 @@ public class MockDataService : IMockDataService
                     Privileges = _mockPrivileges.Where(p => p.Id != 2014).ToList()
                 },
                 "External2026*"
+            ),
+            // Usuario RBAC de prueba: solo lectura sobre adm_priv
+            (
+                new User
+                {
+                    Username = "readonly_user",
+                    Name = "Usuario Solo Lectura",
+                    Avatar = null,
+                    TypeAuthentication = "INTERNA",
+                    AllowPasswordChange = true,
+                    BaseRole = "Único",
+                    Privileges = BuildUserPrivileges(CreateAdmPrivPrivilege(read: true, create: false, modify: false, delete: false))
+                },
+                "ReadOnly2026*"
+            ),
+            // Usuario RBAC de prueba: lectura e inactivación sobre adm_priv
+            (
+                new User
+                {
+                    Username = "read_delete_user",
+                    Name = "Usuario Lectura e Inactivación",
+                    Avatar = null,
+                    TypeAuthentication = "INTERNA",
+                    AllowPasswordChange = true,
+                    BaseRole = "Único",
+                    Privileges = BuildUserPrivileges(CreateAdmPrivPrivilege(read: true, create: false, modify: false, delete: true))
+                },
+                "ReadDelete2026*"
+            ),
+            // Usuario RBAC de prueba: solo creación sobre adm_priv (sin lectura)
+            (
+                new User
+                {
+                    Username = "create_only_user",
+                    Name = "Usuario Solo Creación",
+                    Avatar = null,
+                    TypeAuthentication = "INTERNA",
+                    AllowPasswordChange = true,
+                    BaseRole = "Único",
+                    Privileges = BuildUserPrivileges(CreateAdmPrivPrivilege(read: false, create: true, modify: false, delete: false))
+                },
+                "CreateOnly2026*"
             )
         };
 
@@ -305,14 +357,18 @@ public class MockDataService : IMockDataService
 
     public Task<Privilege?> GetPrivilegeByIdAsync(int id)
     {
-        var privilege = _mockPrivileges.FirstOrDefault(p => p.Id == id);
+        var privilege = _mockPrivileges.FirstOrDefault(p => p.Id == id)
+            ?? (_admPrivDefaultPrivilege.Id == id ? _admPrivDefaultPrivilege : null);
         return Task.FromResult(privilege);
     }
 
     public Task<Privilege?> GetPrivilegeByCodenameAsync(string codename)
     {
         var privilege = _mockPrivileges.FirstOrDefault(p =>
-            string.Equals(p.Codename, codename, StringComparison.OrdinalIgnoreCase));
+            string.Equals(p.Codename, codename, StringComparison.OrdinalIgnoreCase))
+            ?? (string.Equals(_admPrivDefaultPrivilege.Codename, codename, StringComparison.OrdinalIgnoreCase)
+                ? _admPrivDefaultPrivilege
+                : null);
 
         return Task.FromResult(privilege);
     }
@@ -339,4 +395,34 @@ public class MockDataService : IMockDataService
 
         return Task.FromResult((pagedItems, total));
     }
+
+    private List<Privilege> BuildUserPrivileges(Privilege admPrivPrivilege)
+    {
+        var privileges = new List<Privilege>(_mockPrivileges)
+        {
+            admPrivPrivilege
+        };
+
+        return privileges;
+    }
+
+    private static Privilege CreateAdmPrivPrivilege(bool read, bool create, bool modify, bool delete) => new()
+    {
+        Id = 204,
+        IdParent = 1,
+        Codename = "adm_priv",
+        Group = "Seguridad",
+        Title = "Administración de Privilegios",
+        Action = "/admsec/priv",
+        Icon = "icons/roles.svg",
+        Order = 4,
+        Access = new PrivilegeAccess
+        {
+            Read = read,
+            Create = create,
+            Modify = modify,
+            Delete = delete,
+            Execute = read || create || modify || delete
+        }
+    };
 }

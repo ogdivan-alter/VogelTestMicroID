@@ -13,8 +13,8 @@
 
 | Fase | Descripción | Agente Responsable | Estado |
 |---|---|---|---|
-| **Fase 1** | Contratos compartidos (`Vogel.Shared`) y perfiles RBAC en `MockDataService` | `vogel-bff-integration` | ⬜ Pendiente |
-| **Fase 2** | Autorización granular RBAC en BFF (`Vogel.Server`) | `vogel-bff-integration` | ⬜ Pendiente |
+| **Fase 1** | Contratos compartidos (`Vogel.Shared`) y perfiles RBAC en `MockDataService` | `vogel-bff-integration` | ✅ Completada |
+| **Fase 2** | Autorización granular RBAC en BFF (`Vogel.Server`) | `vogel-bff-integration` | 🔄 En progreso |
 | **Fase 3** | Restricciones RBAC en Frontend Blazor (`Vogel.Client`) e ícono `view.svg` | `vogel-blazor-client` | ⬜ Pendiente |
 | **Fase 4** | Pruebas Unitarias e Integración (`Vogel.Tests`) | `vogel-bff-integration` / `vogel-blazor-client` | ⬜ Pendiente |
 | **Fase 5** | Auditoría de Seguridad de la Información (InfoSec) | `vogel-infosec-guardian` | ⬜ Pendiente |
@@ -27,9 +27,9 @@
 ## Detalle de Fases y Tareas
 
 ### Fase 1: Contratos Compartidos y Datos Mock (`Vogel.Shared`)
-- [ ] **T1.1** Crear el enum `PrivilegeAction` (`Read`, `Create`, `Modify`, `Delete`, `Validate`, `Execute`, `Approve`) en `Vogel.Shared/Enums/PrivilegeAction.cs`.
-- [ ] **T1.2** Incorporar el privilegio `adm_priv` en `Vogel.Shared/Services/MockDataService.cs` (con permisos completos para `admin` y `jdoe`) y agregar usuarios mock de prueba con combinaciones RBAC (`readonly_user`, `read_delete_user`, `create_only_user`) sin alterar el comportamiento de pruebas existentes.
-- [ ] **T1.3** Verificar compilación de `Vogel.Shared`.
+- [x] **T1.1** Crear el enum `PrivilegeAction` (`Read`, `Create`, `Modify`, `Delete`, `Validate`, `Execute`, `Approve`) en `Vogel.Shared/Enums/PrivilegeAction.cs`.
+- [x] **T1.2** Incorporar el privilegio `adm_priv` en `Vogel.Shared/Services/MockDataService.cs` (con permisos completos para `admin` y `jdoe`) y agregar usuarios mock de prueba con combinaciones RBAC (`readonly_user`, `read_delete_user`, `create_only_user`) sin alterar el comportamiento de pruebas existentes.
+- [x] **T1.3** Verificar compilación de `Vogel.Shared`.
 
 ### Fase 2: Autorización Granular RBAC en BFF (`Vogel.Server`)
 - [ ] **T2.1** Crear la abstracción `IPrivilegeAuthorizationService` y `PrivilegeAuthorizationResult` en `Vogel.Server/Services/IPrivilegeAuthorizationService.cs`.
@@ -92,3 +92,4 @@
 | Fecha | Fase | Nota |
 |---|---|---|
 | 2026-11-24 | Levantamiento | Rama `adm-priv-rbac-crud-skill` creada desde `main`. Documentos de requerimiento y plan generados en `reqs/` y aprobados por el usuario para iniciar ejecución. |
+| 2026-11-24 | Fase 1 (`T1.1`–`T1.3`) | Creado enum `PrivilegeAction` en `Vogel.Shared/Enums/PrivilegeAction.cs` e incorporados `adm_priv` + perfiles mock RBAC (`readonly_user`, `read_delete_user`, `create_only_user`) en `MockDataService.cs`. Build verde (0 errores/0 warnings) y 149/149 tests en verde. |
