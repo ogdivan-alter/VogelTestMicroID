@@ -16,8 +16,8 @@
 | **Fase 1** | Contratos compartidos (`Vogel.Shared`) y perfiles RBAC en `MockDataService` | `vogel-bff-integration` | ✅ Completada |
 | **Fase 2** | Autorización granular RBAC en BFF (`Vogel.Server`) | `vogel-bff-integration` | ✅ Completada |
 | **Fase 3** | Restricciones RBAC en Frontend Blazor (`Vogel.Client`) e ícono `view.svg` | `vogel-blazor-client` | ✅ Completada |
-| **Fase 4** | Pruebas Unitarias e Integración (`Vogel.Tests`) | `vogel-bff-integration` / `vogel-blazor-client` | 🔄 En progreso |
-| **Fase 5** | Auditoría de Seguridad de la Información (InfoSec) | `vogel-infosec-guardian` | ⬜ Pendiente |
+| **Fase 4** | Pruebas Unitarias e Integración (`Vogel.Tests`) | `vogel-bff-integration` / `vogel-blazor-client` | ✅ Completada |
+| **Fase 5** | Auditoría de Seguridad de la Información (InfoSec) | `vogel-infosec-guardian` | 🔄 En progreso |
 | **Fase 6** | Verificación QA End-to-End (`Api` MicroID + `Mock`) | `vogel-qa-verifier` | ⬜ Pendiente |
 | **Fase 7** | Creación del Skill dedicado para módulos CRUD (`.agents/skills/vogel-crud-module/SKILL.md`) | `vogel-req-analyst` | ⬜ Pendiente |
 | **Fase 8** | Archivo en `VogelTestMicroID-Docs`, limpieza de `reqs/` y Pull Request hacia `main` | `vogel-req-analyst` | ⬜ Pendiente |
@@ -62,10 +62,10 @@
 - [x] **T3.7** Verificar compilación completa de la solución (`dotnet build`).
 
 ### Fase 4: Pruebas Unitarias e Integración (`Vogel.Tests`)
-- [ ] **T4.1** Agregar pruebas unitarias para `PrivilegeAuthorizationService` (permiso concedido, denegado `403`, privilegio ausente, error del proveedor *fail-closed*, propagación `401`).
-- [ ] **T4.2** Actualizar y ampliar pruebas unitarias de `PrivilegesController` verificando los 6 endpoints con permiso concedido y denegado (`403 Forbidden`), incluyendo `Reactivate` gobernado por `Create`.
-- [ ] **T4.3** Agregar pruebas unitarias para `SessionState.HasPrivilegeAccess` y `MockAuthProviderService` con perfiles RBAC diferenciados.
-- [ ] **T4.4** Ejecutar `dotnet test` y verificar 100% de pruebas en verde.
+- [x] **T4.1** Agregar pruebas unitarias para `PrivilegeAuthorizationService` (permiso concedido, denegado `403`, privilegio ausente, error del proveedor *fail-closed*, propagación `401`).
+- [x] **T4.2** Actualizar y ampliar pruebas unitarias de `PrivilegesController` verificando los 6 endpoints con permiso concedido y denegado (`403 Forbidden`), incluyendo `Reactivate` gobernado por `Create`.
+- [x] **T4.3** Agregar pruebas unitarias para `SessionState.HasPrivilegeAccess` y `MockAuthProviderService` con perfiles RBAC diferenciados.
+- [x] **T4.4** Ejecutar `dotnet test` y verificar 100% de pruebas en verde.
 
 ### Fase 5: Auditoría de Seguridad de la Información (`vogel-infosec-guardian`)
 - [ ] **T5.1** Ejecutar auditoría completa con `vogel-infosec-guardian` verificando OWASP A01 (Broken Access Control), *fail-closed*, ausencia de controles no autorizados en DOM, ausencia de URLs hardcodeadas, sanitización de logs y no-filtración de errores.
@@ -95,3 +95,4 @@
 | 2026-11-24 | Fase 1 (`T1.1`–`T1.3`) | Creado enum `PrivilegeAction` en `Vogel.Shared/Enums/PrivilegeAction.cs` e incorporados `adm_priv` + perfiles mock RBAC (`readonly_user`, `read_delete_user`, `create_only_user`) en `MockDataService.cs`. Build verde (0 errores/0 warnings) y 149/149 tests en verde. |
 | 2026-11-24 | Fase 2 (`T2.1`–`T2.5`) | Creados `IPrivilegeAuthorizationService`, `PrivilegeAuthorizationService` (fail-closed) y `MockSessionStore`; actualizados `MockAuthProviderService`, `PrivilegesController` (6 endpoints con autorización `adm_priv`) y `Program.cs`. Build `Vogel.Server` verde (0 errores, 0 warnings). |
 | 2026-11-24 | Fase 3 (`T3.1`–`T3.7`) | Agregado `SessionState.HasPrivilegeAccess`, ícono `view.svg` y restricciones RBAC estrictas en DOM/navegación en `AdmPriv`, `AdmPrivCapture`, `AdmPrivList`, `AdmPrivForm` y `AdmPrivStateService` (incluyendo modo solo lectura y sección `delete` independiente). Build `Vogel.Client` verde (0 errores, 0 warnings). |
+| 2026-11-24 | Fase 4 (`T4.1`–`T4.4`) | Creados `PrivilegeAuthorizationServiceTests.cs` y `SessionStateAndMockRbacTests.cs`; actualizados `PrivilegesControllerTests.cs` y `AdmPrivStateServiceTests.cs`. Build verde (0 errores/0 warnings) y `dotnet test`: 198/198 pruebas en verde (+49 casos nuevos). |
