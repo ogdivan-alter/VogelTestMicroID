@@ -31,8 +31,9 @@ builder.Services.Configure<CookiePolicyOptions>(options =>
 // Información de instancia del servidor para invalidación de sesiones al reiniciarse
 builder.Services.AddSingleton<ServerSessionInfo>();
 
-// Servicio de datos simulados local (soporte para modo Mock)
+// Servicio de datos simulados local y almacén de sesiones en memoria (soporte para modo Mock)
 builder.Services.AddSingleton<IMockDataService, MockDataService>();
+builder.Services.AddSingleton<MockSessionStore>();
 
 // Configuración y clientes HTTP para integración con MicroID
 builder.Services.AddOptions<MicroIdOptions>()
@@ -68,6 +69,9 @@ builder.Services.AddScoped<IAuthProviderService>(sp =>
         ? sp.GetRequiredService<MockAuthProviderService>()
         : sp.GetRequiredService<MicroIdAuthService>();
 });
+
+// Autorización granular RBAC agnóstica al proveedor para el BFF
+builder.Services.AddScoped<IPrivilegeAuthorizationService, PrivilegeAuthorizationService>();
 
 // Proveedores de administración de privilegios desacoplados para el BFF (Api [MicroID] por defecto, Mock explícito)
 builder.Services.AddScoped<MicroIdPrivilegeAdminService>();

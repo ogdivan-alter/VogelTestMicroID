@@ -2,18 +2,22 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Vogel.Server.Services;
 using Vogel.Shared.DTOs;
+using Vogel.Shared.Enums;
 
 namespace Vogel.Server.Controllers;
 
 /// <summary>
 /// Controlador BFF (Backend for Frontend) agnóstico al proveedor para la administración de privilegios.
-/// Delega exclusivamente en <see cref="IPrivilegeAdminProviderService"/>.
+/// Delega exclusivamente en <see cref="IPrivilegeAdminProviderService"/> y autoriza cada operación
+/// mediante <see cref="IPrivilegeAuthorizationService"/>.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Route("api/v1/[controller]")]
 public class PrivilegesController : ControllerBase
 {
+    private const string ModulePrivilegeCodename = "adm_priv";
+
     private const int MaxCodenameLength = 100;
     private const int MaxGroupNameLength = 100;
     private const int MaxTitleLength = 150;
@@ -22,19 +26,22 @@ public class PrivilegesController : ControllerBase
     private const int MaxDelDescriptionLength = 500;
 
     private readonly IPrivilegeAdminProviderService _privilegeAdminProvider;
+    private readonly IPrivilegeAuthorizationService _privilegeAuthorization;
     private readonly ILogger<PrivilegesController> _logger;
 
     public PrivilegesController(
         IPrivilegeAdminProviderService privilegeAdminProvider,
+        IPrivilegeAuthorizationService privilegeAuthorization,
         ILogger<PrivilegesController> logger)
     {
         _privilegeAdminProvider = privilegeAdminProvider;
+        _privilegeAuthorization = privilegeAuthorization;
         _logger = logger;
     }
 
     /// <summary>
     /// Obtiene el listado administrativo de privilegios del sistema configurado.
-    /// Exige token de sesión en cabecera Authorization: Bearer o X-Session-Token.
+    /// Exige token de sesión en cabecera Authorization: Bearer o X-Session-Token y permiso Read en adm_priv.
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] string? status = null)
@@ -44,6 +51,12 @@ public class PrivilegesController : ControllerBase
         {
             _logger.LogWarning("Solicitud a GET /api/privileges rechazada: token de sesión no proporcionado.");
             return Unauthorized(new BackendErrorDto(StatusCodes.Status401Unauthorized, "Token de sesión no proporcionado."));
+        }
+
+        var authFailure = await AuthorizeModuleActionAsync(token, PrivilegeAction.Read);
+        if (authFailure is not null)
+        {
+            return authFailure;
         }
 
         var result = await _privilegeAdminProvider.ListPrivilegesAsync(token, status, HttpContext.RequestAborted);
@@ -69,6 +82,12 @@ public class PrivilegesController : ControllerBase
         {
             _logger.LogWarning("Solicitud a GET /api/privileges/{PrivilegeId} rechazada: token de sesión no proporcionado.", id);
             return Unauthorized(new BackendErrorDto(StatusCodes.Status401Unauthorized, "Token de sesión no proporcionado."));
+        }
+
+        var authFailure = await AuthorizeModuleActionAsync(token, PrivilegeAction.Read);
+        if (authFailure is not null)
+        {
+            return authFailure;
         }
 
         if (id <= 0)
@@ -99,6 +118,12 @@ public class PrivilegesController : ControllerBase
         {
             _logger.LogWarning("Solicitud a POST /api/privileges rechazada: token de sesión no proporcionado.");
             return Unauthorized(new BackendErrorDto(StatusCodes.Status401Unauthorized, "Token de sesión no proporcionado."));
+        }
+
+        var authFailure = await AuthorizeModuleActionAsync(token, PrivilegeAction.Create);
+        if (authFailure is not null)
+        {
+            return authFailure;
         }
 
         var validationError = ValidatePrivilegePayload(
@@ -139,6 +164,12 @@ public class PrivilegesController : ControllerBase
         {
             _logger.LogWarning("Solicitud a PUT /api/privileges/{PrivilegeId} rechazada: token de sesión no proporcionado.", id);
             return Unauthorized(new BackendErrorDto(StatusCodes.Status401Unauthorized, "Token de sesión no proporcionado."));
+        }
+
+        var authFailure = await AuthorizeModuleActionAsync(token, PrivilegeAction.Modify);
+        if (authFailure is not null)
+        {
+            return authFailure;
         }
 
         if (id <= 0)
@@ -195,6 +226,12 @@ public class PrivilegesController : ControllerBase
             return Unauthorized(new BackendErrorDto(StatusCodes.Status401Unauthorized, "Token de sesión no proporcionado."));
         }
 
+        var authFailure = await AuthorizeModuleActionAsync(token, PrivilegeAction.Delete);
+        if (authFailure is not null)
+        {
+            return authFailure;
+        }
+
         if (id <= 0)
         {
             return BadRequest(new BackendErrorDto(StatusCodes.Status400BadRequest, "El identificador del privilegio debe ser mayor a 0."));
@@ -232,6 +269,12 @@ public class PrivilegesController : ControllerBase
             return Unauthorized(new BackendErrorDto(StatusCodes.Status401Unauthorized, "Token de sesión no proporcionado."));
         }
 
+        var authFailure = await AuthorizeModuleActionAsync(token, PrivilegeAction.Create);
+        if (authFailure is not null)
+        {
+            return authFailure;
+        }
+
         if (id <= 0)
         {
             return BadRequest(new BackendErrorDto(StatusCodes.Status400BadRequest, "El identificador del privilegio debe ser mayor a 0."));
@@ -247,6 +290,26 @@ public class PrivilegesController : ControllerBase
         }
 
         return Ok(result.Data);
+    }
+
+    private async Task<IActionResult?> AuthorizeModuleActionAsync(string token, PrivilegeAction requiredAction)
+    {
+        var authResult = await _privilegeAuthorization.AuthorizeAsync(
+            token,
+            ModulePrivilegeCodename,
+            requiredAction,
+            HttpContext.RequestAborted);
+
+        if (!authResult.IsAuthorized)
+        {
+            return StatusCode(
+                authResult.StatusCode,
+                authResult.Error ?? new BackendErrorDto(
+                    authResult.StatusCode,
+                    "No cuenta con permisos suficientes para realizar esta operación."));
+        }
+
+        return null;
     }
 
     private static string? ValidatePrivilegePayload(

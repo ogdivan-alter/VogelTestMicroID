@@ -14,8 +14,8 @@
 | Fase | Descripción | Agente Responsable | Estado |
 |---|---|---|---|
 | **Fase 1** | Contratos compartidos (`Vogel.Shared`) y perfiles RBAC en `MockDataService` | `vogel-bff-integration` | ✅ Completada |
-| **Fase 2** | Autorización granular RBAC en BFF (`Vogel.Server`) | `vogel-bff-integration` | 🔄 En progreso |
-| **Fase 3** | Restricciones RBAC en Frontend Blazor (`Vogel.Client`) e ícono `view.svg` | `vogel-blazor-client` | ⬜ Pendiente |
+| **Fase 2** | Autorización granular RBAC en BFF (`Vogel.Server`) | `vogel-bff-integration` | ✅ Completada |
+| **Fase 3** | Restricciones RBAC en Frontend Blazor (`Vogel.Client`) e ícono `view.svg` | `vogel-blazor-client` | 🔄 En progreso |
 | **Fase 4** | Pruebas Unitarias e Integración (`Vogel.Tests`) | `vogel-bff-integration` / `vogel-blazor-client` | ⬜ Pendiente |
 | **Fase 5** | Auditoría de Seguridad de la Información (InfoSec) | `vogel-infosec-guardian` | ⬜ Pendiente |
 | **Fase 6** | Verificación QA End-to-End (`Api` MicroID + `Mock`) | `vogel-qa-verifier` | ⬜ Pendiente |
@@ -32,17 +32,17 @@
 - [x] **T1.3** Verificar compilación de `Vogel.Shared`.
 
 ### Fase 2: Autorización Granular RBAC en BFF (`Vogel.Server`)
-- [ ] **T2.1** Crear la abstracción `IPrivilegeAuthorizationService` y `PrivilegeAuthorizationResult` en `Vogel.Server/Services/IPrivilegeAuthorizationService.cs`.
-- [ ] **T2.2** Implementar `PrivilegeAuthorizationService` (Scoped) en `Vogel.Server/Services/PrivilegeAuthorizationService.cs` delegando en `IAuthProviderService.GetPrivilegesAsync(token)`, con comportamiento estricto *fail-closed*, logging seguro y respuesta `403 Forbidden`.
-- [ ] **T2.3** Actualizar `MockAuthProviderService` (con registro de sesiones mock en memoria) para que `GetPrivilegesAsync(token)` retorne los privilegios reales del usuario autenticado con ese token, preservando compatibilidad con pruebas existentes.
-- [ ] **T2.4** Integrar `IPrivilegeAuthorizationService` en `PrivilegesController` validando los permisos de `adm_priv` en cada endpoint:
+- [x] **T2.1** Crear la abstracción `IPrivilegeAuthorizationService` y `PrivilegeAuthorizationResult` en `Vogel.Server/Services/IPrivilegeAuthorizationService.cs`.
+- [x] **T2.2** Implementar `PrivilegeAuthorizationService` (Scoped) en `Vogel.Server/Services/PrivilegeAuthorizationService.cs` delegando en `IAuthProviderService.GetPrivilegesAsync(token)`, con comportamiento estricto *fail-closed*, logging seguro y respuesta `403 Forbidden`.
+- [x] **T2.3** Actualizar `MockAuthProviderService` (con registro de sesiones mock en memoria) para que `GetPrivilegesAsync(token)` retorne los privilegios reales del usuario autenticado con ese token, preservando compatibilidad con pruebas existentes.
+- [x] **T2.4** Integrar `IPrivilegeAuthorizationService` en `PrivilegesController` validando los permisos de `adm_priv` en cada endpoint:
   - `List` (`GET /api/privileges`) → `PrivilegeAction.Read`
   - `GetById` (`GET /api/privileges/{id}`) → `PrivilegeAction.Read`
   - `Create` (`POST /api/privileges`) → `PrivilegeAction.Create`
   - `Update` (`PUT /api/privileges/{id}`) → `PrivilegeAction.Modify`
   - `Deactivate` (`DELETE /api/privileges/{id}`) → `PrivilegeAction.Delete`
   - `Reactivate` (`POST /api/privileges/{id}/reactivate`) → `PrivilegeAction.Create`
-- [ ] **T2.5** Registrar `IPrivilegeAuthorizationService` (y el soporte de sesiones mock) en `Vogel.Server/Program.cs` y verificar compilación de `Vogel.Server`.
+- [x] **T2.5** Registrar `IPrivilegeAuthorizationService` (y el soporte de sesiones mock) en `Vogel.Server/Program.cs` y verificar compilación de `Vogel.Server`.
 
 ### Fase 3: Restricciones RBAC en Frontend Blazor (`Vogel.Client`)
 - [ ] **T3.1** Agregar `GetPrivilege(string codename)` y `HasPrivilegeAccess(string codename, PrivilegeAction action)` en `Vogel.Client/Services/SessionState.cs` (evaluación *fail-closed*).
@@ -93,3 +93,4 @@
 |---|---|---|
 | 2026-11-24 | Levantamiento | Rama `adm-priv-rbac-crud-skill` creada desde `main`. Documentos de requerimiento y plan generados en `reqs/` y aprobados por el usuario para iniciar ejecución. |
 | 2026-11-24 | Fase 1 (`T1.1`–`T1.3`) | Creado enum `PrivilegeAction` en `Vogel.Shared/Enums/PrivilegeAction.cs` e incorporados `adm_priv` + perfiles mock RBAC (`readonly_user`, `read_delete_user`, `create_only_user`) en `MockDataService.cs`. Build verde (0 errores/0 warnings) y 149/149 tests en verde. |
+| 2026-11-24 | Fase 2 (`T2.1`–`T2.5`) | Creados `IPrivilegeAuthorizationService`, `PrivilegeAuthorizationService` (fail-closed) y `MockSessionStore`; actualizados `MockAuthProviderService`, `PrivilegesController` (6 endpoints con autorización `adm_priv`) y `Program.cs`. Build `Vogel.Server` verde (0 errores, 0 warnings). |
