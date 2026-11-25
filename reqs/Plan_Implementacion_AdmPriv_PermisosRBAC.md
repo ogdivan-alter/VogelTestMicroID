@@ -19,7 +19,7 @@
 | **Fase 4** | Pruebas Unitarias e Integración (`Vogel.Tests`) | `vogel-bff-integration` / `vogel-blazor-client` | ✅ Completada |
 | **Fase 5** | Auditoría de Seguridad de la Información (InfoSec) | `vogel-infosec-guardian` | ✅ Completada |
 | **Fase 6** | Verificación QA End-to-End (`Api` MicroID + `Mock`) | `vogel-qa-verifier` | ✅ Completada |
-| **Fase 7** | Creación del Skill dedicado para módulos CRUD (`.agents/skills/vogel-crud-module/SKILL.md`) | `vogel-req-analyst` | 🔄 En progreso |
+| **Fase 7** | Creación del Skill dedicado para módulos CRUD (`.agents/skills/vogel-crud-module/SKILL.md`) | `vogel-req-analyst` | ✅ Completada |
 | **Fase 8** | Archivo en `VogelTestMicroID-Docs`, limpieza de `reqs/` y Pull Request hacia `main` | `vogel-req-analyst` | ⬜ Pendiente |
 
 ---
@@ -77,8 +77,8 @@
 - [x] **T6.3** Documentar resultados de QA y confirmar cumplimiento de `CA-01` a `CA-11`.
 
 ### Fase 7: Creación del Skill Dedicado para Módulos CRUD
-- [ ] **T7.1** Crear `.agents/skills/vogel-crud-module/SKILL.md` documentando el estándar completo para módulos CRUD en Vogel (contratos, proveedores `Api`/`Mock`, autorización RBAC en BFF y Front, vistas `WorkViewFrame`/`ViewSet`/Form, íconos SVG, pruebas unitarias, auditoría InfoSec y QA).
-- [ ] **T7.2** Validar que el skill refleje fielmente el patrón implementado y no contenga secretos ni URLs hardcodeadas.
+- [x] **T7.1** Crear `.agents/skills/vogel-crud-module/SKILL.md` documentando el estándar completo para módulos CRUD en Vogel (contratos, proveedores `Api`/`Mock`, autorización RBAC en BFF y Front, vistas `WorkViewFrame`/`ViewSet`/Form, íconos SVG, pruebas unitarias, auditoría InfoSec y QA).
+- [x] **T7.2** Validar que el skill refleje fielmente el patrón implementado y no contenga secretos ni URLs hardcodeadas.
 
 ### Fase 8: Archivo Documental, Limpieza de `reqs/` y Pull Request
 - [ ] **T8.1** Archivar `Requerimiento_AdmPriv_PermisosRBAC.md`, `Plan_Implementacion_AdmPriv_PermisosRBAC.md` (con todas las tareas completadas) y `Cierre_RFC.md` en `VogelTestMicroID-Docs/rfc/rfc_YYYYMMDD_adm_priv_rbac_crud_skill/`, actualizando `README.md` y haciendo `commit` + `push`.
@@ -98,3 +98,4 @@
 | 2026-11-24 | Fase 4 (`T4.1`–`T4.4`) | Creados `PrivilegeAuthorizationServiceTests.cs` y `SessionStateAndMockRbacTests.cs`; actualizados `PrivilegesControllerTests.cs` y `AdmPrivStateServiceTests.cs`. Build verde (0 errores/0 warnings) y `dotnet test`: 198/198 pruebas en verde (+49 casos nuevos). |
 | 2026-11-24 | Fase 5 (`T5.1`–`T5.2`) | Auditoría `vogel-infosec-guardian`: **APROBADO CON OBSERVACIONES MENORES** (0 Críticos, 0 Altos, 0 Medios, 3 Bajos no bloqueantes). Confirmado cumplimiento OWASP A01, fail-closed, anti-DOM-exposure, logging sanitizado e integridad de `MICROID`. |
 | 2026-11-24 | Fase 6 (`T6.1`–`T6.3`) | Verificación QA E2E (`vogel-qa-verifier`): **APROBADO**. Validados `CA-01` a `CA-11` en modo `Mock` (4 perfiles RBAC: `admin`, `readonly_user`, `read_delete_user`, `create_only_user`), modo `Api` contra MicroID real (`http://localhost:8021`), DOM/Razor y `198/198` tests en verde. |
+| 2026-11-24 | Fase 7 (`T7.1`–`T7.2`) | Creado Skill dedicado `.agents/skills/vogel-crud-module/SKILL.md` documentando la arquitectura completa de módulos CRUD en Vogel (contratos, BFF desacoplado + RBAC, Blazor Code-Behind + anti-DOM-exposure, SVGs, tests, InfoSec, QA y cierre en `VogelTestMicroID-Docs`), sin secretos ni URLs hardcodeadas. |
