@@ -2,15 +2,18 @@ using System.Net;
 using Microsoft.AspNetCore.Components;
 using Vogel.Client.Services;
 using Vogel.Shared.DTOs;
+using Vogel.Shared.Enums;
 
 namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv;
 
 /// <summary>
 /// Code-behind del formulario reutilizable de Administración de Privilegios
-/// para creación (/admsec/priv/create) y edición/inactivación (/admsec/priv/edit).
+/// para creación (/admsec/priv/create) y detalle/edición/inactivación (/admsec/priv/edit).
 /// </summary>
 public partial class AdmPrivForm : ComponentBase, IDisposable
 {
+    private const string ModulePrivilegeCodename = "adm_priv";
+
     protected const int MaxCodenameLength = 100;
     protected const int MaxGroupNameLength = 100;
     protected const int MaxTitleLength = 150;
@@ -56,19 +59,33 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
     private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.Ordinal);
     private string? _lastInitializedRouteKey;
 
-    protected string HeaderTitle => IsEditMode ? "Editar Privilegio" : "Crear Privilegio";
+    protected bool CanRead => SessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Read);
+
+    protected bool CanCreate => SessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Create);
+
+    protected bool CanModify => SessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Modify);
+
+    protected bool CanDelete => SessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Delete);
+
+    protected bool IsReadOnlyView => IsEditMode && !CanModify;
+
+    protected string HeaderTitle =>
+        !IsEditMode
+            ? "Crear Privilegio"
+            : (IsReadOnlyView ? "Detalle de Privilegio" : "Editar Privilegio");
 
     protected string PageTitleText => $"{HeaderTitle} — Vogel";
 
     protected string SubmitButtonText => IsEditMode ? "Guardar Cambios" : "Crear Privilegio";
 
-    protected string SecondaryButtonText => (IsDeactivated || LoadFailed) ? "Volver al listado" : "Cancelar";
+    protected string SecondaryButtonText =>
+        (IsDeactivated || LoadFailed || IsReadOnlyView) ? "Volver al listado" : "Cancelar";
 
-    protected bool IsFormDisabled => IsSaving || IsDeactivating || IsDeactivated || LoadFailed;
+    protected bool IsFormDisabled => IsSaving || IsDeactivating || IsDeactivated || LoadFailed || IsReadOnlyView;
 
-    protected bool CanSubmitForm => !LoadFailed && !IsDeactivated;
+    protected bool CanSubmitForm => !LoadFailed && !IsDeactivated && (IsEditMode ? CanModify : CanCreate);
 
-    protected bool CanShowDeactivateSection => IsEditMode && !IsDeactivated && !LoadFailed;
+    protected bool CanShowDeactivateSection => IsEditMode && CanDelete && !IsDeactivated && !LoadFailed;
 
     protected string StatusDisplayText =>
         string.Equals(Status, "A", StringComparison.OrdinalIgnoreCase) ? "Activo" : "Inactivo";
@@ -100,6 +117,23 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
 
         var relativePath = GetNormalizedRelativePath();
         var editRoute = string.Equals(relativePath, "admsec/priv/edit", StringComparison.OrdinalIgnoreCase);
+
+        if (!editRoute && !CanCreate)
+        {
+            AdmPrivState.ClearSelectedEditPrivilegeId();
+            AdmPrivState.SetErrorMessage("No cuenta con permisos para crear privilegios.");
+            NavigationManager.NavigateTo("/admsec/priv", replace: true);
+            return;
+        }
+
+        if (editRoute && !CanRead)
+        {
+            AdmPrivState.ClearSelectedEditPrivilegeId();
+            AdmPrivState.SetErrorMessage("No cuenta con permisos para consultar o editar privilegios.");
+            NavigationManager.NavigateTo("/admsec/priv", replace: true);
+            return;
+        }
+
         var selectedId = editRoute ? AdmPrivState.SelectedEditPrivilegeId : null;
         var routeKey = editRoute ? $"edit:{selectedId?.ToString() ?? "none"}" : "create";
 
@@ -141,7 +175,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
         IsLoadingInitial = true;
         try
         {
-            if (AdmPrivState.AllItems.Count == 0)
+            if (CanRead && AdmPrivState.AllItems.Count == 0)
             {
                 await AdmPrivState.LoadAsync();
             }
@@ -217,7 +251,12 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
 
     protected async Task HandleSubmitAsync()
     {
-        if (IsSaving || IsDeactivating || IsDeactivated || LoadFailed)
+        if (!CanSubmitForm || IsSaving || IsDeactivating || IsDeactivated || LoadFailed)
+        {
+            return;
+        }
+
+        if ((IsEditMode && !CanModify) || (!IsEditMode && !CanCreate))
         {
             return;
         }
@@ -318,7 +357,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
 
     protected void RequestDeactivateConfirmation()
     {
-        if (!CanShowDeactivateSection || IsSaving || IsDeactivating)
+        if (!CanDelete || !CanShowDeactivateSection || IsSaving || IsDeactivating)
         {
             return;
         }
@@ -343,7 +382,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
 
     protected async Task HandleConfirmDeactivateAsync()
     {
-        if (!CanShowDeactivateSection || IsDeactivating || IdPrivilege <= 0)
+        if (!CanDelete || !CanShowDeactivateSection || IsDeactivating || IdPrivilege <= 0)
         {
             return;
         }

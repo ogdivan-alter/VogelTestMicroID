@@ -1,17 +1,24 @@
 using Microsoft.AspNetCore.Components;
 using Vogel.Client.Services;
 using Vogel.Shared.DTOs;
+using Vogel.Shared.Enums;
 using Vogel.Shared.Models;
 
 namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv;
 
 /// <summary>
 /// Code-behind de la vista List de Administración de Privilegios.
-/// Renderiza los privilegios filtrados en ListViewFrame, se suscribe reactivamente a AdmPrivState
-/// y coordina la navegación a edición (activos) y la reactivación lógica (inactivos).
+/// Renderiza los privilegios filtrados en ListViewFrame respetando permisos RBAC de adm_priv,
+/// se suscribe reactivamente a AdmPrivState y coordina la navegación a edición/detalle (activos)
+/// y la reactivación lógica (inactivos).
 /// </summary>
 public partial class AdmPrivList : ComponentBase, IDisposable
 {
+    private const string ModulePrivilegeCodename = "adm_priv";
+
+    [Inject]
+    protected SessionState SessionState { get; set; } = default!;
+
     [Inject]
     protected IAdmPrivStateService AdmPrivState { get; set; } = default!;
 
@@ -20,6 +27,12 @@ public partial class AdmPrivList : ComponentBase, IDisposable
 
     [Parameter]
     public BlockWork? BlockWork { get; set; }
+
+    protected bool CanRead => SessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Read);
+
+    protected bool CanCreate => SessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Create);
+
+    protected bool CanModify => SessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Modify);
 
     /// <summary>
     /// Identificador del privilegio que actualmente se encuentra en proceso de reactivación
@@ -62,7 +75,22 @@ public partial class AdmPrivList : ComponentBase, IDisposable
     /// </summary>
     protected void HandleEditClick(PrivilegeAdminItemDto item)
     {
-        if (!IsActive(item))
+        if (!CanModify || !CanRead || !IsActive(item))
+        {
+            return;
+        }
+
+        AdmPrivState.ClearMessages();
+        AdmPrivState.SetSelectedEditPrivilegeId(item.IdPrivilege);
+        NavigationManager.NavigateTo("/admsec/priv/edit");
+    }
+
+    /// <summary>
+    /// Almacena en memoria el identificador del privilegio activo y navega a /admsec/priv/edit en modo solo lectura.
+    /// </summary>
+    protected void HandleViewClick(PrivilegeAdminItemDto item)
+    {
+        if (!CanRead || !IsActive(item))
         {
             return;
         }
@@ -77,7 +105,7 @@ public partial class AdmPrivList : ComponentBase, IDisposable
     /// </summary>
     protected async Task HandleReactivateClickAsync(PrivilegeAdminItemDto item)
     {
-        if (!IsInactive(item) || ReactivatingPrivilegeId.HasValue)
+        if (!CanCreate || !IsInactive(item) || ReactivatingPrivilegeId.HasValue)
         {
             return;
         }

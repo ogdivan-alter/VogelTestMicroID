@@ -15,8 +15,8 @@
 |---|---|---|---|
 | **Fase 1** | Contratos compartidos (`Vogel.Shared`) y perfiles RBAC en `MockDataService` | `vogel-bff-integration` | ✅ Completada |
 | **Fase 2** | Autorización granular RBAC en BFF (`Vogel.Server`) | `vogel-bff-integration` | ✅ Completada |
-| **Fase 3** | Restricciones RBAC en Frontend Blazor (`Vogel.Client`) e ícono `view.svg` | `vogel-blazor-client` | 🔄 En progreso |
-| **Fase 4** | Pruebas Unitarias e Integración (`Vogel.Tests`) | `vogel-bff-integration` / `vogel-blazor-client` | ⬜ Pendiente |
+| **Fase 3** | Restricciones RBAC en Frontend Blazor (`Vogel.Client`) e ícono `view.svg` | `vogel-blazor-client` | ✅ Completada |
+| **Fase 4** | Pruebas Unitarias e Integración (`Vogel.Tests`) | `vogel-bff-integration` / `vogel-blazor-client` | 🔄 En progreso |
 | **Fase 5** | Auditoría de Seguridad de la Información (InfoSec) | `vogel-infosec-guardian` | ⬜ Pendiente |
 | **Fase 6** | Verificación QA End-to-End (`Api` MicroID + `Mock`) | `vogel-qa-verifier` | ⬜ Pendiente |
 | **Fase 7** | Creación del Skill dedicado para módulos CRUD (`.agents/skills/vogel-crud-module/SKILL.md`) | `vogel-req-analyst` | ⬜ Pendiente |
@@ -45,21 +45,21 @@
 - [x] **T2.5** Registrar `IPrivilegeAuthorizationService` (y el soporte de sesiones mock) en `Vogel.Server/Program.cs` y verificar compilación de `Vogel.Server`.
 
 ### Fase 3: Restricciones RBAC en Frontend Blazor (`Vogel.Client`)
-- [ ] **T3.1** Agregar `GetPrivilege(string codename)` y `HasPrivilegeAccess(string codename, PrivilegeAction action)` en `Vogel.Client/Services/SessionState.cs` (evaluación *fail-closed*).
-- [ ] **T3.2** Crear el ícono vectorial `Vogel.Client/wwwroot/icons/view.svg` para el botón **Ver detalle**.
-- [ ] **T3.3** Actualizar `AdmPriv.razor.cs` para omitir `AdmPrivState.LoadAsync()` cuando `!CanRead` y limpiar cualquier dato residual.
-- [ ] **T3.4** Actualizar `AdmPrivCapture.razor` y `AdmPrivCapture.razor.cs` para renderizar el botón **Crear privilegio** exclusivamente cuando `CanCreate` (ausente del DOM si `false`), con guard defensivo en `HandleCreatePrivilegeClick`.
-- [ ] **T3.5** Actualizar `AdmPrivList.razor`, `AdmPrivList.razor.cs` y `AdmPrivList.razor.css` para:
+- [x] **T3.1** Agregar `GetPrivilege(string codename)` y `HasPrivilegeAccess(string codename, PrivilegeAction action)` en `Vogel.Client/Services/SessionState.cs` (evaluación *fail-closed*).
+- [x] **T3.2** Crear el ícono vectorial `Vogel.Client/wwwroot/icons/view.svg` para el botón **Ver detalle**.
+- [x] **T3.3** Actualizar `AdmPriv.razor.cs` para omitir `AdmPrivState.LoadAsync()` cuando `!CanRead` y limpiar cualquier dato residual.
+- [x] **T3.4** Actualizar `AdmPrivCapture.razor` y `AdmPrivCapture.razor.cs` para renderizar el botón **Crear privilegio** exclusivamente cuando `CanCreate` (ausente del DOM si `false`), con guard defensivo en `HandleCreatePrivilegeClick`.
+- [x] **T3.5** Actualizar `AdmPrivList.razor`, `AdmPrivList.razor.cs` y `AdmPrivList.razor.css` para:
   - Mostrar aviso de acceso de lectura restringido si `!CanRead`.
   - En filas activas: renderizar botón **Editar** (`icons/edit.svg`) si `CanModify`, o botón **Ver detalle** (`icons/view.svg`) si `CanRead && !CanModify`, o ningún botón en caso contrario.
   - En filas inactivas: renderizar botón **Reactivar** (`icons/reactivate.svg`) exclusivamente si `CanCreate` (ausente del DOM si `false`).
-- [ ] **T3.6** Actualizar `AdmPrivForm.razor`, `AdmPrivForm.razor.cs` y `AdmPrivStateService.cs` para:
+- [x] **T3.6** Actualizar `AdmPrivForm.razor`, `AdmPrivForm.razor.cs` y `AdmPrivStateService.cs` para:
   - Bloquear acceso directo a `/admsec/priv/create` si `!CanCreate` y a `/admsec/priv/edit` si `!CanRead` (redirigiendo a `/admsec/priv` con mensaje de error).
   - Evitar la llamada a `AdmPrivState.LoadAsync()` en creación cuando `!CanRead`.
   - Soportar modo solo lectura (`IsReadOnlyView = IsEditMode && !CanModify`): título `Detalle de Privilegio`, campos deshabilitados, botón **Guardar Cambios** ausente del DOM.
   - Renderizar la sección **Inactivación del Privilegio** exclusivamente cuando `IsEditMode && CanDelete && !IsDeactivated && !LoadFailed` (habilitada también en modo solo lectura si `CanRead && !CanModify && CanDelete`).
   - Manejar respuestas `403 Forbidden` sin cerrar la sesión.
-- [ ] **T3.7** Verificar compilación completa de la solución (`dotnet build`).
+- [x] **T3.7** Verificar compilación completa de la solución (`dotnet build`).
 
 ### Fase 4: Pruebas Unitarias e Integración (`Vogel.Tests`)
 - [ ] **T4.1** Agregar pruebas unitarias para `PrivilegeAuthorizationService` (permiso concedido, denegado `403`, privilegio ausente, error del proveedor *fail-closed*, propagación `401`).
@@ -94,3 +94,4 @@
 | 2026-11-24 | Levantamiento | Rama `adm-priv-rbac-crud-skill` creada desde `main`. Documentos de requerimiento y plan generados en `reqs/` y aprobados por el usuario para iniciar ejecución. |
 | 2026-11-24 | Fase 1 (`T1.1`–`T1.3`) | Creado enum `PrivilegeAction` en `Vogel.Shared/Enums/PrivilegeAction.cs` e incorporados `adm_priv` + perfiles mock RBAC (`readonly_user`, `read_delete_user`, `create_only_user`) en `MockDataService.cs`. Build verde (0 errores/0 warnings) y 149/149 tests en verde. |
 | 2026-11-24 | Fase 2 (`T2.1`–`T2.5`) | Creados `IPrivilegeAuthorizationService`, `PrivilegeAuthorizationService` (fail-closed) y `MockSessionStore`; actualizados `MockAuthProviderService`, `PrivilegesController` (6 endpoints con autorización `adm_priv`) y `Program.cs`. Build `Vogel.Server` verde (0 errores, 0 warnings). |
+| 2026-11-24 | Fase 3 (`T3.1`–`T3.7`) | Agregado `SessionState.HasPrivilegeAccess`, ícono `view.svg` y restricciones RBAC estrictas en DOM/navegación en `AdmPriv`, `AdmPrivCapture`, `AdmPrivList`, `AdmPrivForm` y `AdmPrivStateService` (incluyendo modo solo lectura y sección `delete` independiente). Build `Vogel.Client` verde (0 errores, 0 warnings). |

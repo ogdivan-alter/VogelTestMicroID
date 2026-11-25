@@ -1,14 +1,17 @@
 using Microsoft.AspNetCore.Components;
 using Vogel.Client.Services;
+using Vogel.Shared.Enums;
 
 namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv;
 
 /// <summary>
 /// Code-behind de la vista principal de Administración de Privilegios (/admsec/priv).
-/// Valida la sesión autenticada e inicia la carga de privilegios en el estado compartido.
+/// Valida la sesión autenticada y el permiso de lectura antes de iniciar la carga en el estado compartido.
 /// </summary>
 public partial class AdmPriv : ComponentBase
 {
+    private const string ModulePrivilegeCodename = "adm_priv";
+
     [Inject]
     protected SessionState SessionState { get; set; } = default!;
 
@@ -18,6 +21,8 @@ public partial class AdmPriv : ComponentBase
     [Inject]
     protected IAdmPrivStateService AdmPrivState { get; set; } = default!;
 
+    protected bool CanRead => SessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Read);
+
     protected override async Task OnInitializedAsync()
     {
         if (!SessionState.IsAuthenticated)
@@ -26,6 +31,17 @@ public partial class AdmPriv : ComponentBase
             return;
         }
 
+        if (!CanRead)
+        {
+            AdmPrivState.ClearCatalog();
+            return;
+        }
+
+        var pendingError = AdmPrivState.ErrorMessage;
         await AdmPrivState.LoadAsync();
+        if (!string.IsNullOrWhiteSpace(pendingError) && string.IsNullOrWhiteSpace(AdmPrivState.ErrorMessage))
+        {
+            AdmPrivState.SetErrorMessage(pendingError);
+        }
     }
 }

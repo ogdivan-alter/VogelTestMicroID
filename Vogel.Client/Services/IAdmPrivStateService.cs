@@ -145,6 +145,16 @@ public interface IAdmPrivStateService
     void ClearMessages();
 
     /// <summary>
+    /// Publica un mensaje de error controlado en el estado compartido (por ejemplo, al bloquear navegación directa sin permisos).
+    /// </summary>
+    void SetErrorMessage(string message);
+
+    /// <summary>
+    /// Limpia el catálogo de privilegios cargado en memoria sin alterar los mensajes de notificación activos.
+    /// </summary>
+    void ClearCatalog();
+
+    /// <summary>
     /// Actualiza el filtro por estado ("A", "I" o "ALL") y reinicia la paginación.
     /// </summary>
     void SetStatusFilter(string statusFilter);
