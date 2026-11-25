@@ -17,8 +17,8 @@
 | **Fase 2** | Autorización granular RBAC en BFF (`Vogel.Server`) | `vogel-bff-integration` | ✅ Completada |
 | **Fase 3** | Restricciones RBAC en Frontend Blazor (`Vogel.Client`) e ícono `view.svg` | `vogel-blazor-client` | ✅ Completada |
 | **Fase 4** | Pruebas Unitarias e Integración (`Vogel.Tests`) | `vogel-bff-integration` / `vogel-blazor-client` | ✅ Completada |
-| **Fase 5** | Auditoría de Seguridad de la Información (InfoSec) | `vogel-infosec-guardian` | 🔄 En progreso |
-| **Fase 6** | Verificación QA End-to-End (`Api` MicroID + `Mock`) | `vogel-qa-verifier` | ⬜ Pendiente |
+| **Fase 5** | Auditoría de Seguridad de la Información (InfoSec) | `vogel-infosec-guardian` | ✅ Completada |
+| **Fase 6** | Verificación QA End-to-End (`Api` MicroID + `Mock`) | `vogel-qa-verifier` | 🔄 En progreso |
 | **Fase 7** | Creación del Skill dedicado para módulos CRUD (`.agents/skills/vogel-crud-module/SKILL.md`) | `vogel-req-analyst` | ⬜ Pendiente |
 | **Fase 8** | Archivo en `VogelTestMicroID-Docs`, limpieza de `reqs/` y Pull Request hacia `main` | `vogel-req-analyst` | ⬜ Pendiente |
 
@@ -68,8 +68,8 @@
 - [x] **T4.4** Ejecutar `dotnet test` y verificar 100% de pruebas en verde.
 
 ### Fase 5: Auditoría de Seguridad de la Información (`vogel-infosec-guardian`)
-- [ ] **T5.1** Ejecutar auditoría completa con `vogel-infosec-guardian` verificando OWASP A01 (Broken Access Control), *fail-closed*, ausencia de controles no autorizados en DOM, ausencia de URLs hardcodeadas, sanitización de logs y no-filtración de errores.
-- [ ] **T5.2** Resolver cualquier hallazgo bloqueante o de severidad media/alta y registrar el dictamen final.
+- [x] **T5.1** Ejecutar auditoría completa con `vogel-infosec-guardian` verificando OWASP A01 (Broken Access Control), *fail-closed*, ausencia de controles no autorizados en DOM, ausencia de URLs hardcodeadas, sanitización de logs y no-filtración de errores.
+- [x] **T5.2** Resolver cualquier hallazgo bloqueante o de severidad media/alta y registrar el dictamen final.
 
 ### Fase 6: Verificación QA End-to-End (`vogel-qa-verifier`)
 - [ ] **T6.1** Ejecutar verificación QA End-to-End en modo `Mock` probando combinaciones de permisos (`admin` completo, `readonly_user`, `read_delete_user`, `create_only_user`), inspeccionando el DOM real para confirmar ausencia de botones/controles no autorizados y verificando `403 Forbidden` en BFF.
@@ -96,3 +96,4 @@
 | 2026-11-24 | Fase 2 (`T2.1`–`T2.5`) | Creados `IPrivilegeAuthorizationService`, `PrivilegeAuthorizationService` (fail-closed) y `MockSessionStore`; actualizados `MockAuthProviderService`, `PrivilegesController` (6 endpoints con autorización `adm_priv`) y `Program.cs`. Build `Vogel.Server` verde (0 errores, 0 warnings). |
 | 2026-11-24 | Fase 3 (`T3.1`–`T3.7`) | Agregado `SessionState.HasPrivilegeAccess`, ícono `view.svg` y restricciones RBAC estrictas en DOM/navegación en `AdmPriv`, `AdmPrivCapture`, `AdmPrivList`, `AdmPrivForm` y `AdmPrivStateService` (incluyendo modo solo lectura y sección `delete` independiente). Build `Vogel.Client` verde (0 errores, 0 warnings). |
 | 2026-11-24 | Fase 4 (`T4.1`–`T4.4`) | Creados `PrivilegeAuthorizationServiceTests.cs` y `SessionStateAndMockRbacTests.cs`; actualizados `PrivilegesControllerTests.cs` y `AdmPrivStateServiceTests.cs`. Build verde (0 errores/0 warnings) y `dotnet test`: 198/198 pruebas en verde (+49 casos nuevos). |
+| 2026-11-24 | Fase 5 (`T5.1`–`T5.2`) | Auditoría `vogel-infosec-guardian`: **APROBADO CON OBSERVACIONES MENORES** (0 Críticos, 0 Altos, 0 Medios, 3 Bajos no bloqueantes). Confirmado cumplimiento OWASP A01, fail-closed, anti-DOM-exposure, logging sanitizado e integridad de `MICROID`. |
