@@ -6,13 +6,7 @@
     @if (!string.IsNullOrEmpty(ErrorMessage))
     {
         <div id="login-error-alert" class="login-error-alert" role="alert" aria-live="assertive">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
+            <img src="icons/alert-circle.svg" alt="" aria-hidden="true" class="vogel-alert-icon" />
             <span>@ErrorMessage</span>
         </div>
     }
@@ -76,7 +70,7 @@
         <div class="login-actions">
             <button id="btn-login"
                     type="submit"
-                    class="btn btn-primary @(ShowCancelButton ? "" : "btn-block")"
+                    class="vogel-btn vogel-btn--primary vogel-btn--lg @(ShowCancelButton ? "" : "vogel-btn--block")"
                     disabled="@(IsLoading || (ReCaptchaComponent != null && ReCaptchaComponent.IsVisible && !IsRecaptchaVerified))"
                     aria-busy="@IsLoading.ToString().ToLower()">
                 @if (IsLoading)
@@ -86,13 +80,7 @@
                 }
                 else
                 {
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" stroke-width="2"
-                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                        <polyline points="10,17 15,12 10,7"/>
-                        <line x1="15" y1="12" x2="3" y2="12"/>
-                    </svg>
+                    <img src="icons/exit.svg" alt="" aria-hidden="true" class="vogel-btn__icon" />
                     <span>Ingresar</span>
                 }
             </button>
@@ -101,7 +89,7 @@
             {
                 <button id="btn-cancel"
                         type="button"
-                        class="btn btn-secondary"
+                        class="vogel-btn vogel-btn--secondary vogel-btn--lg"
                         @onclick="HandleCancelAsync"
                         disabled="@IsLoading"
                         title="Cancelar"
@@ -114,16 +102,11 @@
             {
                 <button id="btn-clear-form"
                         type="button"
-                        class="btn btn-secondary"
+                        class="vogel-btn vogel-btn--secondary vogel-btn--lg"
                         @onclick="ClearForm"
                         title="Limpiar formulario"
                         aria-label="Limpiar campos del formulario">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" stroke-width="2"
-                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <polyline points="1,4 1,10 7,10"/>
-                        <path d="M3.51 15a9 9 0 1 0 .49-4.95"/>
-                    </svg>
+                    <img src="icons/refresh.svg" alt="" aria-hidden="true" class="vogel-btn__icon" />
                 </button>
             }
         </div>

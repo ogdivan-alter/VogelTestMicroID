@@ -66,34 +66,34 @@ else
                     @if (CanModify)
                     {
                         <button type="button"
-                                class="adm-priv-list__action-btn adm-priv-list__action-btn--edit"
+                                class="vogel-icon-btn vogel-icon-btn--edit"
                                 title="Editar privilegio"
                                 aria-label="Editar privilegio"
                                 @onclick="() => HandleEditClick(item)">
                             <img src="icons/edit.svg"
                                  alt=""
                                  aria-hidden="true"
-                                 class="adm-priv-list__action-icon" />
+                                 class="vogel-icon-btn__icon" />
                         </button>
                     }
                     else if (CanRead)
                     {
                         <button type="button"
-                                class="adm-priv-list__action-btn adm-priv-list__action-btn--view"
+                                class="vogel-icon-btn vogel-icon-btn--view"
                                 title="Ver detalle del privilegio"
                                 aria-label="Ver detalle del privilegio"
                                 @onclick="() => HandleViewClick(item)">
                             <img src="icons/view.svg"
                                  alt=""
                                  aria-hidden="true"
-                                 class="adm-priv-list__action-icon" />
+                                 class="vogel-icon-btn__icon" />
                         </button>
                     }
                 }
                 else if (IsInactive(item) && CanCreate)
                 {
                     <button type="button"
-                            class="adm-priv-list__action-btn adm-priv-list__action-btn--reactivate"
+                            class="vogel-icon-btn vogel-icon-btn--reactivate"
                             title="Reactivar privilegio"
                             aria-label="Reactivar privilegio"
                             disabled="@IsReactivating(item.IdPrivilege)"
@@ -107,7 +107,7 @@ else
                             <img src="icons/reactivate.svg"
                                  alt=""
                                  aria-hidden="true"
-                                 class="adm-priv-list__action-icon" />
+                                 class="vogel-icon-btn__icon" />
                         }
                     </button>
                 }

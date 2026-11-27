@@ -45,11 +45,7 @@
                 @if (!string.IsNullOrWhiteSpace(_actionMessage))
                 {
                     <div class="vogel-work-view-frame__alert vogel-work-view-frame__alert--info">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-alert-icon">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="16" x2="12" y2="12"></line>
-                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                        </svg>
+                        <img src="icons/info.svg" alt="" aria-hidden="true" class="vogel-alert-icon" />
                         <span>@_actionMessage</span>
                         <button type="button" class="vogel-alert-close" @onclick="() => _actionMessage = null">&times;</button>
                     </div>
@@ -65,41 +61,33 @@
                                     <div class="vogel-work-toolbar__group">
                                         @if (!string.IsNullOrWhiteSpace(BlockWork.ActionSet.ApplyMaster))
                                         {
-                                            <button type="button" 
+                                            <button type="button"
                                                     class="vogel-btn vogel-btn--primary vogel-btn--sm"
                                                     disabled="@_isActionBusy"
                                                     @onclick="@(() => HandleActionClickAsync("apply_master", BlockWork.ActionSet.ApplyMaster))">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-btn__icon">
-                                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                                </svg>
+                                                <img src="icons/check.svg" alt="" aria-hidden="true" class="vogel-btn__icon" />
                                                 <span>Aplicar</span>
                                             </button>
                                         }
 
                                         @if (!string.IsNullOrWhiteSpace(BlockWork.ActionSet.CancelMaster))
                                         {
-                                            <button type="button" 
+                                            <button type="button"
                                                     class="vogel-btn vogel-btn--secondary vogel-btn--sm"
                                                     disabled="@_isActionBusy"
                                                     @onclick="@(() => HandleActionClickAsync("cancel_master", BlockWork.ActionSet.CancelMaster))">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-btn__icon">
-                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                                </svg>
+                                                <img src="icons/close.svg" alt="" aria-hidden="true" class="vogel-btn__icon" />
                                                 <span>Cancelar</span>
                                             </button>
                                         }
 
                                         @if (!string.IsNullOrWhiteSpace(BlockWork.ActionSet.Capture))
                                         {
-                                            <button type="button" 
+                                            <button type="button"
                                                     class="vogel-btn vogel-btn--outline vogel-btn--sm"
                                                     disabled="@_isActionBusy"
                                                     @onclick="@(() => HandleActionClickAsync("capture", BlockWork.ActionSet.Capture))">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-btn__icon">
-                                                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                                </svg>
+                                                <img src="icons/plus.svg" alt="" aria-hidden="true" class="vogel-btn__icon" />
                                                 <span>Nuevo Detalle</span>
                                             </button>
                                         }
@@ -108,34 +96,24 @@
                                     <div class="vogel-work-toolbar__group vogel-work-toolbar__group--end">
                                         @if (!string.IsNullOrWhiteSpace(BlockWork.ActionSet.DocMaster))
                                         {
-                                            <button type="button" 
+                                            <button type="button"
                                                     class="vogel-btn vogel-btn--ghost vogel-btn--sm"
                                                     disabled="@_isActionBusy"
                                                     title="Descargar documento representativo (PDF)"
                                                     @onclick="@(() => HandleActionClickAsync("doc_master", BlockWork.ActionSet.DocMaster))">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-btn__icon">
-                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                                                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                                                    <polyline points="10 9 9 9 8 9"></polyline>
-                                                </svg>
+                                                <img src="icons/file-pdf.svg" alt="" aria-hidden="true" class="vogel-btn__icon" />
                                                 <span>Documento (PDF)</span>
                                             </button>
                                         }
 
                                         @if (!string.IsNullOrWhiteSpace(BlockWork.ActionSet.RepMaster))
                                         {
-                                            <button type="button" 
+                                            <button type="button"
                                                     class="vogel-btn vogel-btn--ghost vogel-btn--sm"
                                                     disabled="@_isActionBusy"
                                                     title="Descargar reporte detallado (Excel)"
                                                     @onclick="@(() => HandleActionClickAsync("rep_master", BlockWork.ActionSet.RepMaster))">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-btn__icon">
-                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                                    <polyline points="7 10 12 15 17 10"></polyline>
-                                                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                                                </svg>
+                                                <img src="icons/download.svg" alt="" aria-hidden="true" class="vogel-btn__icon" />
                                                 <span>Reporte (Excel)</span>
                                             </button>
                                         }

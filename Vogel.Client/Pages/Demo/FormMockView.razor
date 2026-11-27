@@ -17,10 +17,7 @@
             @if (_showSuccessAlert)
             {
                 <div class="vogel-form-alert-success" role="alert">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
+                    <img src="icons/check-circle.svg" alt="" aria-hidden="true" class="vogel-alert-icon" />
                     <span>Los cambios se han guardado exitosamente.</span>
                     <button type="button" class="vogel-alert-close" @onclick="() => _showSuccessAlert = false">&times;</button>
                 </div>
@@ -125,9 +122,7 @@
                                     <option value="Consultor">Consultor</option>
                                 </select>
                                 <span class="vogel-select-chevron" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="6 9 12 15 18 9"></polyline>
-                                    </svg>
+                                    <img src="icons/chevron-down.svg" alt="" aria-hidden="true" />
                                 </span>
                             </div>
                         </div>
@@ -198,18 +193,22 @@
                 <!-- BOTONES DE ACCIÓN (Inferior derecha) -->
                 <div class="vogel-form-actions">
                     <button type="button"
-                            class="vogel-btn-form-save"
+                            class="vogel-btn vogel-btn--primary vogel-btn--lg"
                             @onclick="HandleSaveAsync"
                             disabled="@_isSaving">
                         @if (_isSaving)
                         {
                             <span class="vogel-spinner-small"></span>
                         }
+                        else
+                        {
+                            <img src="icons/save.svg" alt="" aria-hidden="true" class="vogel-btn__icon" />
+                        }
                         <span>Guardar Cambios</span>
                     </button>
 
                     <button type="button"
-                            class="vogel-btn-form-cancel"
+                            class="vogel-btn vogel-btn--secondary vogel-btn--lg"
                             @onclick="HandleCancel">
                         Cancelar
                     </button>

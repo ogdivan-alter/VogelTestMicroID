@@ -242,7 +242,8 @@ h1:focus { outline: none; }
     transition: color var(--transition-fast);
 }
 .burger-btn:hover { color: var(--vogel-text); }
-.burger-btn svg { display: block; }
+.burger-btn svg,
+.burger-btn img { display: block; width: 20px; height: 20px; }
 
 /* --- Body / Main content --- */
 .vogel-body {
@@ -634,7 +635,8 @@ h1:focus { outline: none; }
         animation: fadeIn 0.2s ease;
     }
 
-    .user-block .header-btn span { display: inline; }
+    .user-block .header-btn span,
+    .user-block .vogel-btn span { display: inline; }
 
     .vogel-header .brand-name { display: none; }
 
@@ -643,7 +645,8 @@ h1:focus { outline: none; }
     .login-card { padding: 1.75rem 1.25rem; }
 
     .login-actions { flex-direction: column; }
-    .login-actions .btn { width: 100%; }
+    .login-actions .btn,
+    .login-actions .vogel-btn { width: 100%; }
 }
 
 /* ——————————————————————————————————————————
@@ -1553,45 +1556,6 @@ h1:focus { outline: none; }
     margin-left: auto;
 }
 
-.vogel-work-toolbar .vogel-btn {
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: var(--radius-sm);
-    color: #ffffff;
-    font-weight: 600;
-    font-size: 0.825rem;
-    padding: 0.45rem 0.95rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.vogel-work-toolbar .vogel-btn:hover:not(:disabled) {
-    border-color: rgba(255, 255, 255, 0.6);
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.06);
-    transform: translateY(-1px);
-}
-
-.vogel-work-toolbar .vogel-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.vogel-btn--sm {
-    padding: 0.4rem 0.85rem;
-    font-size: 0.825rem;
-    border-radius: var(--radius-sm);
-}
-
-.vogel-btn__icon {
-    width: 15px;
-    height: 15px;
-}
-
 /* Action Alert integrada dentro del Bloque Maestro */
 .vogel-work-view-frame__alert {
     display: flex;
@@ -1779,6 +1743,9 @@ h1:focus { outline: none; }
     width: 16px;
     height: 16px;
     color: var(--vogel-text-muted);
+    display: block;
+    pointer-events: none;
+    opacity: 0.72;
 }
 
 .vogel-filter-input {
@@ -1794,20 +1761,6 @@ h1:focus { outline: none; }
 
 .vogel-filter-input::placeholder {
     color: #94a3b8;
-}
-
-.vogel-filter-panel .vogel-btn--outline {
-    background: #0c0e14;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    color: #ffffff;
-    border-radius: var(--radius-sm);
-    font-weight: 600;
-}
-
-.vogel-filter-panel .vogel-btn--outline:hover:not(:disabled) {
-    border-color: rgba(255, 255, 255, 0.6);
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.06);
 }
 
 .vogel-btn-clear {
@@ -2680,8 +2633,299 @@ h1:focus { outline: none; }
         width: 100%;
     }
     .vogel-btn-form-save,
-    .vogel-btn-form-cancel {
+    .vogel-btn-form-cancel,
+    .vogel-form-actions .vogel-btn {
         width: 100%;
         justify-content: center;
     }
+}
+
+/* ——————————————————————————————————————————
+   16. VOGEL UNIFIED BUTTON SYSTEM
+—————————————————————————————————————————— */
+.vogel-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    cursor: pointer;
+    line-height: 1.2;
+    text-decoration: none;
+    white-space: nowrap;
+    user-select: none;
+    transition: all var(--transition-fast);
+}
+
+.vogel-btn:focus-visible {
+    outline: 2px solid #60a5fa;
+    outline-offset: 2px;
+}
+
+.vogel-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.vogel-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.vogel-btn__icon {
+    width: 15px;
+    height: 15px;
+    display: block;
+    flex-shrink: 0;
+}
+
+/* Tamaños */
+.vogel-btn--sm {
+    font-size: 0.8125rem;
+    padding: 0.4rem 0.75rem;
+}
+
+.vogel-btn--lg {
+    font-size: 0.9375rem;
+    padding: 0.65rem 1.25rem;
+}
+
+.vogel-btn--block {
+    width: 100%;
+}
+
+/* Variantes semánticas */
+.vogel-btn--primary {
+    background: #2563eb;
+    border-color: #1d4ed8;
+    color: #ffffff;
+}
+
+.vogel-btn--primary:hover:not(:disabled) {
+    background: #3b82f6;
+    border-color: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+    transform: translateY(-1px);
+}
+
+.vogel-btn--secondary {
+    background: #2c3147;
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #e8eaf6;
+}
+
+.vogel-btn--secondary:hover:not(:disabled) {
+    background: #373d59;
+    border-color: rgba(255, 255, 255, 0.28);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.vogel-btn--header {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    backdrop-filter: blur(4px);
+}
+
+.vogel-btn--header:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+    color: #60a5fa;
+    border-color: #3b82f6;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
+    transform: translateY(-1px);
+}
+
+.vogel-btn--outline {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.28);
+    color: #e8eaf6;
+}
+
+.vogel-btn--outline:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.55);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.vogel-btn--ghost {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.26);
+    color: #e2e8f0;
+}
+
+.vogel-btn--ghost:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.10);
+    border-color: #60a5fa;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.vogel-btn--success {
+    background: #059669;
+    border-color: #047857;
+    color: #ffffff;
+}
+
+.vogel-btn--success:hover:not(:disabled) {
+    background: #10b981;
+    border-color: #059669;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+    transform: translateY(-1px);
+}
+
+.vogel-btn--danger {
+    background: #dc2626;
+    border-color: #b91c1c;
+    color: #ffffff;
+}
+
+.vogel-btn--danger:hover:not(:disabled) {
+    background: #ef4444;
+    border-color: #dc2626;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+    transform: translateY(-1px);
+}
+
+.vogel-btn--danger-outline {
+    background: rgba(220, 38, 38, 0.12);
+    border-color: rgba(239, 68, 68, 0.55);
+    color: #fca5a5;
+}
+
+.vogel-btn--danger-outline:hover:not(:disabled) {
+    background: #dc2626;
+    border-color: #b91c1c;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+/* Adaptación de contraste en superficies claras (tarjetas de formulario) */
+.vogel-form-card .vogel-btn--danger-outline {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: rgba(220, 38, 38, 0.55);
+    color: #b91c1c;
+}
+
+.vogel-form-card .vogel-btn--danger-outline .vogel-btn__icon {
+    filter: brightness(0) saturate(100%) invert(17%) sepia(82%) saturate(3800%) hue-rotate(352deg) brightness(86%) contrast(95%);
+}
+
+.vogel-form-card .vogel-btn--danger-outline:hover:not(:disabled) {
+    background: #dc2626;
+    border-color: #b91c1c;
+    color: #ffffff;
+}
+
+.vogel-form-card .vogel-btn--danger-outline:hover:not(:disabled) .vogel-btn__icon {
+    filter: none;
+}
+
+.vogel-form-alert-success .vogel-alert-icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+    flex-shrink: 0;
+    filter: brightness(0) saturate(100%) invert(24%) sepia(60%) saturate(1200%) hue-rotate(135deg) brightness(88%) contrast(95%);
+}
+
+.vogel-form-alert-error .vogel-alert-icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+    flex-shrink: 0;
+    filter: brightness(0) saturate(100%) invert(14%) sepia(78%) saturate(3200%) hue-rotate(352deg) brightness(82%) contrast(96%);
+}
+
+.login-error-alert .vogel-alert-icon {
+    width: 16px;
+    height: 16px;
+    display: block;
+    flex-shrink: 0;
+    filter: brightness(0) saturate(100%) invert(47%) sepia(67%) saturate(2250%) hue-rotate(328deg) brightness(96%) contrast(88%);
+}
+
+.vogel-select-chevron img {
+    width: 16px;
+    height: 16px;
+    display: block;
+    filter: brightness(0) saturate(100%) invert(31%) sepia(10%) saturate(500%) hue-rotate(175deg) brightness(95%) contrast(90%);
+}
+
+/* Botones de acción de tabla solo-ícono (alto contraste sobre filas blancas #ffffff) */
+.vogel-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: var(--radius-sm);
+    color: #ffffff;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.15);
+}
+
+.vogel-icon-btn:focus-visible {
+    outline: 2px solid #60a5fa;
+    outline-offset: 2px;
+}
+
+.vogel-icon-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.vogel-icon-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.vogel-icon-btn__icon {
+    width: 16px;
+    height: 16px;
+    display: block;
+    flex-shrink: 0;
+}
+
+.vogel-icon-btn--edit:hover:not(:disabled) {
+    background: #2563eb;
+    border-color: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+.vogel-icon-btn--view:hover:not(:disabled) {
+    background: #0284c7;
+    border-color: #0369a1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+}
+
+.vogel-icon-btn--reactivate:hover:not(:disabled) {
+    background: #059669;
+    border-color: #047857;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.35);
+}
+
+.vogel-icon-btn--danger:hover:not(:disabled) {
+    background: #dc2626;
+    border-color: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
 }

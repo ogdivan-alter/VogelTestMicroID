@@ -87,22 +87,24 @@ Todo módulo CRUD queda gobernado por un `codename` de privilegio (p. ej. `adm_p
 2. **Vistas en `Vogel.Client/Pages/TreeWork/.../<Modulo>/` (Code-Behind `.razor` + `.razor.cs` + `.razor.css`):**
    - **`<Modulo>.razor` / `.razor.cs`:** Único archivo del módulo frontend donde se asigna `BlockWork.Codename` (vía `CreateBlockWork()`). En `OnInitializedAsync()`, registra `State.SetModuleCodename(ModuleBlockWork.Codename)` antes de evaluar `CanRead`; si `!CanRead`, ejecuta `ClearCatalog()`. Contenedor con `WorkViewFrame` y `BlockWork.ViewSet` (`Info`, `Capture`, `Filter`, `List`).
    - **`<Modulo>Info.razor` / `.razor.cs`:** Encabezado descriptivo y conteos en `InfoViewFrame`.
-   - **`<Modulo>Capture.razor` / `.razor.cs` / `.razor.css`:** Botón **Crear** alineado a la derecha (`justify-content: flex-end`) con estilo `HeaderWork` y `<img src="icons/plus.svg" />`, envuelto en `@if (CanCreate)` + guard defensivo en el handler.
-   - **`<Modulo>Filter.razor` / `.razor.cs` / `.razor.css`:** Filtros apilados verticalmente con etiqueta explícita a la izquierda (`for`/`id` y `aria-labelledby`), responsive y botones limpiar (`×`).
+   - **`<Modulo>Capture.razor` / `.razor.cs` / `.razor.css`:** Botón **Crear** alineado a la derecha (`justify-content: flex-end`) usando el sistema unificado `.vogel-btn.vogel-btn--header` con `<img src="icons/plus.svg" alt="" aria-hidden="true" class="vogel-btn__icon" />`, envuelto en `@if (CanCreate)` + guard defensivo en el handler.
+   - **`<Modulo>Filter.razor` / `.razor.cs` / `.razor.css`:** Filtros apilados verticalmente con etiqueta explícita a la izquierda (`for`/`id` y `aria-labelledby`), ícono `icons/search.svg`, responsive y botones limpiar (`×`).
    - **`<Modulo>List.razor` / `.razor.cs` / `.razor.css`:**
      - `ListViewFrame` renderizado únicamente si `CanRead`; si `!CanRead`, aviso informativo de lectura restringida.
-     - Botones de acción en tabla de **alto contraste** sobre filas blancas (`#1e293b`, borde `#334155`, tamaño cuadrado `32×32px`), **solo ícono sin texto** con `title` y `aria-label`:
-       - Activo (`Status == "A"`): `icons/edit.svg` (`@if (CanModify)`) o `icons/view.svg` (`@else if (CanRead)`).
-       - Inactivo (`Status == "I"`): `icons/reactivate.svg` (`@if (CanCreate)`), con bloqueo contra doble clic por fila (`ReactivatingId`).
+     - Botones de acción en tabla usando la clase global `.vogel-icon-btn` (alto contraste `#1e293b` sobre filas blancas, cuadrado `32×32px`), **solo ícono sin texto** (`.vogel-icon-btn__icon`) con `title` y `aria-label`:
+       - Activo (`Status == "A"`): `.vogel-icon-btn--edit` (`icons/edit.svg`, `@if (CanModify)`) o `.vogel-icon-btn--view` (`icons/view.svg`, `@else if (CanRead)`).
+       - Inactivo (`Status == "I"`): `.vogel-icon-btn--reactivate` (`icons/reactivate.svg`, `@if (CanCreate)`), con bloqueo contra doble clic por fila (`ReactivatingId`).
    - **`<Modulo>Form.razor` / `.razor.cs`:**
      - Rutas separadas `/create` y `/edit` (sin IDs en la URL; el ID se toma de `<Modulo>State.SelectedEditId`).
+     - Botones estandarizados con `.vogel-btn`: guardar (`.vogel-btn--primary.vogel-btn--lg` + `icons/save.svg`/`icons/plus.svg`), inactivar (`.vogel-btn--danger-outline` + `icons/trash.svg`), confirmar (`.vogel-btn--danger`) y cancelar confirmación (`.vogel-btn--secondary`). Botones de descarga/exportación de archivos (Excel/PDF) usan `.vogel-btn--ghost` (con borde visible) + `icons/download.svg` / `icons/file-pdf.svg`.
      - Guards en `OnParametersSetAsync`: `/create` exige `CanCreate`; `/edit` exige `CanRead` (si falla, publica error en estado y redirige con `replace: true`).
      - En creación, omite `LoadAsync()` si `!CanRead`.
      - Soporta modo solo lectura (`IsReadOnlyView = IsEditMode && !CanModify`) con campos `disabled`, sin botón guardar en DOM (`@if (CanSubmitForm)`), manteniendo la sección de inactivación independiente bajo `@if (CanShowDeactivateSection)`.
      - No duplicar botones `Cancelar`/`Volver`: el botón **Salir** de `HeaderWork` (`OnExit`) es la única salida del formulario; en modo Creación/Edición solicita confirmación para evitar pérdida de cambios y en modo solo consulta sale directamente sin confirmación.
      - Guards defensivos en todos los handlers de envío e inactivación.
-3. **Íconos SVG (`Vogel.Client/wwwroot/icons/`):**
-   - Reutilizar `plus.svg`, `edit.svg`, `view.svg` y `reactivate.svg` (o crear nuevos siguiendo el mismo estándar: `viewBox="0 0 24 24"`, `stroke="#ffffff"`, únicamente primitivas vectoriales seguras sin `<script>`, `foreignObject`, eventos inline ni referencias externas).
+3. **Catálogo Oficial de Íconos SVG (`Vogel.Client/wwwroot/icons/`):**
+   - Utilizar siempre archivos `.svg` estáticos vía `<img src="icons/<nombre>.svg" alt="" aria-hidden="true" class="vogel-btn__icon" />` (evitar `<svg>` inline).
+   - Catálogo disponible (24 íconos `24×24`, `stroke="#ffffff"`, `stroke-width="2"`, limpios sin `<script>`, `foreignObject` ni eventos inline): `plus`, `edit`, `view`, `reactivate`, `roles`, `users`, `exit`, `logout`, `lock`, `menu`, `search`, `check`, `close`, `save`, `trash`, `refresh`, `download`, `file-pdf`, `info`, `alert-circle`, `check-circle`, `chevron-down`, `privileges`, `systems`.
 
 ---
 

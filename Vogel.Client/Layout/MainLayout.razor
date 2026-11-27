@@ -27,12 +27,7 @@
                     @onclick="ToggleMobileMenu"
                     aria-label="Alternar menú de usuario"
                     aria-expanded="@IsMobileMenuOpen">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
+                <img src="icons/menu.svg" alt="" aria-hidden="true" />
             </button>
 
             <div class="user-block @(IsMobileMenuOpen ? "mobile-open" : "")" role="navigation" aria-label="Menú de usuario">
@@ -49,22 +44,17 @@
                 {
                     <a href="/change-password"
                        id="btn-change-password"
-                       class="header-btn"
+                       class="vogel-btn vogel-btn--header vogel-btn--sm"
                        title="Cambiar Contraseña"
                        aria-label="Cambiar Contraseña">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                             aria-hidden="true">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                        </svg>
+                        <img src="icons/lock.svg" alt="" aria-hidden="true" class="vogel-btn__icon" />
                         <span>Cambiar Clave</span>
                     </a>
                 }
 
                 <!-- 3. Cierre de sesión (botón con ícono diferenciado del botón Salir de HeaderWork) -->
                 <button id="btn-logout"
-                        class="header-btn danger"
+                        class="vogel-btn vogel-btn--danger-outline vogel-btn--sm"
                         title="Cierre de Sesión"
                         @onclick="HandleLogoutAsync"
                         disabled="@IsLoggingOut"
@@ -75,12 +65,7 @@
                     }
                     else
                     {
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                             aria-hidden="true">
-                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                            <line x1="12" y1="2" x2="12" y2="12"></line>
-                        </svg>
+                        <img src="icons/logout.svg" alt="" aria-hidden="true" class="vogel-btn__icon" />
                         <span>Cierre de Sesión</span>
                     }
                 </button>
