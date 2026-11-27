@@ -222,20 +222,12 @@
         </div>
     </main>
 
-    @* 3. FOOTER: FooterFrame *@
+    @* 3. FOOTER: FooterFrame personalizado (MainLayout ya provee DefaultFooter global) *@
     @if (FooterFrame != null)
     {
         <footer class="vogel-work-view-frame__footer">
             <div class="vogel-work-view-frame__container">
                 @FooterFrame
-            </div>
-        </footer>
-    }
-    else
-    {
-        <footer class="vogel-work-view-frame__footer">
-            <div class="vogel-work-view-frame__container">
-                <DefaultFooter />
             </div>
         </footer>
     }

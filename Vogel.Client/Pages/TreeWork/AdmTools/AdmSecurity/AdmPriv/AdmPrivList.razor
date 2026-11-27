@@ -22,68 +22,96 @@
     </div>
 }
 
-<ListViewFrame TItem="PrivilegeAdminItemDto"
-               PageSize="@AdmPrivState.PageSize"
-               CurrentPage="@AdmPrivState.CurrentPage"
-               TotalCount="@AdmPrivState.TotalFilteredCount"
-               Data="@AdmPrivState.PagedItems"
-               PageMethod="HandlePageChangedAsync"
-               IsLoading="@AdmPrivState.IsLoading">
-    <HeaderContent>
-        <th scope="col">codename</th>
-        <th scope="col">title</th>
-        <th scope="col">id_parent</th>
-        <th scope="col">groupname</th>
-        <th scope="col" class="text-center">status</th>
-        <th scope="col" class="text-center"></th>
-    </HeaderContent>
-    <RowTemplate Context="item">
-        <td>
-            <span class="vogel-item-code">@item.Codename</span>
-        </td>
-        <td>@item.Title</td>
-        <td class="font-mono">@item.IdParent</td>
-        <td>
-            <span class="vogel-badge vogel-badge--muted">@item.GroupName</span>
-        </td>
-        <td class="text-center">
-            <input type="checkbox" checked="@IsActive(item)" disabled aria-label="Estado activo" />
-        </td>
-        <td class="text-center">
-            @if (IsActive(item))
-            {
-                <button type="button"
-                        class="adm-priv-list__action-btn adm-priv-list__action-btn--edit"
-                        title="Editar privilegio"
-                        aria-label="Editar privilegio"
-                        @onclick="() => HandleEditClick(item)">
-                    <img src="icons/edit.svg"
-                         alt=""
-                         aria-hidden="true"
-                         class="adm-priv-list__action-icon" />
-                </button>
-            }
-            else if (IsInactive(item))
-            {
-                <button type="button"
-                        class="adm-priv-list__action-btn adm-priv-list__action-btn--reactivate"
-                        title="Reactivar privilegio"
-                        aria-label="Reactivar privilegio"
-                        disabled="@IsReactivating(item.IdPrivilege)"
-                        @onclick="() => HandleReactivateClickAsync(item)">
-                    @if (IsReactivating(item.IdPrivilege))
+@if (!CanRead)
+{
+    <div class="adm-priv-list__restricted" role="status" aria-live="polite">
+        <p class="adm-priv-list__restricted-title">Acceso de lectura restringido</p>
+        <p class="adm-priv-list__restricted-desc">
+            No cuenta con permiso de lectura para consultar el listado de privilegios del sistema.
+        </p>
+    </div>
+}
+else
+{
+    <ListViewFrame TItem="PrivilegeAdminItemDto"
+                   PageSize="@AdmPrivState.PageSize"
+                   CurrentPage="@AdmPrivState.CurrentPage"
+                   TotalCount="@AdmPrivState.TotalFilteredCount"
+                   Data="@AdmPrivState.PagedItems"
+                   PageMethod="HandlePageChangedAsync"
+                   IsLoading="@AdmPrivState.IsLoading">
+        <HeaderContent>
+            <th scope="col">codename</th>
+            <th scope="col">title</th>
+            <th scope="col">id_parent</th>
+            <th scope="col">groupname</th>
+            <th scope="col" class="text-center">status</th>
+            <th scope="col" class="text-center"></th>
+        </HeaderContent>
+        <RowTemplate Context="item">
+            <td>
+                <span class="vogel-item-code">@item.Codename</span>
+            </td>
+            <td>@item.Title</td>
+            <td class="font-mono">@item.IdParent</td>
+            <td>
+                <span class="vogel-badge vogel-badge--muted">@item.GroupName</span>
+            </td>
+            <td class="text-center">
+                <input type="checkbox" checked="@IsActive(item)" disabled aria-label="Estado activo" />
+            </td>
+            <td class="text-center">
+                @if (IsActive(item))
+                {
+                    @if (CanModify)
                     {
-                        <span class="vogel-spinner-small adm-priv-list__spinner" aria-hidden="true"></span>
+                        <button type="button"
+                                class="adm-priv-list__action-btn adm-priv-list__action-btn--edit"
+                                title="Editar privilegio"
+                                aria-label="Editar privilegio"
+                                @onclick="() => HandleEditClick(item)">
+                            <img src="icons/edit.svg"
+                                 alt=""
+                                 aria-hidden="true"
+                                 class="adm-priv-list__action-icon" />
+                        </button>
                     }
-                    else
+                    else if (CanRead)
                     {
-                        <img src="icons/reactivate.svg"
-                             alt=""
-                             aria-hidden="true"
-                             class="adm-priv-list__action-icon" />
+                        <button type="button"
+                                class="adm-priv-list__action-btn adm-priv-list__action-btn--view"
+                                title="Ver detalle del privilegio"
+                                aria-label="Ver detalle del privilegio"
+                                @onclick="() => HandleViewClick(item)">
+                            <img src="icons/view.svg"
+                                 alt=""
+                                 aria-hidden="true"
+                                 class="adm-priv-list__action-icon" />
+                        </button>
                     }
-                </button>
-            }
-        </td>
-    </RowTemplate>
-</ListViewFrame>
+                }
+                else if (IsInactive(item) && CanCreate)
+                {
+                    <button type="button"
+                            class="adm-priv-list__action-btn adm-priv-list__action-btn--reactivate"
+                            title="Reactivar privilegio"
+                            aria-label="Reactivar privilegio"
+                            disabled="@IsReactivating(item.IdPrivilege)"
+                            @onclick="() => HandleReactivateClickAsync(item)">
+                        @if (IsReactivating(item.IdPrivilege))
+                        {
+                            <span class="vogel-spinner-small adm-priv-list__spinner" aria-hidden="true"></span>
+                        }
+                        else
+                        {
+                            <img src="icons/reactivate.svg"
+                                 alt=""
+                                 aria-hidden="true"
+                                 class="adm-priv-list__action-icon" />
+                        }
+                    </button>
+                }
+            </td>
+        </RowTemplate>
+    </ListViewFrame>
+}

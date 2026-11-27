@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Vogel.Shared.DTOs;
 using Vogel.Shared.Models;
 using Vogel.Shared.Services;
@@ -10,14 +11,28 @@ namespace Vogel.Server.Services;
 public sealed class MockAuthProviderService : IAuthProviderService
 {
     private readonly IMockDataService _mockDataService;
+    private readonly MockSessionStore _sessionStore;
     private readonly ILogger<MockAuthProviderService> _logger;
 
+    [ActivatorUtilitiesConstructor]
     public MockAuthProviderService(
         IMockDataService mockDataService,
+        MockSessionStore sessionStore,
         ILogger<MockAuthProviderService> logger)
     {
         _mockDataService = mockDataService;
+        _sessionStore = sessionStore;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Constructor de compatibilidad para pruebas unitarias heredadas.
+    /// </summary>
+    public MockAuthProviderService(
+        IMockDataService mockDataService,
+        ILogger<MockAuthProviderService> logger)
+        : this(mockDataService, new MockSessionStore(), logger)
+    {
     }
 
     public async Task<AuthLoginResult> LoginAsync(
@@ -39,6 +54,7 @@ public sealed class MockAuthProviderService : IAuthProviderService
         }
 
         var mockToken = $"vogel.mock_session_token.{Guid.NewGuid():N}";
+        _sessionStore.RegisterSession(mockToken, mockResult.User.Username);
         _logger.LogInformation("Autenticación exitosa (Mock BFF) para usuario '{Username}'.", safeUsername);
 
         return new AuthLoginResult(
@@ -54,15 +70,49 @@ public sealed class MockAuthProviderService : IAuthProviderService
         string? username = null,
         CancellationToken cancellationToken = default)
     {
-        var rootPrivileges = await _mockDataService.GetRootPrivilegesAsync();
-        var allPrivileges = new List<Privilege>(rootPrivileges);
-        foreach (var root in rootPrivileges)
+        if (string.IsNullOrWhiteSpace(token))
         {
-            var subs = await _mockDataService.GetSubPrivilegesAsync(root.Id);
-            allPrivileges.AddRange(subs);
+            return new AuthPrivilegesResult(
+                false,
+                StatusCodes.Status401Unauthorized,
+                null,
+                new BackendErrorDto(StatusCodes.Status401Unauthorized, "Token de sesión no proporcionado."));
         }
 
-        var privilegeItems = allPrivileges.Select(p => new BackendPrivilegeItemDto(
+        string? resolvedUsername = null;
+        if (_sessionStore.TryGetUsername(token, out var sessionUsername))
+        {
+            resolvedUsername = sessionUsername;
+        }
+        else if (!string.IsNullOrWhiteSpace(username))
+        {
+            resolvedUsername = username.Trim();
+        }
+
+        if (string.IsNullOrWhiteSpace(resolvedUsername))
+        {
+            _logger.LogWarning("Consulta de privilegios (Mock BFF) rechazada: sesión no válida o expirada.");
+            return new AuthPrivilegesResult(
+                false,
+                StatusCodes.Status401Unauthorized,
+                null,
+                new BackendErrorDto(StatusCodes.Status401Unauthorized, "Sesión no válida o expirada."));
+        }
+
+        var user = await _mockDataService.GetUserByUsernameAsync(resolvedUsername);
+        if (user is null)
+        {
+            _logger.LogWarning(
+                "Consulta de privilegios (Mock BFF) rechazada: usuario '{Username}' no encontrado.",
+                SanitizeForLog(resolvedUsername));
+            return new AuthPrivilegesResult(
+                false,
+                StatusCodes.Status401Unauthorized,
+                null,
+                new BackendErrorDto(StatusCodes.Status401Unauthorized, "Sesión no válida o expirada."));
+        }
+
+        var privilegeItems = (user.Privileges ?? new List<Privilege>()).Select(p => new BackendPrivilegeItemDto(
             p.IdParent,
             p.Id,
             p.Codename,
@@ -71,7 +121,7 @@ public sealed class MockAuthProviderService : IAuthProviderService
             p.Action,
             p.Icon ?? string.Empty,
             new BackendAccessDto(
-                p.Access?.Read ?? true,
+                p.Access?.Read ?? false,
                 p.Access?.Modify ?? false,
                 p.Access?.Create ?? false,
                 p.Access?.Delete ?? false,
@@ -80,7 +130,7 @@ public sealed class MockAuthProviderService : IAuthProviderService
                 p.Access?.Execute ?? false)
         )).ToList();
 
-        var responseDto = new BackendPrivilegesResponseDto("mock_user", privilegeItems);
+        var responseDto = new BackendPrivilegesResponseDto(user.Username, privilegeItems);
         return new AuthPrivilegesResult(true, StatusCodes.Status200OK, responseDto, null);
     }
 

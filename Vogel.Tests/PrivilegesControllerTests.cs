@@ -4,22 +4,28 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Vogel.Server.Controllers;
 using Vogel.Server.Services;
 using Vogel.Shared.DTOs;
+using Vogel.Shared.Enums;
 
 namespace Vogel.Tests;
 
 /// <summary>
-/// Pruebas unitarias para PrivilegesController (Fase 3 - T3.1).
-/// Cubre GET /{id}, POST, PUT /{id} y DELETE /{id}: casos exitosos, 401 sin token,
-/// 400 payload/ID inválido, 422 autorreferencia y propagación de errores del proveedor.
+/// Pruebas unitarias para PrivilegesController (Fase 3 - T3.1 / Fase 4 - T4.2).
+/// Cubre los 6 endpoints (List, GetById, Create, Update, Deactivate, Reactivate):
+/// casos exitosos, autorización RBAC granular por acción de módulo (403 Forbidden / 401 propagado),
+/// 401 sin token, 400 payload/ID inválido, 422 autorreferencia y propagación de errores del proveedor.
 /// </summary>
 public class PrivilegesControllerTests
 {
     private static PrivilegesController CreateController(
         StubPrivilegeAdminProviderService provider,
         string? bearerToken = "valid-session-token",
-        string? xSessionToken = null)
+        string? xSessionToken = null,
+        StubPrivilegeAuthorizationService? authService = null)
     {
-        var controller = new PrivilegesController(provider, NullLogger<PrivilegesController>.Instance)
+        var controller = new PrivilegesController(
+            provider,
+            authService ?? new StubPrivilegeAuthorizationService(),
+            NullLogger<PrivilegesController>.Instance)
         {
             ControllerContext = new ControllerContext
             {
@@ -494,12 +500,195 @@ public class PrivilegesControllerTests
         Assert.Equal("El privilegio padre está inactivo.", error.Message);
     }
 
+    // ==================== RBAC Authorization (Fase 4 - T4.2) ====================
+
+    [Fact]
+    public async Task List_WhenAuthorized_ShouldRequireReadActionAndReturn200()
+    {
+        var provider = new StubPrivilegeAdminProviderService();
+        var auth = new StubPrivilegeAuthorizationService();
+        var controller = CreateController(provider, authService: auth);
+
+        var actionResult = await controller.List("A");
+
+        Assert.IsType<OkObjectResult>(actionResult);
+        Assert.Equal("/admsec/priv", auth.LastModuleAction);
+        Assert.Equal(PrivilegeAction.Read, auth.LastAction);
+        Assert.Equal(1, provider.ListCalls);
+    }
+
+    [Fact]
+    public async Task List_WhenUnauthorized403_ShouldReturn403WithoutCallingProvider()
+    {
+        var provider = new StubPrivilegeAdminProviderService();
+        var auth = StubPrivilegeAuthorizationService.DenyForbidden();
+        var controller = CreateController(provider, authService: auth);
+
+        var actionResult = await controller.List();
+
+        var objectResult = Assert.IsType<ObjectResult>(actionResult);
+        Assert.Equal(StatusCodes.Status403Forbidden, objectResult.StatusCode);
+        var error = Assert.IsType<BackendErrorDto>(objectResult.Value);
+        Assert.Equal(StatusCodes.Status403Forbidden, error.Status);
+        Assert.Equal(PrivilegeAction.Read, auth.LastAction);
+        Assert.Equal(0, provider.ListCalls);
+    }
+
+    [Fact]
+    public async Task GetById_WhenUnauthorized403_ShouldReturn403WithoutCallingProvider()
+    {
+        var provider = new StubPrivilegeAdminProviderService();
+        var auth = StubPrivilegeAuthorizationService.DenyForbidden();
+        var controller = CreateController(provider, authService: auth);
+
+        var actionResult = await controller.GetById(15);
+
+        var objectResult = Assert.IsType<ObjectResult>(actionResult);
+        Assert.Equal(StatusCodes.Status403Forbidden, objectResult.StatusCode);
+        Assert.Equal("/admsec/priv", auth.LastModuleAction);
+        Assert.Equal(PrivilegeAction.Read, auth.LastAction);
+        Assert.Equal(0, provider.GetCalls);
+    }
+
+    [Fact]
+    public async Task Create_WhenUnauthorized403_ShouldReturn403WithoutCallingProvider()
+    {
+        var provider = new StubPrivilegeAdminProviderService();
+        var auth = StubPrivilegeAuthorizationService.DenyForbidden();
+        var controller = CreateController(provider, authService: auth);
+
+        var actionResult = await controller.Create(CreateValidCreateRequest());
+
+        var objectResult = Assert.IsType<ObjectResult>(actionResult);
+        Assert.Equal(StatusCodes.Status403Forbidden, objectResult.StatusCode);
+        Assert.Equal("/admsec/priv", auth.LastModuleAction);
+        Assert.Equal(PrivilegeAction.Create, auth.LastAction);
+        Assert.Equal(0, provider.CreateCalls);
+    }
+
+    [Fact]
+    public async Task Update_WhenUnauthorized403_ShouldReturn403WithoutCallingProvider()
+    {
+        var provider = new StubPrivilegeAdminProviderService();
+        var auth = StubPrivilegeAuthorizationService.DenyForbidden();
+        var controller = CreateController(provider, authService: auth);
+
+        var actionResult = await controller.Update(42, CreateValidUpdateRequest());
+
+        var objectResult = Assert.IsType<ObjectResult>(actionResult);
+        Assert.Equal(StatusCodes.Status403Forbidden, objectResult.StatusCode);
+        Assert.Equal("/admsec/priv", auth.LastModuleAction);
+        Assert.Equal(PrivilegeAction.Modify, auth.LastAction);
+        Assert.Equal(0, provider.UpdateCalls);
+    }
+
+    [Fact]
+    public async Task Deactivate_WhenUnauthorized403_ShouldReturn403WithoutCallingProvider()
+    {
+        var provider = new StubPrivilegeAdminProviderService();
+        var auth = StubPrivilegeAuthorizationService.DenyForbidden();
+        var controller = CreateController(provider, authService: auth);
+
+        var actionResult = await controller.Deactivate(7);
+
+        var objectResult = Assert.IsType<ObjectResult>(actionResult);
+        Assert.Equal(StatusCodes.Status403Forbidden, objectResult.StatusCode);
+        Assert.Equal("/admsec/priv", auth.LastModuleAction);
+        Assert.Equal(PrivilegeAction.Delete, auth.LastAction);
+        Assert.Equal(0, provider.DeactivateCalls);
+    }
+
+    [Fact]
+    public async Task Reactivate_WhenUnauthorized403_ShouldRequireCreateActionAndReturn403WithoutCallingProvider()
+    {
+        var provider = new StubPrivilegeAdminProviderService();
+        var auth = StubPrivilegeAuthorizationService.DenyForbidden();
+        var controller = CreateController(provider, authService: auth);
+
+        var actionResult = await controller.Reactivate(12);
+
+        var objectResult = Assert.IsType<ObjectResult>(actionResult);
+        Assert.Equal(StatusCodes.Status403Forbidden, objectResult.StatusCode);
+        Assert.Equal("/admsec/priv", auth.LastModuleAction);
+        Assert.Equal(PrivilegeAction.Create, auth.LastAction);
+        Assert.Equal(0, provider.ReactivateCalls);
+    }
+
+    [Fact]
+    public async Task Endpoints_WhenAuthorizationReturns401_ShouldPropagate401WithoutCallingProvider()
+    {
+        var provider = new StubPrivilegeAdminProviderService();
+        var auth = new StubPrivilegeAuthorizationService
+        {
+            Result = new PrivilegeAuthorizationResult(
+                false,
+                StatusCodes.Status401Unauthorized,
+                new BackendErrorDto(StatusCodes.Status401Unauthorized, "Token expirado."))
+        };
+        var controller = CreateController(provider, authService: auth);
+
+        var listResult = Assert.IsType<ObjectResult>(await controller.List());
+        var createResult = Assert.IsType<ObjectResult>(await controller.Create(CreateValidCreateRequest()));
+        var deactivateResult = Assert.IsType<ObjectResult>(await controller.Deactivate(7));
+
+        Assert.Equal(StatusCodes.Status401Unauthorized, listResult.StatusCode);
+        Assert.Equal(StatusCodes.Status401Unauthorized, createResult.StatusCode);
+        Assert.Equal(StatusCodes.Status401Unauthorized, deactivateResult.StatusCode);
+        Assert.Equal(0, provider.ListCalls);
+        Assert.Equal(0, provider.CreateCalls);
+        Assert.Equal(0, provider.DeactivateCalls);
+    }
+
+    private sealed class StubPrivilegeAuthorizationService : IPrivilegeAuthorizationService
+    {
+        public string? LastToken { get; private set; }
+        public string? LastCodename { get; private set; }
+        public string? LastModuleAction { get; private set; }
+        public PrivilegeAction? LastAction { get; private set; }
+
+        public PrivilegeAuthorizationResult Result { get; set; } =
+            new(true, StatusCodes.Status200OK, null);
+
+        public static StubPrivilegeAuthorizationService DenyForbidden() => new()
+        {
+            Result = new PrivilegeAuthorizationResult(
+                false,
+                StatusCodes.Status403Forbidden,
+                new BackendErrorDto(StatusCodes.Status403Forbidden, "No cuenta con permisos suficientes para realizar esta operación."))
+        };
+
+        public Task<PrivilegeAuthorizationResult> AuthorizeAsync(
+            string token,
+            string privilegeCodename,
+            PrivilegeAction requiredAction,
+            CancellationToken cancellationToken = default)
+        {
+            LastToken = token;
+            LastCodename = privilegeCodename;
+            LastAction = requiredAction;
+            return Task.FromResult(Result);
+        }
+
+        public Task<PrivilegeAuthorizationResult> AuthorizeByActionAsync(
+            string token,
+            string moduleAction,
+            PrivilegeAction requiredAction,
+            CancellationToken cancellationToken = default)
+        {
+            LastToken = token;
+            LastModuleAction = moduleAction;
+            LastAction = requiredAction;
+            return Task.FromResult(Result);
+        }
+    }
+
     private sealed class StubPrivilegeAdminProviderService : IPrivilegeAdminProviderService
     {
         public string? LastToken { get; private set; }
         public int LastIdPrivilege { get; private set; }
         public DeactivatePrivilegeRequestDto? LastDeactivateRequest { get; private set; }
 
+        public int ListCalls { get; private set; }
         public int GetCalls { get; private set; }
         public int CreateCalls { get; private set; }
         public int UpdateCalls { get; private set; }
@@ -529,6 +718,7 @@ public class PrivilegesControllerTests
             string? status = null,
             CancellationToken cancellationToken = default)
         {
+            ListCalls++;
             LastToken = token;
             return Task.FromResult(ListResult);
         }

@@ -19,6 +19,17 @@ public sealed record PrivilegeOperationResult<T>(
 public interface IAdmPrivStateService
 {
     /// <summary>
+    /// Codename del privilegio del módulo inicializado desde la vista principal (AdmPriv.razor).
+    /// Se propaga a las vistas hijas y al estado compartido sin duplicar constantes hardcodeadas.
+    /// </summary>
+    string ModuleCodename { get; }
+
+    /// <summary>
+    /// Registra el codename del privilegio del módulo definido en el BlockWork de la vista principal.
+    /// </summary>
+    void SetModuleCodename(string? codename);
+
+    /// <summary>
     /// Código del sistema al que pertenecen los privilegios cargados (p. ej. "MICROID").
     /// </summary>
     string SystemCode { get; }
@@ -143,6 +154,16 @@ public interface IAdmPrivStateService
     /// Limpia los mensajes de éxito y error publicados en el estado compartido.
     /// </summary>
     void ClearMessages();
+
+    /// <summary>
+    /// Publica un mensaje de error controlado en el estado compartido (por ejemplo, al bloquear navegación directa sin permisos).
+    /// </summary>
+    void SetErrorMessage(string message);
+
+    /// <summary>
+    /// Limpia el catálogo de privilegios cargado en memoria sin alterar los mensajes de notificación activos.
+    /// </summary>
+    void ClearCatalog();
 
     /// <summary>
     /// Actualiza el filtro por estado ("A", "I" o "ALL") y reinicia la paginación.

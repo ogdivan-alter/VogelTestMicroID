@@ -1,14 +1,19 @@
 using Microsoft.AspNetCore.Components;
 using Vogel.Client.Services;
+using Vogel.Shared.Enums;
+using Vogel.Shared.Models;
 
 namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv;
 
 /// <summary>
 /// Code-behind de la vista principal de Administración de Privilegios (/admsec/priv).
-/// Valida la sesión autenticada e inicia la carga de privilegios en el estado compartido.
+/// Inicializa el BlockWork del módulo (fuente única del codename en el frontend) y
+/// valida la sesión autenticada y el permiso de lectura antes de cargar el catálogo.
 /// </summary>
 public partial class AdmPriv : ComponentBase
 {
+    private const string ModuleRouteAction = "/admsec/priv";
+
     [Inject]
     protected SessionState SessionState { get; set; } = default!;
 
@@ -18,14 +23,40 @@ public partial class AdmPriv : ComponentBase
     [Inject]
     protected IAdmPrivStateService AdmPrivState { get; set; } = default!;
 
+    protected BlockWork ModuleBlockWork { get; private set; } = new();
+
+    protected bool CanRead =>
+        SessionState.HasPrivilegeAccessByAction(ModuleRouteAction, PrivilegeAction.Read) ||
+        SessionState.HasPrivilegeAccess(AdmPrivState.ModuleCodename, PrivilegeAction.Read);
+
     protected override async Task OnInitializedAsync()
     {
+        ModuleBlockWork = CreateBlockWork();
+        var resolvedPrivilege = SessionState.GetPrivilegeByAction(ModuleRouteAction);
+        if (!string.IsNullOrWhiteSpace(resolvedPrivilege?.Codename))
+        {
+            ModuleBlockWork.Codename = resolvedPrivilege.Codename;
+        }
+
+        AdmPrivState.SetModuleCodename(ModuleBlockWork.Codename);
+
         if (!SessionState.IsAuthenticated)
         {
             NavigationManager.NavigateTo("/login");
             return;
         }
 
+        if (!CanRead)
+        {
+            AdmPrivState.ClearCatalog();
+            return;
+        }
+
+        var pendingError = AdmPrivState.ErrorMessage;
         await AdmPrivState.LoadAsync();
+        if (!string.IsNullOrWhiteSpace(pendingError) && string.IsNullOrWhiteSpace(AdmPrivState.ErrorMessage))
+        {
+            AdmPrivState.SetErrorMessage(pendingError);
+        }
     }
 }

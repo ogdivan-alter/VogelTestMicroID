@@ -1,15 +1,18 @@
 @namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv
 
-<div class="vogel-filter-panel adm-priv-capture">
-    <div class="vogel-work-toolbar__group adm-priv-capture__actions">
-        <button type="button"
-                class="adm-priv-capture__btn-create"
-                @onclick="HandleCreatePrivilegeClick">
-            <img src="icons/plus.svg"
-                 alt=""
-                 aria-hidden="true"
-                 class="adm-priv-capture__icon" />
-            <span>Crear privilegio</span>
-        </button>
+@if (CanCreate)
+{
+    <div class="vogel-filter-panel adm-priv-capture">
+        <div class="vogel-work-toolbar__group adm-priv-capture__actions">
+            <button type="button"
+                    class="adm-priv-capture__btn-create"
+                    @onclick="HandleCreatePrivilegeClick">
+                <img src="icons/plus.svg"
+                     alt=""
+                     aria-hidden="true"
+                     class="adm-priv-capture__icon" />
+                <span>Crear privilegio</span>
+            </button>
+        </div>
     </div>
-</div>
+}

@@ -2,12 +2,13 @@ using System.Net;
 using Microsoft.AspNetCore.Components;
 using Vogel.Client.Services;
 using Vogel.Shared.DTOs;
+using Vogel.Shared.Enums;
 
 namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv;
 
 /// <summary>
 /// Code-behind del formulario reutilizable de Administración de Privilegios
-/// para creación (/admsec/priv/create) y edición/inactivación (/admsec/priv/edit).
+/// para creación (/admsec/priv/create) y detalle/edición/inactivación (/admsec/priv/edit).
 /// </summary>
 public partial class AdmPrivForm : ComponentBase, IDisposable
 {
@@ -37,6 +38,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
     protected bool IsDeactivated { get; private set; }
     protected bool LoadFailed { get; private set; }
     protected bool ShowDeactivateConfirm { get; private set; }
+    protected bool ShowExitConfirm { get; private set; }
 
     protected string? SuccessMessage { get; private set; }
     protected string? ErrorMessage { get; private set; }
@@ -56,19 +58,39 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
     private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.Ordinal);
     private string? _lastInitializedRouteKey;
 
-    protected string HeaderTitle => IsEditMode ? "Editar Privilegio" : "Crear Privilegio";
+    private const string ModuleRouteAction = "/admsec/priv";
+
+    protected bool CanRead => HasModuleAccess(PrivilegeAction.Read);
+
+    protected bool CanCreate => HasModuleAccess(PrivilegeAction.Create);
+
+    protected bool CanModify => HasModuleAccess(PrivilegeAction.Modify);
+
+    protected bool CanDelete => HasModuleAccess(PrivilegeAction.Delete);
+
+    private bool HasModuleAccess(PrivilegeAction action) =>
+        SessionState.HasPrivilegeAccessByAction(ModuleRouteAction, action) ||
+        SessionState.HasPrivilegeAccess(AdmPrivState.ModuleCodename, action);
+
+    protected bool IsReadOnlyView => IsEditMode && !CanModify;
+
+    protected string HeaderTitle =>
+        !IsEditMode
+            ? "Crear Privilegio"
+            : (IsReadOnlyView ? "Detalle de Privilegio" : "Editar Privilegio");
 
     protected string PageTitleText => $"{HeaderTitle} — Vogel";
 
     protected string SubmitButtonText => IsEditMode ? "Guardar Cambios" : "Crear Privilegio";
 
-    protected string SecondaryButtonText => (IsDeactivated || LoadFailed) ? "Volver al listado" : "Cancelar";
+    protected bool RequiresExitConfirmation =>
+        !IsReadOnlyView && !IsDeactivated && !LoadFailed && !IsLoadingInitial && CanSubmitForm;
 
-    protected bool IsFormDisabled => IsSaving || IsDeactivating || IsDeactivated || LoadFailed;
+    protected bool IsFormDisabled => IsSaving || IsDeactivating || IsDeactivated || LoadFailed || IsReadOnlyView;
 
-    protected bool CanSubmitForm => !LoadFailed && !IsDeactivated;
+    protected bool CanSubmitForm => !LoadFailed && !IsDeactivated && (IsEditMode ? CanModify : CanCreate);
 
-    protected bool CanShowDeactivateSection => IsEditMode && !IsDeactivated && !LoadFailed;
+    protected bool CanShowDeactivateSection => IsEditMode && CanDelete && !IsDeactivated && !LoadFailed;
 
     protected string StatusDisplayText =>
         string.Equals(Status, "A", StringComparison.OrdinalIgnoreCase) ? "Activo" : "Inactivo";
@@ -100,6 +122,23 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
 
         var relativePath = GetNormalizedRelativePath();
         var editRoute = string.Equals(relativePath, "admsec/priv/edit", StringComparison.OrdinalIgnoreCase);
+
+        if (!editRoute && !CanCreate)
+        {
+            AdmPrivState.ClearSelectedEditPrivilegeId();
+            AdmPrivState.SetErrorMessage("No cuenta con permisos para crear privilegios.");
+            NavigationManager.NavigateTo("/admsec/priv", replace: true);
+            return;
+        }
+
+        if (editRoute && !CanRead)
+        {
+            AdmPrivState.ClearSelectedEditPrivilegeId();
+            AdmPrivState.SetErrorMessage("No cuenta con permisos para consultar o editar privilegios.");
+            NavigationManager.NavigateTo("/admsec/priv", replace: true);
+            return;
+        }
+
         var selectedId = editRoute ? AdmPrivState.SelectedEditPrivilegeId : null;
         var routeKey = editRoute ? $"edit:{selectedId?.ToString() ?? "none"}" : "create";
 
@@ -114,6 +153,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
         ErrorMessage = null;
         _fieldErrors.Clear();
         ShowDeactivateConfirm = false;
+        ShowExitConfirm = false;
         DelDescription = string.Empty;
         LoadFailed = false;
         IsDeactivated = false;
@@ -141,7 +181,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
         IsLoadingInitial = true;
         try
         {
-            if (AdmPrivState.AllItems.Count == 0)
+            if (CanRead && AdmPrivState.AllItems.Count == 0)
             {
                 await AdmPrivState.LoadAsync();
             }
@@ -217,7 +257,12 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
 
     protected async Task HandleSubmitAsync()
     {
-        if (IsSaving || IsDeactivating || IsDeactivated || LoadFailed)
+        if (!CanSubmitForm || IsSaving || IsDeactivating || IsDeactivated || LoadFailed)
+        {
+            return;
+        }
+
+        if ((IsEditMode && !CanModify) || (!IsEditMode && !CanCreate))
         {
             return;
         }
@@ -318,7 +363,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
 
     protected void RequestDeactivateConfirmation()
     {
-        if (!CanShowDeactivateSection || IsSaving || IsDeactivating)
+        if (!CanDelete || !CanShowDeactivateSection || IsSaving || IsDeactivating)
         {
             return;
         }
@@ -339,11 +384,12 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
     protected void CancelDeactivateConfirmation()
     {
         ShowDeactivateConfirm = false;
+        ShowExitConfirm = false;
     }
 
     protected async Task HandleConfirmDeactivateAsync()
     {
-        if (!CanShowDeactivateSection || IsDeactivating || IdPrivilege <= 0)
+        if (!CanDelete || !CanShowDeactivateSection || IsDeactivating || IdPrivilege <= 0)
         {
             return;
         }
@@ -358,6 +404,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
             _fieldErrors["DelDescription"] = $"El motivo de inactivación no puede exceder los {MaxDelDescriptionLength} caracteres.";
             ErrorMessage = _fieldErrors["DelDescription"];
             ShowDeactivateConfirm = false;
+        ShowExitConfirm = false;
             return;
         }
 
@@ -378,6 +425,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
                 }
 
                 ShowDeactivateConfirm = false;
+        ShowExitConfirm = false;
                 ErrorMessage = result.ErrorMessage ?? "No fue posible inactivar el privilegio.";
                 return;
             }
@@ -385,6 +433,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
             Status = string.IsNullOrWhiteSpace(result.Data.Status) ? "I" : result.Data.Status;
             IsDeactivated = true;
             ShowDeactivateConfirm = false;
+        ShowExitConfirm = false;
 
             SuccessMessage = result.Data.CascadedRolePrivileges > 0
                 ? $"Privilegio inactivado exitosamente (ID: {result.Data.IdPrivilege}). Se trasladaron {result.Data.CascadedRolePrivileges} asignaciones en roles al histórico."
@@ -396,10 +445,32 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
         }
     }
 
-    protected void HandleCancel()
+    protected void HandleExitRequest()
     {
+        if (IsSaving || IsDeactivating)
+        {
+            return;
+        }
+
+        if (!RequiresExitConfirmation)
+        {
+            ConfirmExit();
+            return;
+        }
+
+        ShowExitConfirm = true;
+    }
+
+    protected void ConfirmExit()
+    {
+        ShowExitConfirm = false;
         AdmPrivState.ClearSelectedEditPrivilegeId();
         NavigationManager.NavigateTo("/admsec/priv");
+    }
+
+    protected void CancelExitConfirmation()
+    {
+        ShowExitConfirm = false;
     }
 
     protected void ClearSuccessMessage() => SuccessMessage = null;

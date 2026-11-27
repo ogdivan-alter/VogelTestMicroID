@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Vogel.Client.Services;
 using Vogel.Shared.DTOs;
+using Vogel.Shared.Models;
 using Xunit;
 
 namespace Vogel.Tests;
@@ -27,9 +28,36 @@ public class AdmPrivStateServiceTests
         }
     };
 
+    private static SessionState CreateSessionState(bool canRead = true, bool canCreate = true, bool canModify = true, bool canDelete = true)
+    {
+        var sessionState = new SessionState();
+        sessionState.SetUser(new User
+        {
+            Username = "admin",
+            Privileges = new List<Privilege>
+            {
+                new()
+                {
+                    Id = 204,
+                    Codename = "adm_priv",
+                    Title = "Administración de Privilegios",
+                    Access = new PrivilegeAccess
+                    {
+                        Read = canRead,
+                        Create = canCreate,
+                        Modify = canModify,
+                        Delete = canDelete
+                    }
+                }
+            }
+        });
+        return sessionState;
+    }
+
     private static (AdmPrivStateService Service, StubHttpMessageHandler Handler) CreateService(
         HttpResponseMessage response,
-        string? token = "jwt-session-token")
+        string? token = "jwt-session-token",
+        SessionState? sessionState = null)
     {
         var handler = new StubHttpMessageHandler(response);
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("http://localhost:5031/") };
@@ -40,7 +68,7 @@ public class AdmPrivStateServiceTests
         }
 
         var logger = new NoOpClientLogger();
-        var service = new AdmPrivStateService(httpClient, storage, logger);
+        var service = new AdmPrivStateService(httpClient, storage, logger, sessionState ?? CreateSessionState());
         return (service, handler);
     }
 
@@ -506,9 +534,89 @@ public class AdmPrivStateServiceTests
         Assert.Empty(handler.Requests);
     }
 
+    [Fact]
+    public async Task CreateAsync_WhenWithoutReadPermission_ShouldNotReloadCatalog()
+    {
+        var createdDto = new CreatePrivilegeResponseDto
+        {
+            IdPrivilege = 77,
+            IdSystem = 1,
+            Status = "A",
+            DateCreation = DateTimeOffset.UtcNow
+        };
+        var handler = new QueueHttpMessageHandler(
+            new HttpResponseMessage(HttpStatusCode.Created) { Content = JsonContent.Create(createdDto) });
+        var sessionState = CreateSessionState(canRead: false, canCreate: true, canModify: false, canDelete: false);
+        var (service, _) = CreateServiceWithHandler(handler, "jwt-create-only", sessionState);
+
+        var result = await service.CreateAsync(new CreatePrivilegeRequestDto
+        {
+            IdParent = 0,
+            Codename = "adm_root_only",
+            GroupName = "SEGURIDAD",
+            Title = "Raíz Solo Creación",
+            Action = "adm/root-only"
+        });
+
+        Assert.True(result.Success);
+        Assert.Equal(201, result.StatusCode);
+        Assert.Single(handler.Requests);
+        Assert.Equal(HttpMethod.Post, handler.Requests[0].Method);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithCustomModuleCodename_ShouldEvaluateReadAccessDynamically()
+    {
+        var createdDto = new CreatePrivilegeResponseDto
+        {
+            IdPrivilege = 88,
+            IdSystem = 1,
+            Status = "A",
+            DateCreation = DateTimeOffset.UtcNow
+        };
+        var handler = new QueueHttpMessageHandler(
+            new HttpResponseMessage(HttpStatusCode.Created) { Content = JsonContent.Create(createdDto) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(CreateSampleResponse()) });
+
+        var sessionState = new SessionState();
+        sessionState.SetUser(new User
+        {
+            Username = "custom_admin",
+            Privileges = new List<Privilege>
+            {
+                new()
+                {
+                    Id = 301,
+                    Codename = "custom_priv_codename",
+                    Title = "Privilegios Custom",
+                    Access = new PrivilegeAccess { Read = true, Create = true }
+                }
+            }
+        });
+
+        var (service, _) = CreateServiceWithHandler(handler, "jwt-custom", sessionState, moduleCodename: "custom_priv_codename");
+
+        var result = await service.CreateAsync(new CreatePrivilegeRequestDto
+        {
+            IdParent = 0,
+            Codename = "custom_item",
+            GroupName = "SEGURIDAD",
+            Title = "Item Custom",
+            Action = "adm/custom"
+        });
+
+        Assert.True(result.Success);
+        Assert.Equal("custom_priv_codename", service.ModuleCodename);
+        Assert.Equal(2, handler.Requests.Count);
+        Assert.Equal(HttpMethod.Post, handler.Requests[0].Method);
+        Assert.Equal(HttpMethod.Get, handler.Requests[1].Method);
+    }
+
     private static (AdmPrivStateService Service, QueueHttpMessageHandler Handler) CreateServiceWithHandler(
         QueueHttpMessageHandler handler,
-        string? token = "jwt-session-token")
+        string? token = "jwt-session-token",
+        SessionState? sessionState = null,
+        string moduleCodename = "adm_priv")
     {
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("http://localhost:5031/") };
         var storage = new InMemorySessionStorage();
@@ -518,7 +626,8 @@ public class AdmPrivStateServiceTests
         }
 
         var logger = new NoOpClientLogger();
-        var service = new AdmPrivStateService(httpClient, storage, logger);
+        var service = new AdmPrivStateService(httpClient, storage, logger, sessionState ?? CreateSessionState());
+        service.SetModuleCodename(moduleCodename);
         return (service, handler);
     }
 
