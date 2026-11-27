@@ -27,4 +27,17 @@ public interface IPrivilegeAuthorizationService
         string privilegeCodename,
         PrivilegeAction requiredAction,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Evalúa si el usuario propietario del <paramref name="token"/> posee permiso
+    /// para ejecutar <paramref name="requiredAction"/> sobre el privilegio cuya ruta/acción
+    /// coincide con <paramref name="moduleAction"/> (p. ej. "/admsec/priv"), independientemente
+    /// del codename asignado al privilegio en el proveedor de identidad.
+    /// Aplica evaluación estricta fail-closed.
+    /// </summary>
+    Task<PrivilegeAuthorizationResult> AuthorizeByActionAsync(
+        string token,
+        string moduleAction,
+        PrivilegeAction requiredAction,
+        CancellationToken cancellationToken = default);
 }

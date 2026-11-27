@@ -23,11 +23,48 @@ public sealed class PrivilegeAuthorizationService : IPrivilegeAuthorizationServi
         _logger = logger;
     }
 
-    public async Task<PrivilegeAuthorizationResult> AuthorizeAsync(
+    public Task<PrivilegeAuthorizationResult> AuthorizeAsync(
         string token,
         string privilegeCodename,
         PrivilegeAction requiredAction,
         CancellationToken cancellationToken = default)
+    {
+        var normalizedTarget = NormalizeCodename(privilegeCodename);
+        return AuthorizeInternalAsync(
+            token,
+            targetLabel: SanitizeForLog(privilegeCodename),
+            targetIsValid: !string.IsNullOrEmpty(normalizedTarget),
+            invalidTargetReason: "codename de privilegio inválido",
+            matcher: p => string.Equals(NormalizeCodename(p.Codename), normalizedTarget, StringComparison.Ordinal),
+            requiredAction,
+            cancellationToken);
+    }
+
+    public Task<PrivilegeAuthorizationResult> AuthorizeByActionAsync(
+        string token,
+        string moduleAction,
+        PrivilegeAction requiredAction,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedTarget = NormalizeAction(moduleAction);
+        return AuthorizeInternalAsync(
+            token,
+            targetLabel: SanitizeForLog(moduleAction),
+            targetIsValid: !string.IsNullOrEmpty(normalizedTarget),
+            invalidTargetReason: "ruta/acción de módulo inválida",
+            matcher: p => string.Equals(NormalizeAction(p.Action), normalizedTarget, StringComparison.OrdinalIgnoreCase),
+            requiredAction,
+            cancellationToken);
+    }
+
+    private async Task<PrivilegeAuthorizationResult> AuthorizeInternalAsync(
+        string token,
+        string targetLabel,
+        bool targetIsValid,
+        string invalidTargetReason,
+        Func<BackendPrivilegeItemDto, bool> matcher,
+        PrivilegeAction requiredAction,
+        CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(token))
         {
@@ -37,12 +74,11 @@ public sealed class PrivilegeAuthorizationService : IPrivilegeAuthorizationServi
                 new BackendErrorDto(StatusCodes.Status401Unauthorized, "Token de sesión no proporcionado."));
         }
 
-        var safeCodename = SanitizeForLog(privilegeCodename);
-        var normalizedTarget = NormalizeCodename(privilegeCodename);
-        if (string.IsNullOrEmpty(normalizedTarget))
+        if (!targetIsValid)
         {
             _logger.LogWarning(
-                "Autorización RBAC denegada (403): codename de privilegio inválido para acción '{RequiredAction}'.",
+                "Autorización RBAC denegada (403): {InvalidReason} para acción '{RequiredAction}'.",
+                invalidTargetReason,
                 requiredAction);
             return Forbidden();
         }
@@ -60,8 +96,8 @@ public sealed class PrivilegeAuthorizationService : IPrivilegeAuthorizationServi
         {
             _logger.LogError(
                 ex,
-                "Error inesperado al validar permisos RBAC para privilegio '{PrivilegeCodename}' y acción '{RequiredAction}'. Acceso denegado (fail-closed).",
-                safeCodename,
+                "Error inesperado al validar permisos RBAC para '{Target}' y acción '{RequiredAction}'. Acceso denegado (fail-closed).",
+                targetLabel,
                 requiredAction);
 
             return new PrivilegeAuthorizationResult(
@@ -77,9 +113,9 @@ public sealed class PrivilegeAuthorizationService : IPrivilegeAuthorizationServi
                 : StatusCodes.Status502BadGateway;
 
             _logger.LogWarning(
-                "Validación RBAC fallida (HTTP {StatusCode}) al consultar privilegios para '{PrivilegeCodename}' acción '{RequiredAction}'.",
+                "Validación RBAC fallida (HTTP {StatusCode}) al consultar privilegios para '{Target}' acción '{RequiredAction}'.",
                 failureStatus,
-                safeCodename,
+                targetLabel,
                 requiredAction);
 
             return new PrivilegeAuthorizationResult(
@@ -88,14 +124,13 @@ public sealed class PrivilegeAuthorizationService : IPrivilegeAuthorizationServi
                 privilegesResult.Error ?? new BackendErrorDto(failureStatus, "No fue posible validar los permisos del usuario."));
         }
 
-        var privilege = privilegesResult.Data.Privileges?
-            .FirstOrDefault(p => string.Equals(NormalizeCodename(p.Codename), normalizedTarget, StringComparison.Ordinal));
+        var privilege = privilegesResult.Data.Privileges?.FirstOrDefault(matcher);
 
         if (privilege?.Access is null || !HasActionPermission(privilege.Access, requiredAction))
         {
             _logger.LogWarning(
-                "Acceso denegado (403) para privilegio '{PrivilegeCodename}' acción '{RequiredAction}'.",
-                safeCodename,
+                "Acceso denegado (403) para '{Target}' acción '{RequiredAction}'.",
+                targetLabel,
                 requiredAction);
 
             return Forbidden();
@@ -127,6 +162,11 @@ public sealed class PrivilegeAuthorizationService : IPrivilegeAuthorizationServi
         string.IsNullOrWhiteSpace(codename)
             ? string.Empty
             : codename.Trim().Replace('-', '_').ToLowerInvariant();
+
+    private static string NormalizeAction(string? action) =>
+        string.IsNullOrWhiteSpace(action)
+            ? string.Empty
+            : action.Trim().Trim('/');
 
     private static string SanitizeForLog(string? value)
     {

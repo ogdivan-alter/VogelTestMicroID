@@ -57,13 +57,19 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
     private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.Ordinal);
     private string? _lastInitializedRouteKey;
 
-    protected bool CanRead => SessionState.HasPrivilegeAccess(AdmPrivState.ModuleCodename, PrivilegeAction.Read);
+    private const string ModuleRouteAction = "/admsec/priv";
 
-    protected bool CanCreate => SessionState.HasPrivilegeAccess(AdmPrivState.ModuleCodename, PrivilegeAction.Create);
+    protected bool CanRead => HasModuleAccess(PrivilegeAction.Read);
 
-    protected bool CanModify => SessionState.HasPrivilegeAccess(AdmPrivState.ModuleCodename, PrivilegeAction.Modify);
+    protected bool CanCreate => HasModuleAccess(PrivilegeAction.Create);
 
-    protected bool CanDelete => SessionState.HasPrivilegeAccess(AdmPrivState.ModuleCodename, PrivilegeAction.Delete);
+    protected bool CanModify => HasModuleAccess(PrivilegeAction.Modify);
+
+    protected bool CanDelete => HasModuleAccess(PrivilegeAction.Delete);
+
+    private bool HasModuleAccess(PrivilegeAction action) =>
+        SessionState.HasPrivilegeAccessByAction(ModuleRouteAction, action) ||
+        SessionState.HasPrivilegeAccess(AdmPrivState.ModuleCodename, action);
 
     protected bool IsReadOnlyView => IsEditMode && !CanModify;
 

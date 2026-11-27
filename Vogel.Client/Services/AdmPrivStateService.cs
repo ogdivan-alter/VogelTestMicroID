@@ -13,6 +13,7 @@ namespace Vogel.Client.Services;
 public sealed class AdmPrivStateService : IAdmPrivStateService
 {
     private const string DefaultSystemCode = "MICROID";
+    private const string ModuleRouteAction = "/admsec/priv";
     private const int DefaultPageSize = 10;
 
     private readonly HttpClient _httpClient;
@@ -266,7 +267,7 @@ public sealed class AdmPrivStateService : IAdmPrivStateService
                     "Respuesta vacía del servidor al crear el privilegio.");
             }
 
-            if (_sessionState.HasPrivilegeAccess(ModuleCodename, PrivilegeAction.Read))
+            if (_sessionState.HasPrivilegeAccessByAction(ModuleRouteAction, PrivilegeAction.Read) || _sessionState.HasPrivilegeAccess(ModuleCodename, PrivilegeAction.Read))
             {
                 await LoadAsync();
             }
@@ -344,7 +345,7 @@ public sealed class AdmPrivStateService : IAdmPrivStateService
                     "Respuesta vacía del servidor al actualizar el privilegio.");
             }
 
-            if (_sessionState.HasPrivilegeAccess(ModuleCodename, PrivilegeAction.Read))
+            if (_sessionState.HasPrivilegeAccessByAction(ModuleRouteAction, PrivilegeAction.Read) || _sessionState.HasPrivilegeAccess(ModuleCodename, PrivilegeAction.Read))
             {
                 await LoadAsync();
             }
@@ -413,7 +414,7 @@ public sealed class AdmPrivStateService : IAdmPrivStateService
                     "Respuesta vacía del servidor al inactivar el privilegio.");
             }
 
-            if (_sessionState.HasPrivilegeAccess(ModuleCodename, PrivilegeAction.Read))
+            if (_sessionState.HasPrivilegeAccessByAction(ModuleRouteAction, PrivilegeAction.Read) || _sessionState.HasPrivilegeAccess(ModuleCodename, PrivilegeAction.Read))
             {
                 await LoadAsync();
             }
@@ -494,7 +495,7 @@ public sealed class AdmPrivStateService : IAdmPrivStateService
                     ErrorMessage);
             }
 
-            if (_sessionState.HasPrivilegeAccess(ModuleCodename, PrivilegeAction.Read))
+            if (_sessionState.HasPrivilegeAccessByAction(ModuleRouteAction, PrivilegeAction.Read) || _sessionState.HasPrivilegeAccess(ModuleCodename, PrivilegeAction.Read))
             {
                 await LoadAsync();
             }

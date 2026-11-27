@@ -66,11 +66,11 @@ Todo módulo CRUD queda gobernado por un `codename` de privilegio (p. ej. `adm_p
    - `Vogel.Server/Services/Mock<Entidad>AdminService.cs` replicando reglas de negocio de forma thread-safe (`SemaphoreSlim`).
 4. **Controlador BFF agnóstico:** `Vogel.Server/Controllers/<Entidades>Controller.cs`
    - Rutas: `api/<recurso>` y alias `api/v1/<recurso>`.
-   - **Prohibido hardcodear el `codename` del módulo en el controlador:** leerlo desde `IOptions<ModulePrivilegesOptions>` (`Vogel.Server/Configuration/ModulePrivilegesOptions.cs`, validado al arranque *fail-fast* desde `appsettings.json`, sección `"ModulePrivileges"`).
-   - Inyectar `I<Entidad>AdminProviderService`, `IPrivilegeAuthorizationService`, `IOptions<ModulePrivilegesOptions>` e `ILogger`.
+   - **Prohibido hardcodear el `codename` del módulo o agregar secciones de mapeo de codenames en `appsettings.json`:** autorizar resolviendo el privilegio por su **`action` (ruta del módulo)** mediante `_privilegeAuthorization.AuthorizeByActionAsync(token, ModuleAction, requiredAction, HttpContext.RequestAborted)` (ej. `ModuleAction = "/admsec/priv"`). Así el administrador puede nombrar el `codename` libremente en MicroID sin tocar código ni configuración.
+   - Inyectar `I<Entidad>AdminProviderService`, `IPrivilegeAuthorizationService` e `ILogger`.
    - En cada acción:
      1. Extraer y validar token (`Authorization: Bearer` o `X-Session-Token`) → `401` si ausente.
-     2. Invocar `_privilegeAuthorization.AuthorizeAsync(token, _modulePrivilegeCodename, requiredAction, HttpContext.RequestAborted)` → propagar `401`/`403`/`502` si `!IsAuthorized`.
+     2. Invocar `_privilegeAuthorization.AuthorizeByActionAsync(token, ModuleAction, requiredAction, HttpContext.RequestAborted)` → propagar `401`/`403`/`502` si `!IsAuthorized`.
      3. Validar parámetros/payload → `400`/`422`.
      4. Delegar en el proveedor y retornar respuesta normalizada.
 5. **Registro DI (`Vogel.Server/Program.cs`):**

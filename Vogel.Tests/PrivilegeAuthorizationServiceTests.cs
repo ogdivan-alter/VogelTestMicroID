@@ -237,6 +237,43 @@ public class PrivilegeAuthorizationServiceTests
         Assert.Equal(StatusCodes.Status502BadGateway, result.Error!.Status);
     }
 
+    [Theory]
+    [InlineData("/admsec/priv")]
+    [InlineData("admsec/priv")]
+    [InlineData("/ADMSEC/PRIV/")]
+    public async Task AuthorizeByActionAsync_WithAnyCustomCodename_ShouldAuthorizeByRouteAction(string requestedAction)
+    {
+        var authProvider = new StubAuthProviderService
+        {
+            Result = CreateSuccessResult("codename_personalizado_en_microid", new BackendAccessDto(Read: true, Write: true, Modify: false, Delete: false, Validate: false, Execute: false, Approve: false))
+        };
+        var service = CreateService(authProvider);
+
+        var readResult = await service.AuthorizeByActionAsync("jwt-token", requestedAction, PrivilegeAction.Read);
+        var createResult = await service.AuthorizeByActionAsync("jwt-token", requestedAction, PrivilegeAction.Create);
+        var modifyResult = await service.AuthorizeByActionAsync("jwt-token", requestedAction, PrivilegeAction.Modify);
+
+        Assert.True(readResult.IsAuthorized);
+        Assert.True(createResult.IsAuthorized);
+        Assert.False(modifyResult.IsAuthorized);
+        Assert.Equal(StatusCodes.Status403Forbidden, modifyResult.StatusCode);
+    }
+
+    [Fact]
+    public async Task AuthorizeByActionAsync_WhenRouteActionNotFound_ShouldReturn403FailClosed()
+    {
+        var authProvider = new StubAuthProviderService
+        {
+            Result = CreateSuccessResult("codename_cualquiera", new BackendAccessDto(Read: true, Write: true, Modify: true, Delete: true, Validate: false, Execute: false, Approve: false))
+        };
+        var service = CreateService(authProvider);
+
+        var result = await service.AuthorizeByActionAsync("jwt-token", "/otra/ruta", PrivilegeAction.Read);
+
+        Assert.False(result.IsAuthorized);
+        Assert.Equal(StatusCodes.Status403Forbidden, result.StatusCode);
+    }
+
     private static AuthPrivilegesResult CreateSuccessResult(string codename, BackendAccessDto access) =>
         new(
             true,

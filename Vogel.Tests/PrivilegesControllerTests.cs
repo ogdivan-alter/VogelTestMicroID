@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
-using Vogel.Server.Configuration;
 using Vogel.Server.Controllers;
 using Vogel.Server.Services;
 using Vogel.Shared.DTOs;
@@ -13,7 +11,7 @@ namespace Vogel.Tests;
 /// <summary>
 /// Pruebas unitarias para PrivilegesController (Fase 3 - T3.1 / Fase 4 - T4.2).
 /// Cubre los 6 endpoints (List, GetById, Create, Update, Deactivate, Reactivate):
-/// casos exitosos, autorización RBAC granular (403 Forbidden / 401 propagado),
+/// casos exitosos, autorización RBAC granular por acción de módulo (403 Forbidden / 401 propagado),
 /// 401 sin token, 400 payload/ID inválido, 422 autorreferencia y propagación de errores del proveedor.
 /// </summary>
 public class PrivilegesControllerTests
@@ -22,13 +20,11 @@ public class PrivilegesControllerTests
         StubPrivilegeAdminProviderService provider,
         string? bearerToken = "valid-session-token",
         string? xSessionToken = null,
-        StubPrivilegeAuthorizationService? authService = null,
-        string modulePrivilegeCodename = "adm_priv")
+        StubPrivilegeAuthorizationService? authService = null)
     {
         var controller = new PrivilegesController(
             provider,
             authService ?? new StubPrivilegeAuthorizationService(),
-            Options.Create(new ModulePrivilegesOptions { Privileges = modulePrivilegeCodename }),
             NullLogger<PrivilegesController>.Instance)
         {
             ControllerContext = new ControllerContext
@@ -69,23 +65,6 @@ public class PrivilegesControllerTests
         Action = "adm/test-upd",
         Icon = "icons/test-upd.svg"
     };
-
-    [Fact]
-    public async Task List_WithCustomConfiguredCodename_ShouldAuthorizeUsingConfiguredValue()
-    {
-        var provider = new StubPrivilegeAdminProviderService();
-        var authService = new StubPrivilegeAuthorizationService();
-        var controller = CreateController(
-            provider,
-            authService: authService,
-            modulePrivilegeCodename: "seg_privilegios_custom");
-
-        var actionResult = await controller.List();
-
-        Assert.IsType<OkObjectResult>(actionResult);
-        Assert.Equal("seg_privilegios_custom", authService.LastCodename);
-        Assert.Equal(PrivilegeAction.Read, authService.LastAction);
-    }
 
     // ==================== GET /api/privileges/{id} ====================
 
@@ -533,7 +512,7 @@ public class PrivilegesControllerTests
         var actionResult = await controller.List("A");
 
         Assert.IsType<OkObjectResult>(actionResult);
-        Assert.Equal("adm_priv", auth.LastCodename);
+        Assert.Equal("/admsec/priv", auth.LastModuleAction);
         Assert.Equal(PrivilegeAction.Read, auth.LastAction);
         Assert.Equal(1, provider.ListCalls);
     }
@@ -566,7 +545,7 @@ public class PrivilegesControllerTests
 
         var objectResult = Assert.IsType<ObjectResult>(actionResult);
         Assert.Equal(StatusCodes.Status403Forbidden, objectResult.StatusCode);
-        Assert.Equal("adm_priv", auth.LastCodename);
+        Assert.Equal("/admsec/priv", auth.LastModuleAction);
         Assert.Equal(PrivilegeAction.Read, auth.LastAction);
         Assert.Equal(0, provider.GetCalls);
     }
@@ -582,7 +561,7 @@ public class PrivilegesControllerTests
 
         var objectResult = Assert.IsType<ObjectResult>(actionResult);
         Assert.Equal(StatusCodes.Status403Forbidden, objectResult.StatusCode);
-        Assert.Equal("adm_priv", auth.LastCodename);
+        Assert.Equal("/admsec/priv", auth.LastModuleAction);
         Assert.Equal(PrivilegeAction.Create, auth.LastAction);
         Assert.Equal(0, provider.CreateCalls);
     }
@@ -598,7 +577,7 @@ public class PrivilegesControllerTests
 
         var objectResult = Assert.IsType<ObjectResult>(actionResult);
         Assert.Equal(StatusCodes.Status403Forbidden, objectResult.StatusCode);
-        Assert.Equal("adm_priv", auth.LastCodename);
+        Assert.Equal("/admsec/priv", auth.LastModuleAction);
         Assert.Equal(PrivilegeAction.Modify, auth.LastAction);
         Assert.Equal(0, provider.UpdateCalls);
     }
@@ -614,7 +593,7 @@ public class PrivilegesControllerTests
 
         var objectResult = Assert.IsType<ObjectResult>(actionResult);
         Assert.Equal(StatusCodes.Status403Forbidden, objectResult.StatusCode);
-        Assert.Equal("adm_priv", auth.LastCodename);
+        Assert.Equal("/admsec/priv", auth.LastModuleAction);
         Assert.Equal(PrivilegeAction.Delete, auth.LastAction);
         Assert.Equal(0, provider.DeactivateCalls);
     }
@@ -630,7 +609,7 @@ public class PrivilegesControllerTests
 
         var objectResult = Assert.IsType<ObjectResult>(actionResult);
         Assert.Equal(StatusCodes.Status403Forbidden, objectResult.StatusCode);
-        Assert.Equal("adm_priv", auth.LastCodename);
+        Assert.Equal("/admsec/priv", auth.LastModuleAction);
         Assert.Equal(PrivilegeAction.Create, auth.LastAction);
         Assert.Equal(0, provider.ReactivateCalls);
     }
@@ -664,6 +643,7 @@ public class PrivilegesControllerTests
     {
         public string? LastToken { get; private set; }
         public string? LastCodename { get; private set; }
+        public string? LastModuleAction { get; private set; }
         public PrivilegeAction? LastAction { get; private set; }
 
         public PrivilegeAuthorizationResult Result { get; set; } =
@@ -685,6 +665,18 @@ public class PrivilegesControllerTests
         {
             LastToken = token;
             LastCodename = privilegeCodename;
+            LastAction = requiredAction;
+            return Task.FromResult(Result);
+        }
+
+        public Task<PrivilegeAuthorizationResult> AuthorizeByActionAsync(
+            string token,
+            string moduleAction,
+            PrivilegeAction requiredAction,
+            CancellationToken cancellationToken = default)
+        {
+            LastToken = token;
+            LastModuleAction = moduleAction;
             LastAction = requiredAction;
             return Task.FromResult(Result);
         }

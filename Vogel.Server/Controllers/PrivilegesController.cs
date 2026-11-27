@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.Extensions.Options;
-using Vogel.Server.Configuration;
 using Vogel.Server.Services;
 using Vogel.Shared.DTOs;
 using Vogel.Shared.Enums;
@@ -11,13 +9,15 @@ namespace Vogel.Server.Controllers;
 /// <summary>
 /// Controlador BFF (Backend for Frontend) agnóstico al proveedor para la administración de privilegios.
 /// Delega exclusivamente en <see cref="IPrivilegeAdminProviderService"/> y autoriza cada operación
-/// mediante <see cref="IPrivilegeAuthorizationService"/> usando el codename configurado en <see cref="ModulePrivilegesOptions"/>.
+/// mediante <see cref="IPrivilegeAuthorizationService"/> resolviendo el privilegio por su acción de módulo.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Route("api/v1/[controller]")]
 public class PrivilegesController : ControllerBase
 {
+    private const string ModuleAction = "/admsec/priv";
+
     private const int MaxCodenameLength = 100;
     private const int MaxGroupNameLength = 100;
     private const int MaxTitleLength = 150;
@@ -27,24 +27,21 @@ public class PrivilegesController : ControllerBase
 
     private readonly IPrivilegeAdminProviderService _privilegeAdminProvider;
     private readonly IPrivilegeAuthorizationService _privilegeAuthorization;
-    private readonly string _modulePrivilegeCodename;
     private readonly ILogger<PrivilegesController> _logger;
 
     public PrivilegesController(
         IPrivilegeAdminProviderService privilegeAdminProvider,
         IPrivilegeAuthorizationService privilegeAuthorization,
-        IOptions<ModulePrivilegesOptions> modulePrivilegesOptions,
         ILogger<PrivilegesController> logger)
     {
         _privilegeAdminProvider = privilegeAdminProvider;
         _privilegeAuthorization = privilegeAuthorization;
-        _modulePrivilegeCodename = modulePrivilegesOptions?.Value?.Privileges?.Trim() ?? string.Empty;
         _logger = logger;
     }
 
     /// <summary>
     /// Obtiene el listado administrativo de privilegios del sistema configurado.
-    /// Exige token de sesión en cabecera Authorization: Bearer o X-Session-Token y permiso Read en adm_priv.
+    /// Exige token de sesión en cabecera Authorization: Bearer o X-Session-Token y permiso Read sobre el módulo.
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] string? status = null)
@@ -297,9 +294,9 @@ public class PrivilegesController : ControllerBase
 
     private async Task<IActionResult?> AuthorizeModuleActionAsync(string token, PrivilegeAction requiredAction)
     {
-        var authResult = await _privilegeAuthorization.AuthorizeAsync(
+        var authResult = await _privilegeAuthorization.AuthorizeByActionAsync(
             token,
-            _modulePrivilegeCodename,
+            ModuleAction,
             requiredAction,
             HttpContext.RequestAborted);
 

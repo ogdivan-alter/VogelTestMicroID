@@ -65,11 +65,44 @@ public class SessionState
 
         var trimmedCodename = codename.Trim();
         var normalizedTarget = trimmedCodename.Replace("_", "-");
-        Console.WriteLine($"Testing Privilege Codename: {codename}");   
+
         return CurrentUser.Privileges.FirstOrDefault(p =>
             !string.IsNullOrWhiteSpace(p.Codename) &&
             (string.Equals(p.Codename, trimmedCodename, StringComparison.OrdinalIgnoreCase) ||
              string.Equals(p.Codename.Replace("_", "-"), normalizedTarget, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    /// <summary>
+    /// Obtiene el privilegio del usuario autenticado cuya ruta/acción coincide con <paramref name="action"/>
+    /// (normalizando '/' inicial/final e insensible a mayúsculas/minúsculas), independientemente del codename
+    /// configurado en el proveedor de identidad.
+    /// </summary>
+    public Privilege? GetPrivilegeByAction(string action)
+    {
+        if (!IsAuthenticated || CurrentUser?.Privileges is null || string.IsNullOrWhiteSpace(action))
+        {
+            return null;
+        }
+
+        var normalizedTarget = NormalizeAction(action);
+        if (string.IsNullOrEmpty(normalizedTarget))
+        {
+            return null;
+        }
+
+        return CurrentUser.Privileges.FirstOrDefault(p =>
+            !string.IsNullOrWhiteSpace(p.Action) &&
+            string.Equals(NormalizeAction(p.Action), normalizedTarget, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Evalúa de forma estricta (fail-closed) si el usuario autenticado posee una acción granular
+    /// específica sobre un privilegio identificado por su ruta/acción (p. ej. "/admsec/priv").
+    /// </summary>
+    public bool HasPrivilegeAccessByAction(string action, PrivilegeAction requiredAction)
+    {
+        var privilege = GetPrivilegeByAction(action);
+        return HasAccess(privilege, requiredAction);
     }
 
     /// <summary>
@@ -80,9 +113,11 @@ public class SessionState
     public bool HasPrivilegeAccess(string codename, PrivilegeAction action)
     {
         var privilege = GetPrivilege(codename);
+        return HasAccess(privilege, action);
+    }
 
-        Console.WriteLine($"Testing Privilege: {privilege}");        
-        
+    private static bool HasAccess(Privilege? privilege, PrivilegeAction action)
+    {
         if (privilege?.Access is null)
         {
             return false;
@@ -100,6 +135,11 @@ public class SessionState
             _ => false
         };
     }
+
+    private static string NormalizeAction(string? action) =>
+        string.IsNullOrWhiteSpace(action)
+            ? string.Empty
+            : action.Trim().Trim('/');
 
     /// <summary>
     /// Verifica si el usuario tiene un privilegio específico por codename.

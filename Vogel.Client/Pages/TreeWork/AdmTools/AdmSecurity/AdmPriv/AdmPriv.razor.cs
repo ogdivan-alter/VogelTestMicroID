@@ -12,6 +12,8 @@ namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv;
 /// </summary>
 public partial class AdmPriv : ComponentBase
 {
+    private const string ModuleRouteAction = "/admsec/priv";
+
     [Inject]
     protected SessionState SessionState { get; set; } = default!;
 
@@ -23,11 +25,19 @@ public partial class AdmPriv : ComponentBase
 
     protected BlockWork ModuleBlockWork { get; private set; } = new();
 
-    protected bool CanRead => SessionState.HasPrivilegeAccess(AdmPrivState.ModuleCodename, PrivilegeAction.Read);
+    protected bool CanRead =>
+        SessionState.HasPrivilegeAccessByAction(ModuleRouteAction, PrivilegeAction.Read) ||
+        SessionState.HasPrivilegeAccess(AdmPrivState.ModuleCodename, PrivilegeAction.Read);
 
     protected override async Task OnInitializedAsync()
     {
         ModuleBlockWork = CreateBlockWork();
+        var resolvedPrivilege = SessionState.GetPrivilegeByAction(ModuleRouteAction);
+        if (!string.IsNullOrWhiteSpace(resolvedPrivilege?.Codename))
+        {
+            ModuleBlockWork.Codename = resolvedPrivilege.Codename;
+        }
+
         AdmPrivState.SetModuleCodename(ModuleBlockWork.Codename);
 
         if (!SessionState.IsAuthenticated)
