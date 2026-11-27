@@ -99,6 +99,7 @@ Todo módulo CRUD queda gobernado por un `codename` de privilegio (p. ej. `adm_p
      - Guards en `OnParametersSetAsync`: `/create` exige `CanCreate`; `/edit` exige `CanRead` (si falla, publica error en estado y redirige con `replace: true`).
      - En creación, omite `LoadAsync()` si `!CanRead`.
      - Soporta modo solo lectura (`IsReadOnlyView = IsEditMode && !CanModify`) con campos `disabled`, sin botón guardar en DOM (`@if (CanSubmitForm)`), manteniendo la sección de inactivación independiente bajo `@if (CanShowDeactivateSection)`.
+     - No duplicar botones `Cancelar`/`Volver`: el botón **Salir** de `HeaderWork` (`OnExit`) es la única salida del formulario; en modo Creación/Edición solicita confirmación para evitar pérdida de cambios y en modo solo consulta sale directamente sin confirmación.
      - Guards defensivos en todos los handlers de envío e inactivación.
 3. **Íconos SVG (`Vogel.Client/wwwroot/icons/`):**
    - Reutilizar `plus.svg`, `edit.svg`, `view.svg` y `reactivate.svg` (o crear nuevos siguiendo el mismo estándar: `viewBox="0 0 24 24"`, `stroke="#ffffff"`, únicamente primitivas vectoriales seguras sin `<script>`, `foreignObject`, eventos inline ni referencias externas).

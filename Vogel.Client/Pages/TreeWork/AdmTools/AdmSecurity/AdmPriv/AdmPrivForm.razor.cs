@@ -38,6 +38,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
     protected bool IsDeactivated { get; private set; }
     protected bool LoadFailed { get; private set; }
     protected bool ShowDeactivateConfirm { get; private set; }
+    protected bool ShowExitConfirm { get; private set; }
 
     protected string? SuccessMessage { get; private set; }
     protected string? ErrorMessage { get; private set; }
@@ -82,8 +83,8 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
 
     protected string SubmitButtonText => IsEditMode ? "Guardar Cambios" : "Crear Privilegio";
 
-    protected string SecondaryButtonText =>
-        (IsDeactivated || LoadFailed || IsReadOnlyView) ? "Volver al listado" : "Cancelar";
+    protected bool RequiresExitConfirmation =>
+        !IsReadOnlyView && !IsDeactivated && !LoadFailed && !IsLoadingInitial && CanSubmitForm;
 
     protected bool IsFormDisabled => IsSaving || IsDeactivating || IsDeactivated || LoadFailed || IsReadOnlyView;
 
@@ -152,6 +153,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
         ErrorMessage = null;
         _fieldErrors.Clear();
         ShowDeactivateConfirm = false;
+        ShowExitConfirm = false;
         DelDescription = string.Empty;
         LoadFailed = false;
         IsDeactivated = false;
@@ -382,6 +384,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
     protected void CancelDeactivateConfirmation()
     {
         ShowDeactivateConfirm = false;
+        ShowExitConfirm = false;
     }
 
     protected async Task HandleConfirmDeactivateAsync()
@@ -401,6 +404,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
             _fieldErrors["DelDescription"] = $"El motivo de inactivación no puede exceder los {MaxDelDescriptionLength} caracteres.";
             ErrorMessage = _fieldErrors["DelDescription"];
             ShowDeactivateConfirm = false;
+        ShowExitConfirm = false;
             return;
         }
 
@@ -421,6 +425,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
                 }
 
                 ShowDeactivateConfirm = false;
+        ShowExitConfirm = false;
                 ErrorMessage = result.ErrorMessage ?? "No fue posible inactivar el privilegio.";
                 return;
             }
@@ -428,6 +433,7 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
             Status = string.IsNullOrWhiteSpace(result.Data.Status) ? "I" : result.Data.Status;
             IsDeactivated = true;
             ShowDeactivateConfirm = false;
+        ShowExitConfirm = false;
 
             SuccessMessage = result.Data.CascadedRolePrivileges > 0
                 ? $"Privilegio inactivado exitosamente (ID: {result.Data.IdPrivilege}). Se trasladaron {result.Data.CascadedRolePrivileges} asignaciones en roles al histórico."
@@ -439,10 +445,32 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
         }
     }
 
-    protected void HandleCancel()
+    protected void HandleExitRequest()
     {
+        if (IsSaving || IsDeactivating)
+        {
+            return;
+        }
+
+        if (!RequiresExitConfirmation)
+        {
+            ConfirmExit();
+            return;
+        }
+
+        ShowExitConfirm = true;
+    }
+
+    protected void ConfirmExit()
+    {
+        ShowExitConfirm = false;
         AdmPrivState.ClearSelectedEditPrivilegeId();
         NavigationManager.NavigateTo("/admsec/priv");
+    }
+
+    protected void CancelExitConfirmation()
+    {
+        ShowExitConfirm = false;
     }
 
     protected void ClearSuccessMessage() => SuccessMessage = null;

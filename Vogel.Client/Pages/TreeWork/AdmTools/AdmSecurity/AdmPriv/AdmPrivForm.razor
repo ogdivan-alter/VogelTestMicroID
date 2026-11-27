@@ -8,10 +8,33 @@
     <HeaderWork Title="@HeaderTitle"
                 Color="#0c0e14"
                 TextExit="Salir"
-                ActionExit="/admsec/priv" />
+                ActionExit="/admsec/priv"
+                OnExit="HandleExitRequest" />
 
     <main class="vogel-form-mock-body" role="main">
         <div class="vogel-form-mock-container">
+            @if (ShowExitConfirm)
+            {
+                <div class="vogel-form-danger-confirm" role="alertdialog" aria-labelledby="confirm-exit-title" style="margin-bottom: 1rem;">
+                    <p id="confirm-exit-title" class="vogel-form-danger-confirm__text">
+                        ¿Desea salir del formulario? Los cambios no guardados se perderán.
+                    </p>
+                    <div class="vogel-form-danger-confirm__buttons">
+                        <button type="button"
+                                class="vogel-btn-form-danger"
+                                @onclick="ConfirmExit"
+                                disabled="@(IsSaving || IsDeactivating)">
+                            Salir sin guardar
+                        </button>
+                        <button type="button"
+                                class="vogel-btn-form-cancel"
+                                @onclick="CancelExitConfirmation"
+                                disabled="@(IsSaving || IsDeactivating)">
+                            Continuar editando
+                        </button>
+                    </div>
+                </div>
+            }
             @if (!string.IsNullOrWhiteSpace(SuccessMessage))
             {
                 <div class="vogel-form-alert-success" role="alert">
@@ -272,9 +295,9 @@
                     }
 
                     <!-- BOTONERA DE ACCIONES -->
-                    <div class="vogel-form-actions">
-                        @if (CanSubmitForm)
-                        {
+                    @if (CanSubmitForm)
+                    {
+                        <div class="vogel-form-actions">
                             <button type="button"
                                     class="vogel-btn-form-save"
                                     @onclick="HandleSubmitAsync"
@@ -285,15 +308,8 @@
                                 }
                                 <span>@SubmitButtonText</span>
                             </button>
-                        }
-
-                        <button type="button"
-                                class="vogel-btn-form-cancel"
-                                @onclick="HandleCancel"
-                                disabled="@(IsSaving || IsDeactivating)">
-                            @SecondaryButtonText
-                        </button>
-                    </div>
+                        </div>
+                    }
                 }
             </div>
         </div>
