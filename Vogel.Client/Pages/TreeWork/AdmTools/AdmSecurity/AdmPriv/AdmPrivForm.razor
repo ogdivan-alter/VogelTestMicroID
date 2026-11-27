@@ -21,13 +21,13 @@
                     </p>
                     <div class="vogel-form-danger-confirm__buttons">
                         <button type="button"
-                                class="vogel-btn-form-danger"
+                                class="vogel-btn vogel-btn--danger"
                                 @onclick="ConfirmExit"
                                 disabled="@(IsSaving || IsDeactivating)">
                             Salir sin guardar
                         </button>
                         <button type="button"
-                                class="vogel-btn-form-cancel"
+                                class="vogel-btn vogel-btn--secondary"
                                 @onclick="CancelExitConfirmation"
                                 disabled="@(IsSaving || IsDeactivating)">
                             Continuar editando
@@ -38,10 +38,7 @@
             @if (!string.IsNullOrWhiteSpace(SuccessMessage))
             {
                 <div class="vogel-form-alert-success" role="alert">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
+                    <img src="icons/check-circle.svg" alt="" aria-hidden="true" class="vogel-alert-icon" />
                     <span>@SuccessMessage</span>
                     <button type="button" class="vogel-alert-close" aria-label="Cerrar alerta" @onclick="ClearSuccessMessage">&times;</button>
                 </div>
@@ -50,11 +47,7 @@
             @if (!string.IsNullOrWhiteSpace(ErrorMessage))
             {
                 <div class="vogel-form-alert-error" role="alert">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="8" x2="12" y2="12"></line>
-                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                    </svg>
+                    <img src="icons/alert-circle.svg" alt="" aria-hidden="true" class="vogel-alert-icon" />
                     <span>@ErrorMessage</span>
                     <button type="button" class="vogel-alert-close" aria-label="Cerrar alerta" @onclick="ClearErrorMessage">&times;</button>
                 </div>
@@ -194,9 +187,7 @@
                                         }
                                     </select>
                                     <span class="vogel-select-chevron" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                            <polyline points="6 9 12 15 18 9"></polyline>
-                                        </svg>
+                                        <img src="icons/chevron-down.svg" alt="" aria-hidden="true" />
                                     </span>
                                 </div>
                                 @if (HasFieldError("IdParent"))
@@ -258,10 +249,11 @@
                             {
                                 <div class="vogel-form-danger-zone__actions">
                                     <button type="button"
-                                            class="vogel-btn-form-danger-outline"
+                                            class="vogel-btn vogel-btn--danger-outline"
                                             @onclick="RequestDeactivateConfirmation"
                                             disabled="@(IsSaving || IsDeactivating)">
-                                        Inactivar privilegio
+                                        <img src="icons/trash.svg" alt="" aria-hidden="true" class="vogel-btn__icon" />
+                                        <span>Inactivar privilegio</span>
                                     </button>
                                 </div>
                             }
@@ -273,17 +265,21 @@
                                     </p>
                                     <div class="vogel-form-danger-confirm__buttons">
                                         <button type="button"
-                                                class="vogel-btn-form-danger"
+                                                class="vogel-btn vogel-btn--danger"
                                                 @onclick="HandleConfirmDeactivateAsync"
                                                 disabled="@IsDeactivating">
                                             @if (IsDeactivating)
                                             {
                                                 <span class="vogel-spinner-small"></span>
                                             }
+                                            else
+                                            {
+                                                <img src="icons/trash.svg" alt="" aria-hidden="true" class="vogel-btn__icon" />
+                                            }
                                             <span>Confirmar inactivación</span>
                                         </button>
                                         <button type="button"
-                                                class="vogel-btn-form-cancel"
+                                                class="vogel-btn vogel-btn--secondary"
                                                 @onclick="CancelDeactivateConfirmation"
                                                 disabled="@IsDeactivating">
                                             Cancelar inactivación
@@ -299,12 +295,16 @@
                     {
                         <div class="vogel-form-actions">
                             <button type="button"
-                                    class="vogel-btn-form-save"
+                                    class="vogel-btn vogel-btn--primary vogel-btn--lg"
                                     @onclick="HandleSubmitAsync"
                                     disabled="@(IsSaving || IsDeactivating)">
                                 @if (IsSaving)
                                 {
                                     <span class="vogel-spinner-small"></span>
+                                }
+                                else
+                                {
+                                    <img src="@(IsEditMode ? "icons/save.svg" : "icons/plus.svg")" alt="" aria-hidden="true" class="vogel-btn__icon" />
                                 }
                                 <span>@SubmitButtonText</span>
                             </button>

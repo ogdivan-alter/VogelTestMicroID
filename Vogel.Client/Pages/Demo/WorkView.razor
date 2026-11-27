@@ -51,10 +51,7 @@ else
         <FilterFrame>
             <div class="vogel-filter-panel">
                 <div class="vogel-filter-panel__search">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-search-icon">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
+                    <img src="icons/search.svg" alt="" aria-hidden="true" class="vogel-search-icon" />
                     <input type="text"
                            class="vogel-input vogel-filter-input"
                            placeholder="Buscar por código o descripción..."
@@ -66,13 +63,10 @@ else
                     }
                 </div>
                 <div class="vogel-filter-panel__actions">
-                    <button type="button" 
+                    <button type="button"
                             class="vogel-btn vogel-btn--outline vogel-btn--sm"
                             @onclick="() => LoadPagedDataAsync(1)">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vogel-btn__icon">
-                            <polyline points="23 4 23 10 17 10"></polyline>
-                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                        </svg>
+                        <img src="icons/refresh.svg" alt="" aria-hidden="true" class="vogel-btn__icon" />
                         <span>Actualizar</span>
                     </button>
                 </div>
