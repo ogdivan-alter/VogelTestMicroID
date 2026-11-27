@@ -11,6 +11,8 @@ namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv;
 /// </summary>
 public partial class AdmPrivCapture : ComponentBase
 {
+    private const string ModuleRouteAction = "/admsec/priv";
+
     [Inject]
     protected SessionState SessionState { get; set; } = default!;
 
@@ -26,7 +28,9 @@ public partial class AdmPrivCapture : ComponentBase
     private string EffectiveCodename =>
         !string.IsNullOrWhiteSpace(BlockWork?.Codename) ? BlockWork.Codename : AdmPrivState.ModuleCodename;
 
-    protected bool CanCreate => SessionState.HasPrivilegeAccess(EffectiveCodename, PrivilegeAction.Create);
+    protected bool CanCreate =>
+        SessionState.HasPrivilegeAccessByAction(ModuleRouteAction, PrivilegeAction.Create) ||
+        SessionState.HasPrivilegeAccess(EffectiveCodename, PrivilegeAction.Create);
 
     /// <summary>
     /// Limpia cualquier privilegio seleccionado para edición y navega al formulario de creación.

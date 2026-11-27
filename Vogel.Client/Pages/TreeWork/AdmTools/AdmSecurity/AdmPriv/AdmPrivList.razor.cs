@@ -14,6 +14,8 @@ namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv;
 /// </summary>
 public partial class AdmPrivList : ComponentBase, IDisposable
 {
+    private const string ModuleRouteAction = "/admsec/priv";
+
     [Inject]
     protected SessionState SessionState { get; set; } = default!;
 
@@ -29,11 +31,15 @@ public partial class AdmPrivList : ComponentBase, IDisposable
     private string EffectiveCodename =>
         !string.IsNullOrWhiteSpace(BlockWork?.Codename) ? BlockWork.Codename : AdmPrivState.ModuleCodename;
 
-    protected bool CanRead => SessionState.HasPrivilegeAccess(EffectiveCodename, PrivilegeAction.Read);
+    private bool HasModuleAccess(PrivilegeAction action) =>
+        SessionState.HasPrivilegeAccessByAction(ModuleRouteAction, action) ||
+        SessionState.HasPrivilegeAccess(EffectiveCodename, action);
 
-    protected bool CanCreate => SessionState.HasPrivilegeAccess(EffectiveCodename, PrivilegeAction.Create);
+    protected bool CanRead => HasModuleAccess(PrivilegeAction.Read);
 
-    protected bool CanModify => SessionState.HasPrivilegeAccess(EffectiveCodename, PrivilegeAction.Modify);
+    protected bool CanCreate => HasModuleAccess(PrivilegeAction.Create);
+
+    protected bool CanModify => HasModuleAccess(PrivilegeAction.Modify);
 
     /// <summary>
     /// Identificador del privilegio que actualmente se encuentra en proceso de reactivación
