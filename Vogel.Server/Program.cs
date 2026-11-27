@@ -41,6 +41,12 @@ builder.Services.AddOptions<MicroIdOptions>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
+// Mapeo configurable de codenames de privilegios por módulo CRUD del BFF
+builder.Services.AddOptions<ModulePrivilegesOptions>()
+    .Bind(builder.Configuration.GetSection(ModulePrivilegesOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
 builder.Services.AddHttpClient(MicroIdSystemKeyProvider.HttpClientName, (sp, client) =>
 {
     var opts = sp.GetRequiredService<IOptions<MicroIdOptions>>().Value;

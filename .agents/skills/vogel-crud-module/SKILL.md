@@ -66,10 +66,11 @@ Todo módulo CRUD queda gobernado por un `codename` de privilegio (p. ej. `adm_p
    - `Vogel.Server/Services/Mock<Entidad>AdminService.cs` replicando reglas de negocio de forma thread-safe (`SemaphoreSlim`).
 4. **Controlador BFF agnóstico:** `Vogel.Server/Controllers/<Entidades>Controller.cs`
    - Rutas: `api/<recurso>` y alias `api/v1/<recurso>`.
-   - Inyectar `I<Entidad>AdminProviderService`, `IPrivilegeAuthorizationService` e `ILogger`.
+   - **Prohibido hardcodear el `codename` del módulo en el controlador:** leerlo desde `IOptions<ModulePrivilegesOptions>` (`Vogel.Server/Configuration/ModulePrivilegesOptions.cs`, validado al arranque *fail-fast* desde `appsettings.json`, sección `"ModulePrivileges"`).
+   - Inyectar `I<Entidad>AdminProviderService`, `IPrivilegeAuthorizationService`, `IOptions<ModulePrivilegesOptions>` e `ILogger`.
    - En cada acción:
      1. Extraer y validar token (`Authorization: Bearer` o `X-Session-Token`) → `401` si ausente.
-     2. Invocar `_privilegeAuthorization.AuthorizeAsync(token, ModulePrivilegeCodename, requiredAction, HttpContext.RequestAborted)` → propagar `401`/`403`/`502` si `!IsAuthorized`.
+     2. Invocar `_privilegeAuthorization.AuthorizeAsync(token, _modulePrivilegeCodename, requiredAction, HttpContext.RequestAborted)` → propagar `401`/`403`/`502` si `!IsAuthorized`.
      3. Validar parámetros/payload → `400`/`422`.
      4. Delegar en el proveedor y retornar respuesta normalizada.
 5. **Registro DI (`Vogel.Server/Program.cs`):**
@@ -78,12 +79,13 @@ Todo módulo CRUD queda gobernado por un `codename` de privilegio (p. ej. `adm_p
 
 ### 3.3 Frontend Blazor (`Vogel.Client`)
 1. **Servicio de Estado:** `Vogel.Client/Services/I<Modulo>StateService.cs` y `<Modulo>StateService.cs`
+   - **Fuente única de verdad del `codename` en Frontend:** expone `ModuleCodename` y `SetModuleCodename(string? codename)`, inicializado exclusivamente desde `<Modulo>.razor` (`CreateBlockWork().Codename`). **Prohibido** duplicar constantes `ModulePrivilegeCodename` en subcomponentes o servicios.
    - Mantiene en memoria: catálogo (`AllItems`), filtros reactivos (`StatusFilter = "A"`, filtros de texto/relación), paginación (`PagedItems`), `SelectedEditId` (evitando exponer IDs sensibles en URL), `SuccessMessage` / `ErrorMessage`, `ClearCatalog()`, `SetErrorMessage(...)`.
    - Adjunta `Authorization: Bearer <token>` leído de `ISecureSessionStorageService`.
-   - Al completar mutaciones (`Create`, `Update`, `Deactivate`, `Reactivate`), solo invoca `LoadAsync()` si `SessionState.HasPrivilegeAccess(codename, PrivilegeAction.Read)`.
+   - Al completar mutaciones (`Create`, `Update`, `Deactivate`, `Reactivate`), solo invoca `LoadAsync()` si `SessionState.HasPrivilegeAccess(ModuleCodename, PrivilegeAction.Read)`.
    - Respuestas `403 Forbidden` publican el error sanitizado **sin cerrar sesión**.
 2. **Vistas en `Vogel.Client/Pages/TreeWork/.../<Modulo>/` (Code-Behind `.razor` + `.razor.cs` + `.razor.css`):**
-   - **`<Modulo>.razor` / `.razor.cs`:** Contenedor principal con `WorkViewFrame` y `BlockWork.ViewSet` (`Info`, `Capture`, `Filter`, `List`). En inicialización, solo llama `LoadAsync()` si `CanRead`; si `!CanRead`, ejecuta `ClearCatalog()`.
+   - **`<Modulo>.razor` / `.razor.cs`:** Único archivo del módulo frontend donde se asigna `BlockWork.Codename` (vía `CreateBlockWork()`). En `OnInitializedAsync()`, registra `State.SetModuleCodename(ModuleBlockWork.Codename)` antes de evaluar `CanRead`; si `!CanRead`, ejecuta `ClearCatalog()`. Contenedor con `WorkViewFrame` y `BlockWork.ViewSet` (`Info`, `Capture`, `Filter`, `List`).
    - **`<Modulo>Info.razor` / `.razor.cs`:** Encabezado descriptivo y conteos en `InfoViewFrame`.
    - **`<Modulo>Capture.razor` / `.razor.cs` / `.razor.css`:** Botón **Crear** alineado a la derecha (`justify-content: flex-end`) con estilo `HeaderWork` y `<img src="icons/plus.svg" />`, envuelto en `@if (CanCreate)` + guard defensivo en el handler.
    - **`<Modulo>Filter.razor` / `.razor.cs` / `.razor.css`:** Filtros apilados verticalmente con etiqueta explícita a la izquierda (`for`/`id` y `aria-labelledby`), responsive y botones limpiar (`×`).

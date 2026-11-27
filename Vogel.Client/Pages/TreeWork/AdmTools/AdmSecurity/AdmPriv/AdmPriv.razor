@@ -1,8 +1,10 @@
 @page "/admsec/priv"
 @namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv
 
-@{
-    var blockWork = new BlockWork
+<WorkViewFrame BlockWork="@ModuleBlockWork" ShowActionToolbar="false" />
+
+@code {
+    private BlockWork CreateBlockWork() => new()
     {
         Codename = "adm_priv",
         Title = "Administración de Privilegios",
@@ -22,5 +24,3 @@
         }
     };
 }
-
-<WorkViewFrame BlockWork="@blockWork" ShowActionToolbar="false" />

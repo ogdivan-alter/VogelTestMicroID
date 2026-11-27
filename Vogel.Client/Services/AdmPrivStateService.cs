@@ -13,7 +13,6 @@ namespace Vogel.Client.Services;
 public sealed class AdmPrivStateService : IAdmPrivStateService
 {
     private const string DefaultSystemCode = "MICROID";
-    private const string ModulePrivilegeCodename = "adm_priv";
     private const int DefaultPageSize = 10;
 
     private readonly HttpClient _httpClient;
@@ -36,6 +35,8 @@ public sealed class AdmPrivStateService : IAdmPrivStateService
         _logger = logger;
         _sessionState = sessionState;
     }
+
+    public string ModuleCodename { get; private set; } = string.Empty;
 
     public string SystemCode { get; private set; } = DefaultSystemCode;
 
@@ -265,7 +266,7 @@ public sealed class AdmPrivStateService : IAdmPrivStateService
                     "Respuesta vacía del servidor al crear el privilegio.");
             }
 
-            if (_sessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Read))
+            if (_sessionState.HasPrivilegeAccess(ModuleCodename, PrivilegeAction.Read))
             {
                 await LoadAsync();
             }
@@ -343,7 +344,7 @@ public sealed class AdmPrivStateService : IAdmPrivStateService
                     "Respuesta vacía del servidor al actualizar el privilegio.");
             }
 
-            if (_sessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Read))
+            if (_sessionState.HasPrivilegeAccess(ModuleCodename, PrivilegeAction.Read))
             {
                 await LoadAsync();
             }
@@ -412,7 +413,7 @@ public sealed class AdmPrivStateService : IAdmPrivStateService
                     "Respuesta vacía del servidor al inactivar el privilegio.");
             }
 
-            if (_sessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Read))
+            if (_sessionState.HasPrivilegeAccess(ModuleCodename, PrivilegeAction.Read))
             {
                 await LoadAsync();
             }
@@ -493,7 +494,7 @@ public sealed class AdmPrivStateService : IAdmPrivStateService
                     ErrorMessage);
             }
 
-            if (_sessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Read))
+            if (_sessionState.HasPrivilegeAccess(ModuleCodename, PrivilegeAction.Read))
             {
                 await LoadAsync();
             }
@@ -527,6 +528,18 @@ public sealed class AdmPrivStateService : IAdmPrivStateService
                 (int)HttpStatusCode.InternalServerError,
                 ErrorMessage);
         }
+    }
+
+    public void SetModuleCodename(string? codename)
+    {
+        var normalized = codename?.Trim() ?? string.Empty;
+        if (string.Equals(ModuleCodename, normalized, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        ModuleCodename = normalized;
+        NotifyStateChanged();
     }
 
     public void ClearMessages()

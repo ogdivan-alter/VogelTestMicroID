@@ -8,14 +8,12 @@ namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv;
 
 /// <summary>
 /// Code-behind de la vista List de Administración de Privilegios.
-/// Renderiza los privilegios filtrados en ListViewFrame respetando permisos RBAC de adm_priv,
+/// Renderiza los privilegios filtrados en ListViewFrame respetando los permisos RBAC del módulo,
 /// se suscribe reactivamente a AdmPrivState y coordina la navegación a edición/detalle (activos)
 /// y la reactivación lógica (inactivos).
 /// </summary>
 public partial class AdmPrivList : ComponentBase, IDisposable
 {
-    private const string ModulePrivilegeCodename = "adm_priv";
-
     [Inject]
     protected SessionState SessionState { get; set; } = default!;
 
@@ -28,11 +26,14 @@ public partial class AdmPrivList : ComponentBase, IDisposable
     [Parameter]
     public BlockWork? BlockWork { get; set; }
 
-    protected bool CanRead => SessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Read);
+    private string EffectiveCodename =>
+        !string.IsNullOrWhiteSpace(BlockWork?.Codename) ? BlockWork.Codename : AdmPrivState.ModuleCodename;
 
-    protected bool CanCreate => SessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Create);
+    protected bool CanRead => SessionState.HasPrivilegeAccess(EffectiveCodename, PrivilegeAction.Read);
 
-    protected bool CanModify => SessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Modify);
+    protected bool CanCreate => SessionState.HasPrivilegeAccess(EffectiveCodename, PrivilegeAction.Create);
+
+    protected bool CanModify => SessionState.HasPrivilegeAccess(EffectiveCodename, PrivilegeAction.Modify);
 
     /// <summary>
     /// Identificador del privilegio que actualmente se encuentra en proceso de reactivación

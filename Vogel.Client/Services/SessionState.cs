@@ -65,7 +65,7 @@ public class SessionState
 
         var trimmedCodename = codename.Trim();
         var normalizedTarget = trimmedCodename.Replace("_", "-");
-
+        Console.WriteLine($"Testing Privilege Codename: {codename}");   
         return CurrentUser.Privileges.FirstOrDefault(p =>
             !string.IsNullOrWhiteSpace(p.Codename) &&
             (string.Equals(p.Codename, trimmedCodename, StringComparison.OrdinalIgnoreCase) ||
@@ -80,6 +80,9 @@ public class SessionState
     public bool HasPrivilegeAccess(string codename, PrivilegeAction action)
     {
         var privilege = GetPrivilege(codename);
+
+        Console.WriteLine($"Testing Privilege: {privilege}");        
+        
         if (privilege?.Access is null)
         {
             return false;

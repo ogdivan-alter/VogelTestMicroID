@@ -12,8 +12,6 @@ namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv;
 /// </summary>
 public partial class AdmPrivForm : ComponentBase, IDisposable
 {
-    private const string ModulePrivilegeCodename = "adm_priv";
-
     protected const int MaxCodenameLength = 100;
     protected const int MaxGroupNameLength = 100;
     protected const int MaxTitleLength = 150;
@@ -59,13 +57,13 @@ public partial class AdmPrivForm : ComponentBase, IDisposable
     private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.Ordinal);
     private string? _lastInitializedRouteKey;
 
-    protected bool CanRead => SessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Read);
+    protected bool CanRead => SessionState.HasPrivilegeAccess(AdmPrivState.ModuleCodename, PrivilegeAction.Read);
 
-    protected bool CanCreate => SessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Create);
+    protected bool CanCreate => SessionState.HasPrivilegeAccess(AdmPrivState.ModuleCodename, PrivilegeAction.Create);
 
-    protected bool CanModify => SessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Modify);
+    protected bool CanModify => SessionState.HasPrivilegeAccess(AdmPrivState.ModuleCodename, PrivilegeAction.Modify);
 
-    protected bool CanDelete => SessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Delete);
+    protected bool CanDelete => SessionState.HasPrivilegeAccess(AdmPrivState.ModuleCodename, PrivilegeAction.Delete);
 
     protected bool IsReadOnlyView => IsEditMode && !CanModify;
 

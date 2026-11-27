@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
+using Vogel.Server.Configuration;
 using Vogel.Server.Controllers;
 using Vogel.Server.Services;
 using Vogel.Shared.DTOs;
@@ -20,11 +22,13 @@ public class PrivilegesControllerTests
         StubPrivilegeAdminProviderService provider,
         string? bearerToken = "valid-session-token",
         string? xSessionToken = null,
-        StubPrivilegeAuthorizationService? authService = null)
+        StubPrivilegeAuthorizationService? authService = null,
+        string modulePrivilegeCodename = "adm_priv")
     {
         var controller = new PrivilegesController(
             provider,
             authService ?? new StubPrivilegeAuthorizationService(),
+            Options.Create(new ModulePrivilegesOptions { Privileges = modulePrivilegeCodename }),
             NullLogger<PrivilegesController>.Instance)
         {
             ControllerContext = new ControllerContext
@@ -65,6 +69,23 @@ public class PrivilegesControllerTests
         Action = "adm/test-upd",
         Icon = "icons/test-upd.svg"
     };
+
+    [Fact]
+    public async Task List_WithCustomConfiguredCodename_ShouldAuthorizeUsingConfiguredValue()
+    {
+        var provider = new StubPrivilegeAdminProviderService();
+        var authService = new StubPrivilegeAuthorizationService();
+        var controller = CreateController(
+            provider,
+            authService: authService,
+            modulePrivilegeCodename: "seg_privilegios_custom");
+
+        var actionResult = await controller.List();
+
+        Assert.IsType<OkObjectResult>(actionResult);
+        Assert.Equal("seg_privilegios_custom", authService.LastCodename);
+        Assert.Equal(PrivilegeAction.Read, authService.LastAction);
+    }
 
     // ==================== GET /api/privileges/{id} ====================
 

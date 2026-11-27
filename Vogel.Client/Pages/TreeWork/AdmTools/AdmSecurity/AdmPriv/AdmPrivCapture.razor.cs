@@ -7,12 +7,10 @@ namespace Vogel.Client.Pages.TreeWork.AdmTools.AdmSecurity.AdmPriv;
 
 /// <summary>
 /// Code-behind de la vista Capture de Administración de Privilegios.
-/// Expone el botón "Crear privilegio" exclusivamente cuando el usuario posee permiso Create en adm_priv.
+/// Expone el botón "Crear privilegio" exclusivamente cuando el usuario posee permiso Create sobre el módulo.
 /// </summary>
 public partial class AdmPrivCapture : ComponentBase
 {
-    private const string ModulePrivilegeCodename = "adm_priv";
-
     [Inject]
     protected SessionState SessionState { get; set; } = default!;
 
@@ -25,7 +23,10 @@ public partial class AdmPrivCapture : ComponentBase
     [Parameter]
     public BlockWork? BlockWork { get; set; }
 
-    protected bool CanCreate => SessionState.HasPrivilegeAccess(ModulePrivilegeCodename, PrivilegeAction.Create);
+    private string EffectiveCodename =>
+        !string.IsNullOrWhiteSpace(BlockWork?.Codename) ? BlockWork.Codename : AdmPrivState.ModuleCodename;
+
+    protected bool CanCreate => SessionState.HasPrivilegeAccess(EffectiveCodename, PrivilegeAction.Create);
 
     /// <summary>
     /// Limpia cualquier privilegio seleccionado para edición y navega al formulario de creación.

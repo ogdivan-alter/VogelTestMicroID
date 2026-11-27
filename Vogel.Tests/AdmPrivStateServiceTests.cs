@@ -564,10 +564,59 @@ public class AdmPrivStateServiceTests
         Assert.Equal(HttpMethod.Post, handler.Requests[0].Method);
     }
 
+    [Fact]
+    public async Task CreateAsync_WithCustomModuleCodename_ShouldEvaluateReadAccessDynamically()
+    {
+        var createdDto = new CreatePrivilegeResponseDto
+        {
+            IdPrivilege = 88,
+            IdSystem = 1,
+            Status = "A",
+            DateCreation = DateTimeOffset.UtcNow
+        };
+        var handler = new QueueHttpMessageHandler(
+            new HttpResponseMessage(HttpStatusCode.Created) { Content = JsonContent.Create(createdDto) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(CreateSampleResponse()) });
+
+        var sessionState = new SessionState();
+        sessionState.SetUser(new User
+        {
+            Username = "custom_admin",
+            Privileges = new List<Privilege>
+            {
+                new()
+                {
+                    Id = 301,
+                    Codename = "custom_priv_codename",
+                    Title = "Privilegios Custom",
+                    Access = new PrivilegeAccess { Read = true, Create = true }
+                }
+            }
+        });
+
+        var (service, _) = CreateServiceWithHandler(handler, "jwt-custom", sessionState, moduleCodename: "custom_priv_codename");
+
+        var result = await service.CreateAsync(new CreatePrivilegeRequestDto
+        {
+            IdParent = 0,
+            Codename = "custom_item",
+            GroupName = "SEGURIDAD",
+            Title = "Item Custom",
+            Action = "adm/custom"
+        });
+
+        Assert.True(result.Success);
+        Assert.Equal("custom_priv_codename", service.ModuleCodename);
+        Assert.Equal(2, handler.Requests.Count);
+        Assert.Equal(HttpMethod.Post, handler.Requests[0].Method);
+        Assert.Equal(HttpMethod.Get, handler.Requests[1].Method);
+    }
+
     private static (AdmPrivStateService Service, QueueHttpMessageHandler Handler) CreateServiceWithHandler(
         QueueHttpMessageHandler handler,
         string? token = "jwt-session-token",
-        SessionState? sessionState = null)
+        SessionState? sessionState = null,
+        string moduleCodename = "adm_priv")
     {
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("http://localhost:5031/") };
         var storage = new InMemorySessionStorage();
@@ -578,6 +627,7 @@ public class AdmPrivStateServiceTests
 
         var logger = new NoOpClientLogger();
         var service = new AdmPrivStateService(httpClient, storage, logger, sessionState ?? CreateSessionState());
+        service.SetModuleCodename(moduleCodename);
         return (service, handler);
     }
 

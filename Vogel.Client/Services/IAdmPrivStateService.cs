@@ -19,6 +19,17 @@ public sealed record PrivilegeOperationResult<T>(
 public interface IAdmPrivStateService
 {
     /// <summary>
+    /// Codename del privilegio del módulo inicializado desde la vista principal (AdmPriv.razor).
+    /// Se propaga a las vistas hijas y al estado compartido sin duplicar constantes hardcodeadas.
+    /// </summary>
+    string ModuleCodename { get; }
+
+    /// <summary>
+    /// Registra el codename del privilegio del módulo definido en el BlockWork de la vista principal.
+    /// </summary>
+    void SetModuleCodename(string? codename);
+
+    /// <summary>
     /// Código del sistema al que pertenecen los privilegios cargados (p. ej. "MICROID").
     /// </summary>
     string SystemCode { get; }

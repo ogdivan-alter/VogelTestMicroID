@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.Extensions.Options;
+using Vogel.Server.Configuration;
 using Vogel.Server.Services;
 using Vogel.Shared.DTOs;
 using Vogel.Shared.Enums;
@@ -9,15 +11,13 @@ namespace Vogel.Server.Controllers;
 /// <summary>
 /// Controlador BFF (Backend for Frontend) agnóstico al proveedor para la administración de privilegios.
 /// Delega exclusivamente en <see cref="IPrivilegeAdminProviderService"/> y autoriza cada operación
-/// mediante <see cref="IPrivilegeAuthorizationService"/>.
+/// mediante <see cref="IPrivilegeAuthorizationService"/> usando el codename configurado en <see cref="ModulePrivilegesOptions"/>.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Route("api/v1/[controller]")]
 public class PrivilegesController : ControllerBase
 {
-    private const string ModulePrivilegeCodename = "adm_priv";
-
     private const int MaxCodenameLength = 100;
     private const int MaxGroupNameLength = 100;
     private const int MaxTitleLength = 150;
@@ -27,15 +27,18 @@ public class PrivilegesController : ControllerBase
 
     private readonly IPrivilegeAdminProviderService _privilegeAdminProvider;
     private readonly IPrivilegeAuthorizationService _privilegeAuthorization;
+    private readonly string _modulePrivilegeCodename;
     private readonly ILogger<PrivilegesController> _logger;
 
     public PrivilegesController(
         IPrivilegeAdminProviderService privilegeAdminProvider,
         IPrivilegeAuthorizationService privilegeAuthorization,
+        IOptions<ModulePrivilegesOptions> modulePrivilegesOptions,
         ILogger<PrivilegesController> logger)
     {
         _privilegeAdminProvider = privilegeAdminProvider;
         _privilegeAuthorization = privilegeAuthorization;
+        _modulePrivilegeCodename = modulePrivilegesOptions?.Value?.Privileges?.Trim() ?? string.Empty;
         _logger = logger;
     }
 
@@ -296,7 +299,7 @@ public class PrivilegesController : ControllerBase
     {
         var authResult = await _privilegeAuthorization.AuthorizeAsync(
             token,
-            ModulePrivilegeCodename,
+            _modulePrivilegeCodename,
             requiredAction,
             HttpContext.RequestAborted);
 
